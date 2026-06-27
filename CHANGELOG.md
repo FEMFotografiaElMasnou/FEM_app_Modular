@@ -8,6 +8,37 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.7] — 2026-06-27 — Galería histórica de retos finalizados
+
+> Petición (origen Enric): poder revisar todas las fotos de retos ya cerrados,
+> también para las reuniones de valoración del club. Acceso desde el participante.
+
+### Añadido
+- **Pantalla/panel Galería** para participantes (el admin entra con "veure com a
+  participant"): muestra **solo** fotos de temáticas finalizadas (`status: 'finished'`),
+  con el **nombre del autor**. Nuevo módulo `js/features/galeria.js`.
+- **Tarjeta GALERIA** colocada **al lado de la card "La meva foto"** (50/50 en escritorio,
+  apiladas en móvil). Visible solo si hay algún reto finalizado.
+- **Dos filtros** (desplegables) con agrupación en cabeceras ("box fino"):
+  - Reto: "tots els reptes" → agrupa por reto (cronológico, reciente→antiguo).
+  - Reto concreto + "tots els autors" → agrupa por autor (alfabético).
+  - Ambos concretos → cuadrícula directa.
+- En el **visor a pantalla completa** se añade el **nombre del autor** debajo (fuente Arial),
+  **solo cuando se abre desde la galería** (el autor se pasa en la lista de fotos). En la
+  votación las fotos siguen **anónimas**. Reutiliza el zoom/swipe/teclado ya existentes.
+- Textos CA/ES de la galería en `js/core/i18n.js`.
+
+### Eliminado
+- Botón **"Veure Fotos"** y el **mosaico embebido** del reto actual (HTML, funciones JS
+  `togglePhotoMosaic`/`renderPhotoMosaic`/`getMosaicPhotosList`/`openMosaicLightbox` e imports
+  huérfanos). Su función queda cubierta por la nueva galería.
+
+### Pendiente de verificación manual
+- Probar en navegador con una temática finalizada y fotos publicadas: filtros, agrupación,
+  visor con autor, y el reparto foto/galería en escritorio y móvil.
+
+---
+
 ## [0.1.6] — 2026-06-27 — Modo Test aislado: carpeta Cloudinary propia + auto-login + sello visual
 
 > Objetivo: poder trastear en la BD de pruebas con tranquilidad, sin ensuciar producción
