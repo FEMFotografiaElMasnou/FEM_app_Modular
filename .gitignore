@@ -15,3 +15,7 @@ Desktop.ini
 
 # Notas de Enric (solo apuntes, no van al repo)
 [Ee]nric*.md
+
+# Arranque local de desarrollo (herramienta personal, no se despliega)
+server.js
+Iniciar_FEM.bat
