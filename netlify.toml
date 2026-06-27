@@ -1,0 +1,4 @@
+# Configuració de desplegament a Netlify — lloc estàtic (HTML/CSS/JS, sense build)
+[build]
+  publish = "."
+  command = ""
