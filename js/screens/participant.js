@@ -62,9 +62,14 @@ export function showParticipantGallery() {
 function _objDate(o) {
   return o.end_date || o.start_date || '';
 }
-function _finishedObjectivesSorted() {
+// Reptes que es mostren al desplegable de "Resultat Repte".
+// Diferenciat per TIPUS DE COMPTE (rol real):
+//   · admin       → TOTS els reptes (inclòs l'actiu i els inactius)
+//   · participant → només els finalitzats
+function _resultatsObjectives() {
+  const isAdmin = !!(state.currentUser && state.currentUser.role === 'admin');
   return state.objectives
-    .filter(o => o.status === 'finished')
+    .filter(o => isAdmin || o.status === 'finished')
     .slice()
     .sort((a, b) => String(_objDate(b)).localeCompare(String(_objDate(a))));  // recent → antic
 }
@@ -77,7 +82,7 @@ export function showParticipantResultats() {
   const sel   = document.getElementById('resultats-repte-select');
   const empty = document.getElementById('resultats-empty');
   const list  = document.getElementById('resultats-list');
-  const objs  = _finishedObjectivesSorted();
+  const objs  = _resultatsObjectives();
   const label = sel ? sel.closest('.gallery-filter') : null;
 
   if (objs.length === 0) {
