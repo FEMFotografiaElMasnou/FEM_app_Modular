@@ -430,27 +430,13 @@
         </div>
       </div>
 
+      <!-- Fila: card "La meva foto" (meitat) + targeta GALERIA (meitat) -->
+      <div class="photo-gallery-row">
       <div class="card" id="card-my-photo">
-        <div class="card-header" style="flex-wrap:wrap;gap:10px;">
+        <div class="card-header">
           <div style="flex:1;min-width:0;">
             <div class="card-title" id="card-my-photo-title" data-i18n="my_photo">LA MEVA FOTO</div>
             <div class="card-subtitle" id="upload-status-label">Puja la teva foto per participar</div>
-          </div>
-          <!-- Botón "Veure Fotos" — abre el mosaico embebido -->
-          <button type="button" class="btn-view-photos" id="btn-view-photos" onclick="togglePhotoMosaic()" style="display:none;">
-            <span style="font-size:14px;">👁</span>
-            <span data-i18n="view_photos">Veure Fotos</span>
-          </button>
-        </div>
-
-        <!-- Mosaico embebido (oculto por defecto) — toda la galería en cuadrícula scrollable -->
-        <div id="photo-mosaic-section" class="hidden" style="margin-top:16px;">
-          <div id="photo-mosaic-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:6px;max-height:420px;overflow-y:auto;overflow-x:hidden;padding:8px;background:var(--surface);border-radius:12px;-webkit-overflow-scrolling:touch;">
-            <!-- Las fotos se inyectan dinámicamente -->
-          </div>
-          <div id="photo-mosaic-empty" class="hidden" style="text-align:center;padding:32px;color:var(--text-muted);">
-            <div style="font-size:42px;">📷</div>
-            <p data-i18n="no_photos_yet" style="margin-top:8px;">Encara no hi ha fotos publicades</p>
           </div>
         </div>
 
@@ -486,6 +472,14 @@
           </div>
         </div>
 
+      </div>
+
+        <!-- Targeta GALERIA — al costat de la card de pujar foto -->
+        <div class="nav-card photo-gallery-tile" id="nav-card-gallery" onclick="showParticipantGallery()">
+          <div class="nav-icon">📷</div>
+          <div class="nav-title" data-i18n="nav_gallery">GALERIA</div>
+          <div class="nav-sub" data-i18n="nav_gallery_sub">Fotos dels reptes finalitzats</div>
+        </div>
       </div>
 
       <div class="nav-grid">
@@ -546,6 +540,31 @@
           <div id="p-ranking-general-list" class="ranking-list">
             <div class="empty-state"><div class="empty-icon">🏅</div><p>Sense dades.</p></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Galeria — fotos dels reptes finalitzats -->
+    <div id="participant-panel-gallery" class="hidden">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()">← Tornar</button>
+        <h2 style="font-family:var(--font-display);font-size:24px;letter-spacing:2px;" data-i18n="gallery_title">GALERIA</h2>
+      </div>
+      <div class="card">
+        <div class="gallery-filters">
+          <label class="gallery-filter">
+            <span data-i18n="gallery_filter_objective">Repte</span>
+            <select id="gallery-filter-objective" onchange="onGalleryFilterChange()"></select>
+          </label>
+          <label class="gallery-filter">
+            <span data-i18n="gallery_filter_author">Autor</span>
+            <select id="gallery-filter-author" onchange="onGalleryFilterChange()"></select>
+          </label>
+        </div>
+        <div id="gallery-grid" style="margin-top:16px;"></div>
+        <div id="gallery-empty" class="hidden" style="text-align:center;padding:40px;color:var(--text-muted);">
+          <div style="font-size:42px;">📷</div>
+          <p data-i18n="gallery_empty" style="margin-top:8px;">Encara no hi ha reptes finalitzats.</p>
         </div>
       </div>
     </div>
@@ -662,8 +681,8 @@
     <button type="button" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;font-size:22px;cursor:pointer;border-radius:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);" onclick="event.stopPropagation(); closeFullscreen()">✕</button>
   </div>
 
-  <!-- Caption (títol/descripció de l'autor) -->
-  <div id="fullscreen-caption" onclick="event.stopPropagation();" style="display:none;position:absolute;bottom:72px;left:50%;transform:translateX(-50%);max-width:85vw;background:rgba(0,0,0,0.6);color:#fff;padding:10px 18px;border-radius:12px;font-size:15px;line-height:1.4;text-align:center;white-space:pre-wrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);"></div>
+  <!-- Caption (títol/descripció + autor, només a la galeria) -->
+  <div id="fullscreen-caption" onclick="event.stopPropagation();" style="display:none;position:absolute;bottom:72px;left:50%;transform:translateX(-50%);max-width:85vw;background:rgba(0,0,0,0.6);color:#fff;padding:10px 18px;border-radius:12px;font-size:15px;line-height:1.4;text-align:center;white-space:pre-wrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:Arial,Helvetica,sans-serif;"></div>
 
   <!-- Counter -->
   <div class="lightbox-counter" id="lightbox-counter" style="display:none;">1 / 10</div>

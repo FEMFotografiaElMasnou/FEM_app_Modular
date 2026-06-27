@@ -17,12 +17,24 @@ function _captionForUrl(url) {
   const ph  = all.find(p => p.url === url || p.originalUrl === url);
   return (ph && ph.caption) ? ph.caption : '';
 }
-function _showCaption(url) {
+function _escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Mostra el text (títol/descripció) i, NOMÉS si se'n passa, el nom de l'autor.
+// L'autor només arriba des de la galeria de reptes finalitzats; a la votació
+// (anònima) no es passa, així que mai es revela.
+function _showCaption(url, author) {
   const el = document.getElementById('fullscreen-caption');
   if (!el) return;
   const cap = _captionForUrl(url);
-  el.textContent   = cap;
-  el.style.display = cap ? 'block' : 'none';
+  let html = '';
+  if (cap)    html += `<div>${_escapeHtml(cap)}</div>`;
+  if (author) html += `<div style="margin-top:${cap ? '6px' : '0'};font-size:13px;opacity:0.85;">${_escapeHtml(author)}</div>`;
+  el.innerHTML     = html;
+  el.style.display = html ? 'block' : 'none';
 }
 
 export function openFullscreen(url, fileName, photosList, startIndex) {
@@ -35,7 +47,8 @@ export function openFullscreen(url, fileName, photosList, startIndex) {
 
   img.src = url;
   _fullscreenFileName = fileName || 'foto.jpg';
-  _showCaption(url);
+  const _startPhoto = (photosList && photosList.length) ? photosList[startIndex || 0] : null;
+  _showCaption(url, _startPhoto && _startPhoto.author);
 
   // Setup navigation if photosList provided
   if (photosList && photosList.length > 1) {
@@ -83,7 +96,7 @@ export function navigateLightbox(direction) {
   const img = document.getElementById('fullscreen-img');
   img.src = photo.url;
   _fullscreenFileName = photo.fileName || 'foto.jpg';
-  _showCaption(photo.url);
+  _showCaption(photo.url, photo.author);
 
   // Resetear zoom al cambiar de foto
   resetZoom();

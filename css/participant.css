@@ -82,4 +82,99 @@
   .bottom-nav { display: block; }
   .has-bottom-nav { padding-bottom: 64px; }
   .nav-grid { display: none; }
+  /* La targeta GALERIA viu al costat de la card de foto; en mòbil s'apila a sota */
+  .photo-gallery-row { grid-template-columns: 1fr; }
+}
+
+/* ── Fila: card "La meva foto" (meitat) + targeta GALERIA (meitat) ── */
+.photo-gallery-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+  align-items: stretch;
+}
+.photo-gallery-row > .card { margin-bottom: 0; }
+.photo-gallery-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ════════════════════════════════
+   GALERIA — filtres, capçaleres de grup i mosaic
+   ════════════════════════════════ */
+.gallery-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.gallery-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 140px;
+}
+.gallery-filter select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface, #16243a);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+}
+.gallery-group-header {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent2);
+  background: rgba(255,255,255,0.04);
+  border-left: 3px solid var(--accent2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin: 18px 0 10px;
+}
+.gallery-mosaic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.gallery-photo {
+  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface, #16243a);
+  border: 1px solid var(--border2);
+  transition: transform 0.15s, border-color 0.15s;
+}
+.gallery-photo:hover { transform: translateY(-2px); border-color: var(--accent); }
+.gallery-photo img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+.gallery-photo-meta {
+  padding: 6px 8px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.gallery-photo-caption {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.gallery-photo-author {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
