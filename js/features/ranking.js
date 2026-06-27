@@ -2,7 +2,7 @@
 // RANKING — cálculo client-side y render
 // ═══════════════════════════════════
 import { state, actingAsAdmin } from '../core/state.js';
-import { currentLang } from '../core/i18n.js';
+import { currentLang, t } from '../core/i18n.js';
 import { getActivePublishedPhotos, getDisplayName } from '../core/data.js';
 
 // ── Taula de punts per posició al rànquing global ───────────────
@@ -49,12 +49,13 @@ export function formatScore(score) {
   return score.toFixed(2).replace('.', ',');
 }
 
-export function getPhotoScore(photoId) {
-  // Puntuació final d'una fotografia dins del repte (mitja de les 3 mitges de criteri).
+export function getPhotoScoreBreakdown(photoId) {
+  // Desglossament de la puntuació d'una foto: mitja per criteri + nota final.
+  const empty = { creativity: 0, theme: 0, composition: 0, final: 0 };
 
   // 1) Trobar la foto i el seu objectiveId
   const photo = state.publishedPhotos.find(p => p.id === photoId);
-  if (!photo || !photo.objectiveId) return 0;
+  if (!photo || !photo.objectiveId) return empty;
   const objectiveId = photo.objectiveId;
 
   // 2) Set de userIds que han ENVIAT (es_esborrany=false) en aquest repte.
@@ -69,13 +70,13 @@ export function getPhotoScore(photoId) {
   }
 
   const totalVotants = submittedUserIds.size;
-  if (totalVotants === 0) return 0;
+  if (totalVotants === 0) return empty;
 
   // 3) Vots d'aquesta foto, només dels votants que han enviat
   const photoVotes = state.votes.filter(
     v => v.photoId === photoId && submittedUserIds.has(String(v.userId))
   );
-  if (photoVotes.length === 0) return 0;
+  if (photoVotes.length === 0) return empty;
 
   // 4) Mitja per criteri: suma dels vots vàlids / total de votants del repte
   const avgCriterion = (key) => {
@@ -85,11 +86,58 @@ export function getPhotoScore(photoId) {
     return sum / totalVotants;
   };
 
-  const avgCreativity  = avgCriterion('creativity');
-  const avgTheme       = avgCriterion('theme');
-  const avgComposition = avgCriterion('composition');
+  const creativity  = avgCriterion('creativity');
+  const theme       = avgCriterion('theme');
+  const composition = avgCriterion('composition');
 
-  return (avgCreativity + avgTheme + avgComposition) / 3;
+  return { creativity, theme, composition, final: (creativity + theme + composition) / 3 };
+}
+
+export function getPhotoScore(photoId) {
+  // Puntuació final d'una fotografia dins del repte (mitja de les 3 mitges de criteri).
+  return getPhotoScoreBreakdown(photoId).final;
+}
+
+// Rànquing detallat d'un repte concret (per id), ordenat per nota final.
+export function computeRankingForObjective(objId) {
+  return state.publishedPhotos
+    .filter(p => p.objectiveId === objId)
+    .map(photo => ({ photo, ...getPhotoScoreBreakdown(photo.id) }))
+    .sort((a, b) => b.final - a.final);
+}
+
+// Nom real de l'autor (els reptes finalitzats no són anònims; com a la galeria).
+function _authorName(userId) {
+  const u = state.users.find(x => x.id === userId);
+  return (u && u.name) ? u.name : '—';
+}
+
+// Pinta el rànquing detallat (nota final + 3 criteris) d'un repte finalitzat.
+export function renderResultatsRepte(objId, listId) {
+  const el = document.getElementById(listId);
+  if (!el) return;
+  const ranked = computeRankingForObjective(objId);
+  if (ranked.length === 0) {
+    const msg = currentLang === 'es' ? 'Sin datos de votación.' : 'Sense dades de votació.';
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏆</div><p>${msg}</p></div>`;
+    return;
+  }
+  const rankNums = ['gold', 'silver', 'bronze'];
+  el.innerHTML = ranked.map(({ photo, creativity, theme, composition, final }, idx) => `
+    <div class="rank-item rank-item-detailed">
+      <div class="rank-num ${rankNums[idx] || ''}">${idx + 1}</div>
+      <img class="rank-thumb" src="${photo.url}" alt="">
+      <div class="rank-info">
+        <div class="rank-name">${_authorName(photo.userId)}</div>
+        <div class="rank-criteria">
+          <span>${t('creativity')} ${formatScore(creativity)}</span>
+          <span>${t('composition')} ${formatScore(composition)}</span>
+          <span>${t('theme')} ${formatScore(theme)}</span>
+        </div>
+      </div>
+      <div class="rank-score">${formatScore(final)}</div>
+    </div>
+  `).join('');
 }
 
 export function computeCurrentRanking() {

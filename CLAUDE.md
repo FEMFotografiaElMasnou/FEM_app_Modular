@@ -61,5 +61,5 @@ módulos por pantalla y por función.
   `D:\Mis proyectos\FEM_Reptes\Instrucciones\Archivos MD\...` → `PRD.MD`, `Components.MD`, `Decisions.MD` (ADRs), `Changelog.MD`, `Setup.MD`.
   Antes de tocar lógica, releer `Components.MD` y `Decisions.MD`.
 - **Changelog de la modularización**: `CHANGELOG.md` (en esta carpeta).
-- **Integraciones pendientes** (instrucciones de Enric, aún NO aplicadas): `enric_Integracio-Botons-Reptes.md`, `Enric_Integracio-Reptes-Resultats.md`.
+- **Integraciones de Enric (YA aplicadas)**: `Enric_Integracio-Reptes-Resultats.md` (persistencia de sesión, v0.1.4) y `enric_Integracio-Botons-Reptes.md` (App Resultats embebida, v0.1.8). La App Resultats vive en la **raíz** `https://fem-reptes.netlify.app/` y lee `?role=&view=&embedded=true`.
 - **Decisión de arquitectura**: módulos ES por pantalla + puente `window.*` para `onclick`. Al cerrar la fase, actualizar ADR-001.

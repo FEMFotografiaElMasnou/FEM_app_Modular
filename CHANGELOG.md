@@ -8,6 +8,60 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.8] — 2026-06-27 — Resultados: Classificació General (Enric embebida) + Resultat Repte nativo
+
+> Implementa el **Documento 2 de Enric** (`enric_Integracio-Botons-Reptes.md`). Complementa la
+> persistencia de sesión del Documento 1 (ya en 0.1.4), que pasa el rol a la App Resultats.
+
+### Verificado (cambió respecto al bloqueo de 0.1.4)
+- La web de Enric **ya lee los parámetros de URL**. La URL buena es la **raíz**
+  `https://fem-reptes.netlify.app/` (la `FEM-Resultat_Ranquing.html` de los documentos da **404**).
+  - `role` → `admin` ve todos los retos; `participant`/sin sesión solo los finalizados.
+  - `view=resultats` → resultados del reto · `view=classificacio` → ranking acumulado (`switchToGeneral`).
+  - `embedded=true` → su CSS `body.embedded` **oculta su topbar/título/controles** (no se duplican).
+
+### Añadido — Classificació General (Enric, embebida)
+- **Panel embebido** `participant-panel-embedded` dentro de `screen-participant` (así la topbar
+  y la bottom-nav nuestras **siguen visibles**): un `<iframe id="iframe-resultats">` + botón "← Tornar".
+- Funciones `openEmbedded(view)` / `closeEmbedded()` en `js/screens/participant.js` (expuestas en
+  `window`). Construyen la URL `…/?role=&view=&embedded=true` con el rol de `state.currentUser`
+  (o `participant` por defecto). `closeEmbedded()` vacía el `src` del iframe y vuelve a la home.
+- Clave i18n `embedded_back` (CA "← Tornar" / ES "← Volver").
+- Enlazan a Enric: `nav-card-classificacio` (home) y `bnav-rank` (🏆 Ranking, bottom-nav móvil),
+  ambos con `openEmbedded('classificacio')`.
+
+### Añadido — Resultat Repte (NATIVO, sin iframe)
+> Motivo: el modo `embedded` de Enric oculta su selector de retos (`#repteSelect` está en
+> `.controls-row`, que su CSS esconde). En vez de depender de un cambio en su web, se reconstruye
+> la vista de resultados por reto con el motor de cálculo que la app **ya tenía**.
+- `nav-card-resultats` (home) → `showParticipantResultats()` (vista propia, no Enric).
+- Nuevo panel `participant-panel-resultats`: **desplegable de retos finalizados** (reciente→antiguo)
+  + ranking **detallado por criterios** (Creativitat / Composició / Temàtica + nota total).
+- En `js/features/ranking.js`:
+  - `getPhotoScoreBreakdown(photoId)` → `{ creativity, theme, composition, final }`. `getPhotoScore`
+    pasa a delegar en ella (mismo resultado, sin cambiar comportamiento).
+  - `computeRankingForObjective(objId)` y `renderResultatsRepte(objId, listId)`. Usa el **nombre real**
+    del autor (retos finalizados no son anónimos, como la galería).
+- `showParticipantResultats()` / `onResultatsRepteChange()` en `participant.js` (en `window`).
+- CSS `.rank-criteria` en `css/base.css` (fila fina con las 3 notas, responsive).
+- **Visibilidad**: la card "Resultat Repte" pasa a estar **siempre visible** (antes solo con reto
+  activo y nombres revelados). Si aún no hay retos finalizados, muestra aviso y oculta el desplegable.
+  Sigue respetando el override de admin `force_hide_resultats`.
+
+### No cambiado (a propósito)
+- El **cálculo de puntuación** y la vista interna antigua (`showParticipantClassificacio`, panel
+  `participant-panel-ranking` con pestañas) **se conservan** sin enlazar. Reversible.
+
+### Pendiente de verificación manual
+- En navegador (HTTP, no `file://`):
+  - **Resultat Repte**: el desplegable lista los retos finalizados; al cambiarlo se actualiza el
+    ranking con las notas por criterio y la nota total; sin finalizados, sale el aviso.
+  - **Classificació General** y **🏆 Ranking** (móvil): cargan la web de Enric sin su topbar
+    (embedded) y "← Tornar" vuelve a la home. Como admin se ven todos los retos; como participante,
+    solo finalizados. Recargar (F5) dentro: la sesión se mantiene.
+
+---
+
 ## [0.1.7] — 2026-06-27 — Galería histórica de retos finalizados
 
 > Petición (origen Enric): poder revisar todas las fotos de retos ya cerrados,

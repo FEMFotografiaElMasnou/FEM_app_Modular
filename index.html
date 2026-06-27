@@ -396,7 +396,7 @@
         <span class="bnav-icon">🗳️</span>
         <span data-i18n="nav_vote">Votar</span>
       </button>
-      <button type="button" class="bnav-btn" id="bnav-rank" onclick="showParticipantRanking(); setActiveNav('bnav-rank')">
+      <button type="button" class="bnav-btn" id="bnav-rank" onclick="openEmbedded('classificacio'); setActiveNav('bnav-rank')">
         <span class="bnav-icon">🏆</span>
         <span data-i18n="ranking">Ranking</span>
       </button>
@@ -493,7 +493,7 @@
           <div class="nav-title" data-i18n="nav_resultats">RESULTAT REPTE</div>
           <div class="nav-sub" data-i18n="nav_resultats_sub">Resultats del repte actual</div>
         </div>
-        <div class="nav-card" id="nav-card-classificacio" onclick="showParticipantClassificacio()">
+        <div class="nav-card" id="nav-card-classificacio" onclick="openEmbedded('classificacio')">
           <div class="nav-icon">🏆</div>
           <div class="nav-title" data-i18n="nav_classificacio">CLASSIFICACIÓ GENERAL</div>
           <div class="nav-sub" data-i18n="nav_classificacio_sub">Classificació acumulada</div>
@@ -567,6 +567,39 @@
           <p data-i18n="gallery_empty" style="margin-top:8px;">Encara no hi ha reptes finalitzats.</p>
         </div>
       </div>
+    </div>
+
+    <!-- Panel Resultat Repte — rànquing detallat per repte finalitzat (natiu) -->
+    <div id="participant-panel-resultats" class="hidden">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()">
+          <span data-i18n="embedded_back">← Tornar</span>
+        </button>
+        <h2 style="font-family:var(--font-display);font-size:24px;letter-spacing:2px;" data-i18n="nav_resultats">RESULTAT REPTE</h2>
+      </div>
+      <div class="card">
+        <label class="gallery-filter" style="margin-bottom:16px;">
+          <span data-i18n="gallery_filter_objective">Repte</span>
+          <select id="resultats-repte-select" onchange="onResultatsRepteChange()"></select>
+        </label>
+        <div id="resultats-list" class="ranking-list"></div>
+        <div id="resultats-empty" class="hidden" style="text-align:center;padding:40px;color:var(--text-muted);">
+          <div style="font-size:42px;">🏆</div>
+          <p data-i18n="gallery_empty" style="margin-top:8px;">Encara no hi ha reptes finalitzats.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Resultats (App Resultats d'Enric, embeguda) -->
+    <div id="participant-panel-embedded" class="hidden">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeEmbedded()">
+          <span data-i18n="embedded_back">← Tornar</span>
+        </button>
+        <h2 id="embedded-title" style="font-family:var(--font-display);font-size:24px;letter-spacing:2px;"></h2>
+      </div>
+      <iframe id="iframe-resultats" src="" title="Resultats"
+        style="width:100%;height:calc(100dvh - 200px);min-height:480px;border:none;border-radius:12px;"></iframe>
     </div>
   </div>
 </div>
