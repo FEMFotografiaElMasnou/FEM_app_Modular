@@ -11,7 +11,7 @@ módulos por pantalla y por función.
 - Runtime / build: **ninguno** — no hay build step ni bundler. El navegador carga los módulos tal cual.
 - Base de datos: **Supabase** (Postgres + API REST/JS). La seguridad real recae en las RLS, no en ocultar la clave anon.
 - Imágenes: **Cloudinary** (cloud `dz1n0g9yg`, preset `Fem_Apps`).
-- Hosting: **Vercel** (sirve los archivos estáticos directamente, sin compilar).
+- Hosting: **Netlify** (sitio estático, `netlify.toml`; redeploy automático al hacer push a `main`). Repo privado, por eso no GitHub Pages. `vercel.json` se conserva por si se vuelve a Vercel.
 - Modo BD: conmutable **Normal / Test** (dos proyectos Supabase), persistido en `localStorage`.
 
 ## Comandos

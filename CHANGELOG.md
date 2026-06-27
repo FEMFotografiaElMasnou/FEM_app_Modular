@@ -8,6 +8,30 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.10] — 2026-06-27 — Despliegue como sitio estático (Netlify)
+
+> Objetivo: publicar la app online. Es HTML/CSS/JS puro sin build, así que cualquier
+> hosting estático sirve. Se decanta por **Netlify** (mismo hosting que la App Resultats
+> de Enric) por ser gratis con repos privados.
+
+### Añadido
+- `vercel.json` — config para servir como estático en Vercel (`framework: null`, sin build).
+  Se creó porque Vercel detectaba `server.js` y trataba el proyecto como Node. Se conserva
+  por si en el futuro se usa Vercel.
+- `netlify.toml` — config de Netlify: sitio estático servido desde la raíz (`publish = "."`,
+  sin `command`). Cada `push` a `main` redespliega automáticamente.
+
+### Eliminado (del repo, no del disco local)
+- `server.js` e `Iniciar_FEM.bat` — eran el **arranque local de desarrollo** (servidor estático
+  en `localhost`), no forman parte de la app desplegada. Se sacan del control de versiones con
+  `git rm --cached` y se ignoran en `.gitignore`; siguen en el disco de Pablo para uso local.
+
+### Notas
+- **GitHub Pages descartado**: el repo es privado y Pages en privados requiere plan de pago.
+- **Vercel descartado de momento**: empujaba al plan Pro (proyecto bajo organización/Team).
+
+---
+
 ## [0.1.9] — 2026-06-27 — Reskin base: estilo de la App Resultats (Enric)
 
 > Petición (Pablo): que toda la app adopte el estilo elegante de la web de Enric
