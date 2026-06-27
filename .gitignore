@@ -12,3 +12,6 @@ Desktop.ini
 # Logs y temporales
 *.log
 *.tmp
+
+# Notas de Enric (solo apuntes, no van al repo)
+[Ee]nric*.md
