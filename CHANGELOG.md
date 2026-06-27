@@ -71,6 +71,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
   desplegable (incluido el actual y los inactivos); el **participante**, solo los **finalizados**.
   Misma regla que la App Resultats de Enric. Implica que el admin también los ve en modo
   "veure com a participant" (excepción consciente a la réplica exacta del socio).
+- **Reto no finalizado muestra las fotos subidas aunque no estén publicadas**: en un reto
+  finalizado el ranking solo incluye las fotos que concursaron (`publishedPhotos`); en el reto
+  actual/inactivo (que solo ve el admin) incluye también las **no publicadas** (`state.photos`),
+  para que el admin vea el estado real. `getPhotoScoreBreakdown` ahora localiza la foto en ambas
+  listas. (Sin fuga de anonimato: solo el admin ve retos no finalizados.)
 - En `js/features/ranking.js`:
   - `getPhotoScoreBreakdown(photoId)` → `{ creativity, theme, composition, final }`. `getPhotoScore`
     pasa a delegar en ella (mismo resultado, sin cambiar comportamiento).

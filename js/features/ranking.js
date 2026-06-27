@@ -53,8 +53,10 @@ export function getPhotoScoreBreakdown(photoId) {
   // Desglossament de la puntuació d'una foto: mitja per criteri + nota final.
   const empty = { creativity: 0, theme: 0, composition: 0, final: 0 };
 
-  // 1) Trobar la foto i el seu objectiveId
-  const photo = state.publishedPhotos.find(p => p.id === photoId);
+  // 1) Trobar la foto i el seu objectiveId (publicada o no: el repte actiu pot
+  //    tenir fotos pujades encara no publicades, que l'admin també vol veure)
+  const photo = state.publishedPhotos.find(p => p.id === photoId)
+             || state.photos.find(p => p.id === photoId);
   if (!photo || !photo.objectiveId) return empty;
   const objectiveId = photo.objectiveId;
 
@@ -99,9 +101,16 @@ export function getPhotoScore(photoId) {
 }
 
 // Rànquing detallat d'un repte concret (per id), ordenat per nota final.
+//   · repte finalitzat → només les fotos que van concursar (publicades)
+//   · repte no finalitzat (actual/inactiu, només visible per l'admin) → totes les
+//     fotos pujades, encara que no estiguin publicades, per veure'n l'estat.
 export function computeRankingForObjective(objId) {
-  return state.publishedPhotos
-    .filter(p => p.objectiveId === objId)
+  const obj = state.objectives.find(o => o.id === objId);
+  const isFinished = !!(obj && obj.status === 'finished');
+  const pool = isFinished
+    ? state.publishedPhotos.filter(p => p.objectiveId === objId)
+    : [...state.publishedPhotos, ...state.photos].filter(p => p.objectiveId === objId);
+  return pool
     .map(photo => ({ photo, ...getPhotoScoreBreakdown(photo.id) }))
     .sort((a, b) => b.final - a.final);
 }
