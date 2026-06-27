@@ -1,0 +1,195 @@
+# Changelog — FEM VOTACIONS (versión modular)
+
+Registro cronológico del desglose del monolito a estructura modular.
+Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Fechas `YYYY-MM-DD`.
+
+> Este changelog cubre **solo la modularización** (carpeta `FEM_app_Modular/`).
+> El histórico funcional del producto vive en `Instrucciones/Archivos MD/.../Changelog.MD`.
+
+---
+
+## [0.1.6] — 2026-06-27 — Modo Test aislado: carpeta Cloudinary propia + auto-login + sello visual
+
+> Objetivo: poder trastear en la BD de pruebas con tranquilidad, sin ensuciar producción
+> ni teclear login cada vez, y sabiendo siempre de un vistazo que estás en Test.
+
+### Añadido
+- **Carpeta Cloudinary separada para Test** (`js/features/fotos.js`): en modo test las fotos
+  suben a `FemReptes_TEST/<temàtica>` en vez de `FemReptes/<temàtica>`. Antes ambas BD
+  compartían carpeta (los registros iban a la BD test, pero los archivos al mismo Cloudinary).
+  No requiere tocar el panel de Cloudinary (el preset ya acepta el parámetro `folder`);
+  la carpeta se crea sola al subir la primera foto en test.
+- **Auto-login al ir a Test** (`js/core/config.js` `switchDbMode` + `enterAsEmail` en
+  `js/screens/login.js`): al cambiar a test ya no pide usuario/contraseña; reentra con el
+  **mismo email** en la BD de test (sin guardar contraseñas). Si ese email no existe en test,
+  cae al login normal. **Volver a Normal (producción) sigue pidiendo login** por seguridad.
+- **Sello "TEST"** (`index.html` `#test-stamp` + `css/base.css`): estampado rojo fijo abajo a la
+  derecha, visible solo en modo test (`_updateTestStamp()`), `pointer-events:none` para no
+  estorbar clics. Se actualiza en boot, al cambiar de BD y al renderizar el panel admin.
+
+### Notas
+- Para que el auto-login funcione, el **mismo email** debe existir en ambos proyectos Supabase.
+- El sentido Test→Normal es intencionadamente más estricto (login) por entrar en producción.
+
+---
+
+## [0.1.5] — 2026-06-27 — Título/descripción opcional en las fotos
+
+> Petición de Enric: que el autor pueda dar una orientación de qué quiere transmitir con su foto.
+
+### ⚠️ REQUIERE cambio en Supabase (ejecutar ANTES de usar)
+```sql
+ALTER TABLE photo_submissions ADD COLUMN caption text;
+```
+Sin esta columna, `loadAllData()` falla (pide `caption` en el SELECT) y la app no carga datos.
+
+### Añadido
+- Campo de texto **opcional** (un único cuadro título/descripción, máx. 300 caracteres) en la
+  pantalla de subir foto, tanto para socio como para admin (`index.html`).
+- Traducciones CA/ES (`caption_label`, `caption_placeholder`) en `js/core/i18n.js`.
+- El texto se guarda en `photo_submissions.caption` al subir (`js/features/fotos.js`) y se carga
+  en `state` (`js/core/data.js`, campo `caption`).
+- Se muestra en el **visor a pantalla completa** (lightbox): el visor busca el texto por la URL
+  de la foto (`js/ui/lightbox.js`), así no hubo que tocar las llamadas que abren el visor.
+
+### Notas
+- Decisión (Pablo): se muestra **solo al ver la foto en grande**, no en la cuadrícula de votación
+  (en móvil las fotos se ven pequeñas). Matiz: si se amplía una foto **durante** la votación, el
+  texto también aparece; si en algún caso quisiera transmitir identidad, rompería el anonimato.
+  Es opcional y responsabilidad del autor; ajustable si se quiere ocultar durante la votación.
+
+---
+
+## [0.1.4] — 2026-06-27 — Persistencia de sesión (no re-login al refrescar)
+
+> Adaptación a la versión modular del **Documento 1 de Enric**
+> (`Enric_Integracio-Reptes-Resultats.md`).
+
+### Añadido
+- Persistencia de sesión con `sessionStorage` en `js/screens/login.js`:
+  - Helpers `saveSession()` / `readSession()` / `clearSession()` (guardan solo `id, name, role`;
+    nunca la contraseña).
+  - `init()` restaura la sesión al arrancar: si hay sesión válida, entra directo a la pantalla
+    (admin o participante) sin pasar por el login. Busca el usuario completo en `state.users`
+    (datos frescos de Supabase), así que un cambio de rol se refleja al recargar.
+  - Se guarda la sesión al hacer login, al crear contraseña nueva (reset) y al registrarse.
+  - Se borra al hacer `logout()` (y por tanto también al cambiar de BD Normal/Test y al darse de baja).
+
+### Notas
+- `sessionStorage` se borra al cerrar la pestaña (comportamiento buscado para una app de club).
+- Todo va envuelto en `try/catch` por si el navegador bloquea el almacenamiento (modo privado):
+  si falla, simplemente no persiste y se comporta como antes.
+
+### Pendiente — Documento 2 de Enric (botón "Resultats" → web de Enric embebida)
+- URL de la app de Enric: **https://fem-reptes.netlify.app/** (Netlify; la app vive en la raíz `/`,
+  NO en `FEM-Resultat_Ranquing.html`, que da 404).
+- El iframe es técnicamente posible (su servidor **no** envía `X-Frame-Options` ni CSP que lo bloqueen).
+- **BLOQUEO funcional:** la versión desplegada **no lee** los parámetros que prometía el documento:
+  no usa `role` (no filtra por rol), ni `view` (no abre directo en resultats/classificacio; navega
+  con sus botones internos), ni `embedded=true` (no oculta su barra superior → se vería duplicada).
+- **Decisión (Pablo):** un único botón **"Resultats/Resultados"** (según idioma) que muestre la web
+  de Enric embebida tapando su barra superior. A la espera de que **Enric actualice su web** (o pase
+  su código para integrarlo aquí). Hasta entonces, NO se tocan los botones del ranking.
+
+---
+
+## [0.1.3] — 2026-06-27 — "Veure com a participant" ahora es réplica exacta del participante
+
+### Añadido
+- Helper `actingAsAdmin()` en `js/core/state.js`: devuelve `true` solo si el usuario es admin
+  **y NO** está en modo "veure com a participant". Es la nueva regla central para decidir si
+  la vista debe comportarse como admin o como socio.
+
+### Arreglado
+- Cuando un admin pulsaba "veure com a participant", la pantalla se veía como la del socio pero
+  las funciones seguían tratándolo como admin. Ahora la experiencia es **idéntica** a la de un
+  participante real. Se reemplazó `currentUser.role === 'admin'` por `actingAsAdmin()` en los
+  6 puntos que afectan a la vista participante:
+  - `screens/participant.js` — visibilidad de las nav-cards (Votar/Resultats/Classificació).
+  - `features/ranking.js` — el ranking de la temàtica respeta el candado hasta revelar noms.
+  - `features/fotos.js` — sección de subida respeta `force_hide_upload` y subida cerrada; y el
+    refresco tras subir/borrar foto actualiza la pantalla correcta.
+  - `ui/lightbox.js` — el botón de descarga solo aparece en modo admin real.
+  - `core/router.js` — el auto-refresco (polling) actualiza la pantalla visible correcta.
+
+### No cambiado (a propósito)
+- El rol **real** se sigue usando donde toca: login (a qué pantalla ir), gestión de socios,
+  lógica del toggle admin↔participant y texto del badge. El nombre/foto del admin en modo
+  participante siguen siendo los suyos (es identidad, no función).
+
+### Pendiente de verificación manual
+- Probar en navegador: como admin, entrar en "veure com a participant" y comprobar que botones,
+  ranking (candado), subida de foto y descargas se comportan igual que para un socio normal.
+
+---
+
+## [0.1.2] — 2026-06-26 — Lanzador local (arregla el "login no reacciona")
+
+### Añadido
+- `server.js` — mini-servidor estático Node (sin dependencias) que sirve la carpeta por HTTP
+  con los Content-Type correctos. Crítico: `.js` → `text/javascript` (lo exigen los módulos ES).
+  Bloquea path traversal y prueba puertos consecutivos si el 8000 está ocupado.
+- `Iniciar_FEM.bat` — doble clic: arranca `node server.js` y abre el navegador en
+  `http://localhost:8000`. Recupera el flujo "doble clic" sirviendo por HTTP.
+- Aviso anti-`file://` en `index.html` (script normal, no module): si se abre por doble clic,
+  muestra instrucciones para usar `Iniciar_FEM.bat` en vez de dejar los botones muertos.
+
+### Arreglado
+- "El login no reacciona": se servía por `file://` y el navegador bloqueaba los módulos ES.
+  Ahora, con el lanzador, la app carga por HTTP y el botón ENTRAR responde. **No se tocó la
+  lógica del login.** Verificado: `server.js` devuelve `text/javascript` para `js/main.js`,
+  `text/css` para el CSS y 404 para rutas inexistentes.
+
+### Pendiente de verificación manual
+- Smoke-test end-to-end en navegador con Supabase real (login admin/participante, votar, ranking).
+
+---
+
+## [0.1.1] — 2026-06-26 — CLAUDE.md descriptivo + diagnóstico del login
+
+### Cambiado
+- `CLAUDE.md` reescrito al formato de la plantilla `AGENTS.md` (Stack, Comandos, Estructura,
+  Convenciones, No hagas, Flujo de trabajo, Documentación). Pasa de ser un plan de desglose a
+  un **documento descriptivo de la app** (qué es, para qué sirve, cómo está organizada).
+
+### Diagnosticado (pendiente de arreglar — tarea aparte)
+- Bug "el login no reacciona": **no es un bug de código**. Causa = abrir `index.html` por
+  `file://` (doble clic); el navegador bloquea los módulos ES, `main.js` no arranca y los
+  `onclick` quedan muertos. Verificado que sintaxis, imports/exports y `window.*` están OK.
+  Solución prevista: lanzador local (`.bat` + mini-servidor Node) que sirva por HTTP.
+
+---
+
+## [0.1.0] — 2026-06-13 — Desglose del monolito a estructura modular
+
+### Añadido
+- Estructura modular a partir de `Test/Index_60.html` (monolito, 5.706 líneas):
+  - `index.html` (núcleo) + `css/` (base, login, admin, participant) + `js/` con
+    `core/` (state, config, i18n, data, router), `ui/` (toast, modals, lightbox),
+    `features/` (ranking, votacio, fotos, socis, tematiques) y `screens/` (login, admin,
+    participant), orquestado por `js/main.js`.
+- Patrón de carga: módulos ES con `import/export` para dependencias internas y
+  `window.*` para las funciones llamadas desde `onclick` del HTML.
+
+### Cambiado (mínimos, sin tocar lógica)
+- `_hasUnsavedVotes` → `window._hasUnsavedVotes` (se reasigna entre módulos; los `import`
+  de ES son de solo lectura).
+- Botón de descarga del lightbox: usa `downloadCurrentFullscreen()` en lugar de la global
+  `_fullscreenFileName` (ahora de ámbito de módulo).
+- El JS se sirve como `<script type="module" src="js/main.js">`.
+
+### Verificado
+- Validación estática: sintaxis ESM (`node --check`), resolución de `import/export`,
+  cobertura `onclick`→`window` y ausencia de llamadas cruzadas huérfanas. Todo OK.
+- **Prueba en navegador (2026-06-13): el login reacciona correctamente** al servir la app
+  por HTTP con un servidor local (`python -m http.server 8000`). La app carga y responde.
+
+### Nota de desarrollo
+- Abrir con doble clic (`file://`) **no funciona**: el navegador bloquea los módulos ES por
+  política de mismo origen (CORS). En local hay que servir por HTTP (Live Server de VS Code,
+  `python -m http.server` o `npx serve`). En Vercel funciona directo, sin cambios.
+
+### Pendiente
+- Copiar `manifest.json` y `sw.js` desde la raíz de producción (PWA) cuando se despliegue.
+- Smoke-test completo comparando contra el monolito (subir/publicar foto, votar + enviar,
+  ranking, finalitzar temàtica, socis, CA/ES, lightbox/zoom, modo Normal/Test).

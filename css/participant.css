@@ -1,0 +1,85 @@
+/* ════════════════════════════════
+   PARTICIPANT — estilos exclusivos de #screen-participant
+   (bottom-nav móvil y tarjetas de navegación de escritorio)
+   ════════════════════════════════ */
+
+/* ── BOTTOM NAV (mobile participant) ── */
+.bottom-nav {
+  display: none; /* shown only on mobile via media query */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(7,18,51,0.97);
+  border-top: 1px solid var(--border2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 150;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-nav-inner {
+  display: flex;
+  height: 64px;
+}
+
+.bnav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bnav-btn .bnav-icon { font-size: 22px; line-height: 1; }
+.bnav-btn.active, .bnav-btn:hover { color: var(--accent2); }
+.bnav-btn.active .bnav-icon { filter: drop-shadow(0 0 6px var(--accent-glow)); }
+
+/* ── PARTICIPANT NAV CARDS (desktop/tablet) ── */
+.nav-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.nav-card {
+  background: rgba(13,29,74,0.7);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  color: var(--text);
+}
+
+.nav-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(79,143,255,0.2);
+}
+
+.nav-card .nav-icon { font-size: 40px; margin-bottom: 10px; }
+.nav-card .nav-title { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; }
+.nav-card .nav-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* Responsivo: en móvil se muestra bottom-nav y se ocultan las nav-cards */
+@media (max-width: 640px) {
+  .bottom-nav { display: block; }
+  .has-bottom-nav { padding-bottom: 64px; }
+  .nav-grid { display: none; }
+}

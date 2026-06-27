@@ -1,0 +1,285 @@
+// ═══════════════════════════════════
+// SUPABASE DATA LAYER — carga, guardado y filtros por temática activa
+// ═══════════════════════════════════
+import { state, _localVoteEdits } from './state.js';
+import { sb } from './config.js';
+import { showToast } from '../ui/toast.js';
+
+export async function loadAllData() {
+  const results = await Promise.all([
+    sb.from('users').select('id,display_name,email,password,role,created_at').order('id', { ascending: true }),
+    sb.from('objectives').select('id,name,description,status,uploads_enabled,voting_enabled,start_date,end_date,created_by'),
+    sb.from('photo_submissions').select('id,user_id,objective_id,file_name,file_url,original_url,file_size,published,revealed,submitted_at,caption'),
+    sb.from('votes').select('id,user_id,photo_id,objective_id,creativity,theme,composition'),
+    sb.from('app_settings').select('key,value'),
+    sb.from('seguiment_votacio').select('user_id,objective_id,es_esborrany,submitted_at'),
+  ]);
+
+  // Check for connection errors
+  const firstError = results.find(r => r.error);
+  if (firstError) {
+    console.error('Supabase loadAllData error:', firstError.error);
+    showToast('❌ Error connectant amb Supabase: ' + (firstError.error.message || 'Comprova la URL i la clau.'), 'error');
+    return;
+  }
+
+  const [usersRes, objectivesRes, photosRes, votesRes, settingsRes, seguimentRes] = results;
+  const usersRaw      = usersRes.data || [];
+  const objectivesRaw = objectivesRes.data || [];
+  const photosRaw     = photosRes.data || [];
+  const votesRaw      = votesRes.data || [];
+  const settingsRaw   = settingsRes.data || [];
+  const seguimentRaw  = seguimentRes.data || [];
+
+  // ── Voting status (seguiment_votacio) → map keyed by `${userId}__${objectiveId}`
+  state.submittedVoting = {};
+  seguimentRaw.forEach(s => {
+    const key = `${s.user_id}__${s.objective_id}`;
+    state.submittedVoting[key] = {
+      es_esborrany: s.es_esborrany,
+      submitted_at: s.submitted_at,
+    };
+  });
+
+  // ── Users
+  state.users = (usersRaw || []).map(u => ({
+    id:       String(u.id || ''),
+    name:     u.display_name || '',
+    email:    u.email || '',
+    username: u.email || '',
+    password: u.password || '',
+    role:     u.role || 'participant',
+    created_at: u.created_at || '',
+  }));
+
+  // ── Objectives
+  state.objectives = (objectivesRaw || []).map(o => ({
+    id:              String(o.id || ''),
+    title:           o.name || '',
+    description:     o.description || '',
+    status:          o.status || 'inactive',
+    uploads_enabled: !!o.uploads_enabled,
+    voting_enabled:  !!o.voting_enabled,
+    start_date:      o.start_date || '',
+    end_date:        o.end_date || '',
+    created_by:      o.created_by || '',
+  }));
+
+  // ── Photos
+  const allPhotos = (photosRaw || []).map(p => ({
+    id:           String(p.id || ''),
+    userId:       String(p.user_id || ''),
+    objectiveId:  String(p.objective_id || ''),
+    fileName:     p.file_name || '',
+    url:          p.file_url || '',
+    originalUrl:  p.original_url || p.file_url || '',
+    fileSize:     p.file_size || '',
+    published:    !!p.published,
+    revealed:     !!p.revealed,
+    submitted_at: p.submitted_at || '',
+    caption:      p.caption || '',
+  }));
+  state.photos          = allPhotos.filter(p => !p.published);
+  state.publishedPhotos = allPhotos.filter(p => p.published);
+
+  // ── Votes
+  state.votes = (votesRaw || []).map(v => ({
+    id:          String(v.id || ''),
+    userId:      String(v.user_id || ''),
+    photoId:     String(v.photo_id || ''),
+    objectiveId: String(v.objective_id || ''),
+    creativity:  parseInt(v.creativity) || 0,
+    theme:       parseInt(v.theme) || 0,
+    composition: parseInt(v.composition) || 0,
+    created_at:  v.created_at || '',
+  }));
+
+  // ── Re-apply any unsaved local vote edits on top of fresh data
+  if (window._hasUnsavedVotes && state.currentUser) {
+    const uid = state.currentUser.id;
+    for (const [photoId, edits] of Object.entries(_localVoteEdits)) {
+      let vote = state.votes.find(v => v.photoId === photoId && v.userId === uid);
+      if (!vote) {
+        vote = {
+          id:          'v_' + Date.now() + '_' + Math.random().toString(36).slice(2),
+          userId:      uid,
+          photoId,
+          objectiveId: state.currentObjective ? state.currentObjective.id : '',
+          creativity:  0, theme: 0, composition: 0,
+          created_at:  new Date().toISOString(),
+        };
+        state.votes.push(vote);
+      }
+      if (edits.creativity !== undefined)  vote.creativity  = edits.creativity;
+      if (edits.theme !== undefined)       vote.theme       = edits.theme;
+      if (edits.composition !== undefined) vote.composition = edits.composition;
+    }
+  }
+
+  // ── Settings
+  const sRows = settingsRaw || [];
+  const parseSetting = (key, def) => {
+    const r = sRows.find(s => s.key === key);
+    return r ? (r.value === 'true') : def;
+  };
+  const parseJSON = (key, def) => {
+    const r = sRows.find(s => s.key === key);
+    if (r && r.value) {
+      try { return JSON.parse(r.value); } catch (e) { return def; }
+    }
+    return def;
+  };
+  state.settings = {
+    uploads_enabled: parseSetting('uploads_enabled', false),
+    voting_enabled:  parseSetting('voting_enabled', false),
+    namesRevealed:   parseSetting('names_revealed', false),
+    rankingHidden:   parseSetting('ranking_hidden', false),
+    force_hide_upload:        parseSetting('force_hide_upload', false),
+    force_hide_vote:          parseSetting('force_hide_vote', false),
+    force_hide_resultats:     parseSetting('force_hide_resultats', false),
+    force_hide_classificacio: parseSetting('force_hide_classificacio', false),
+  };
+  state.generalRanking = parseJSON('general_ranking', {});
+
+  // ── Active objective
+  state.currentObjective = state.objectives.find(o => o.status === 'active') || null;
+}
+
+// ═══════════════════════════════════
+// SAVE HELPERS — SUPABASE
+// ═══════════════════════════════════
+export async function saveUsers() {
+  const rows = state.users.map(u => ({
+    id:           u.id,
+    display_name: u.name,
+    email:        u.email || u.username,
+    role:         u.role,
+    password:     u.password,
+    created_at:   u.created_at || new Date().toISOString(),
+  }));
+  const { error } = await sb.from('users').upsert(rows, { onConflict: 'id' });
+  if (error) console.error('saveUsers error', error);
+  return !error;
+}
+
+// Efficient single-user update (used by toggleRole, inlineEditName)
+export async function updateUser(userId, fields) {
+  const { error } = await sb.from('users').update(fields).eq('id', userId);
+  if (error) console.error('updateUser error', error);
+  return !error;
+}
+
+export async function saveObjectives() {
+  const rows = state.objectives.map(o => ({
+    id:              o.id,
+    name:            o.title,
+    description:     o.description,
+    status:          o.status,
+    uploads_enabled: !!o.uploads_enabled,
+    voting_enabled:  !!o.voting_enabled,
+    start_date:      o.start_date || null,
+    end_date:        o.end_date || null,
+    created_by:      o.created_by || (state.currentUser ? state.currentUser.id : null),
+  }));
+  const { error } = await sb.from('objectives').upsert(rows, { onConflict: 'id' });
+  if (error) console.error('saveObjectives error', error);
+  return !error;
+}
+
+export async function saveVotes() {
+  const uid = state.currentUser ? state.currentUser.id : null;
+  if (!uid) return false;
+
+  // Build the user's vote rows
+  const myVoteRows = state.votes
+    .filter(v => String(v.userId) === String(uid))
+    .filter(v => v.creativity > 0 || v.theme > 0 || v.composition > 0)
+    .map(v => ({
+      id:           v.id,
+      user_id:      v.userId,
+      photo_id:     v.photoId,
+      objective_id: v.objectiveId,
+      creativity:   v.creativity,
+      theme:        v.theme,
+      composition:  v.composition,
+      created_at:   v.created_at || new Date().toISOString(),
+    }));
+
+  // Delete this user's old votes for this objective, then insert fresh
+  const objId = state.currentObjective ? state.currentObjective.id : null;
+  if (objId) {
+    await sb.from('votes').delete().eq('user_id', uid).eq('objective_id', objId);
+  } else {
+    await sb.from('votes').delete().eq('user_id', uid);
+  }
+
+  if (myVoteRows.length > 0) {
+    const { error } = await sb.from('votes').insert(myVoteRows);
+    if (error) { console.error('saveVotes insert error', error); return false; }
+  }
+  return true;
+}
+
+export async function saveSettings() {
+  const updatedBy = state.currentUser ? state.currentUser.id : 'system';
+  const now = new Date().toISOString();
+  const rows = [
+    { id: 'cfg_uploads',  key: 'uploads_enabled', value: String(state.settings.uploads_enabled),  updated_at: now, updated_by: updatedBy },
+    { id: 'cfg_voting',   key: 'voting_enabled',  value: String(state.settings.voting_enabled),   updated_at: now, updated_by: updatedBy },
+    { id: 'cfg_revealed', key: 'names_revealed',   value: String(state.settings.namesRevealed),    updated_at: now, updated_by: updatedBy },
+    { id: 'cfg_ranking_hidden', key: 'ranking_hidden', value: String(state.settings.rankingHidden), updated_at: now, updated_by: updatedBy },
+    { id: 'cfg_force_hide_upload',        key: 'force_hide_upload',        value: String(state.settings.force_hide_upload),        updated_at: now, updated_by: updatedBy },
+    { id: 'cfg_force_hide_vote',          key: 'force_hide_vote',          value: String(state.settings.force_hide_vote),          updated_at: now, updated_by: updatedBy },
+    { id: 'cfg_force_hide_resultats',     key: 'force_hide_resultats',     value: String(state.settings.force_hide_resultats),     updated_at: now, updated_by: updatedBy },
+    { id: 'cfg_force_hide_classificacio', key: 'force_hide_classificacio', value: String(state.settings.force_hide_classificacio), updated_at: now, updated_by: updatedBy },
+    { id: 'cfg_ranking',  key: 'general_ranking',  value: JSON.stringify(state.generalRanking),    updated_at: now, updated_by: updatedBy },
+  ];
+  const { error } = await sb.from('app_settings').upsert(rows, { onConflict: 'id' });
+  if (error) console.error('saveSettings error', error);
+  return !error;
+}
+
+// ── Filtrado por temática activa ─────────────────────────────────
+export function getActiveObjectiveId() {
+  return state.currentObjective ? state.currentObjective.id : null;
+}
+export function getActivePublishedPhotos() {
+  const objId = getActiveObjectiveId();
+  if (!objId) return [];
+  return state.publishedPhotos.filter(p => p.objectiveId === objId);
+}
+export function getActiveAllPhotos() {
+  // Publicadas + no publicadas, ambas filtradas por temática activa
+  const objId = getActiveObjectiveId();
+  if (!objId) return [];
+  return [...state.photos, ...state.publishedPhotos].filter(p => p.objectiveId === objId);
+}
+export function getActiveVotes() {
+  const objId = getActiveObjectiveId();
+  if (!objId) return [];
+  return state.votes.filter(v => v.objectiveId === objId);
+}
+
+// ═══════════════════════════════════
+// PARTICIPANT NUMBER (anonymous) + helpers de usuario
+// ═══════════════════════════════════
+export function hasUserVoted(userId) {
+  const user = state.users.find(u => u.id === userId);
+  if (!user) return false;
+  // Check if this user has at least one vote
+  return state.votes.some(v => v.userId === userId);
+}
+
+export function getParticipantNumber(userId) {
+  // Incluye a todos los usuarios (admin también participa)
+  const idx = state.users.findIndex(u => u.id === userId);
+  return idx >= 0 ? (idx + 1) : '?';
+}
+
+export function getDisplayName(userId) {
+  if (state.settings.namesRevealed) {
+    const u = state.users.find(u => u.id === userId);
+    return u ? u.name : `Participant #${getParticipantNumber(userId)}`;
+  }
+  return `Participant #${getParticipantNumber(userId)}`;
+}

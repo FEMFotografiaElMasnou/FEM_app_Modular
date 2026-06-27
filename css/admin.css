@@ -1,0 +1,163 @@
+/* ════════════════════════════════
+   ADMIN — estilos exclusivos de #screen-admin
+   (sidebar, botones de plástico retroiluminado, tabs de escritorio)
+   ════════════════════════════════ */
+
+/* ── SIDEBAR (iteració 1) ── */
+.admin-shell { display: flex; flex: 1; width: 100%; align-items: stretch; }
+.admin-sidebar {
+  flex-shrink: 0;
+  width: 230px;
+  background: linear-gradient(180deg, var(--bg2) 0%, var(--surface) 100%);
+  border-right: 1px solid var(--border);
+  padding: 24px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-sidebar .sidebar-title {
+  font-family: var(--font-display);
+  font-size: 14px; letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: 0 12px 12px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px; font-weight: 600;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.sidebar-item .sidebar-icon { font-size: 20px; line-height: 1; width: 24px; text-align: center; }
+.sidebar-item:hover { background: var(--surface2); color: var(--text); }
+.sidebar-item.active {
+  background: var(--surface2);
+  border-color: var(--border2);
+  color: var(--accent2);
+  box-shadow: inset 0 0 0 1px var(--border2), 0 0 16px var(--accent-glow);
+}
+.admin-shell .main-content { margin: 0; max-width: none; }
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .admin-sidebar { width: 180px; padding: 18px 10px; }
+}
+@media (max-width: 640px) {
+  .admin-shell { flex-direction: column; }
+  .admin-sidebar {
+    width: 100%; flex-direction: row;
+    overflow-x: auto;
+    border-right: none; border-bottom: 1px solid var(--border);
+    padding: 10px; gap: 6px;
+  }
+  .admin-sidebar .sidebar-title { display: none; }
+  .sidebar-item { width: auto; white-space: nowrap; padding: 10px 14px; }
+  .sidebar-item .sidebar-label { font-size: 13px; }
+}
+
+/* ── PLASTIC BUTTONS (iteració 3) ── */
+.plastic-cb { display: none; }
+/* Modificador reutilitzable: card que s'ajusta al contingut */
+.card.card-fit { width: fit-content; max-width: 100%; }
+.plastic-btn-row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+/* ── Iteració 6: només el cercle retroil·luminat (sense píndola exterior) ── */
+.plastic-btn {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 0; border: 0; background: transparent;
+  cursor: pointer;
+  font-family: var(--font-display);
+  color: rgba(232,240,255,0.55);
+  transition: color 0.25s ease;
+}
+.plastic-btn .pb-icon {
+  flex-shrink: 0;
+  width: 64px; height: 64px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(232,240,255,0.60);
+  background: radial-gradient(circle at 38% 32%, rgba(255,255,255,0.22), rgba(80,130,255,0.04) 70%);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.45),
+    inset 0 -2px 4px rgba(0,0,0,0.35),
+    0 4px 14px rgba(0,0,0,0.35);
+  transition: all 0.3s ease;
+}
+.plastic-btn .pb-icon svg {
+  width: 28px; height: 28px;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.45));
+  transition: all 0.3s ease;
+}
+.plastic-btn .pb-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  text-align: center;
+  max-width: 110px;
+  line-height: 1.25;
+}
+.plastic-btn:hover { color: rgba(232,240,255,0.90); }
+.plastic-btn:hover .pb-icon { border-color: rgba(255,255,255,0.40); }
+
+/* ON — el cercle s'encén */
+.plastic-btn.on { color: #ffffff; }
+.plastic-btn.on .pb-icon {
+  color: #ffffff;
+  border-color: rgba(205,228,255,0.95);
+  background: radial-gradient(circle at 40% 35%, #ffffff 0%, var(--accent2) 45%, var(--accent) 92%);
+  box-shadow:
+    inset 0 1px 3px rgba(255,255,255,0.85),
+    0 0 18px var(--accent-glow),
+    0 0 32px rgba(123,179,255,0.6),
+    0 0 56px rgba(79,143,255,0.35);
+}
+.plastic-btn.on .pb-icon svg { filter: drop-shadow(0 0 7px rgba(255,255,255,0.95)); }
+
+/* ── TABS (admin, desktop) ── */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  background: rgba(4,9,30,0.5);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  margin-bottom: 20px;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.tab-btn.active { background: var(--surface3); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.tab-btn:hover:not(.active) { color: var(--accent2); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+@media (max-width: 640px) {
+  .tab-nav { width: 100%; }
+}
