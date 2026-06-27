@@ -8,6 +8,36 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.9] — 2026-06-27 — Reskin base: estilo de la App Resultats (Enric)
+
+> Petición (Pablo): que toda la app adopte el estilo elegante de la web de Enric
+> (tipografías y colores). Fase 1 ("base y vemos"): variables + fuentes. Pendiente
+> afinar los colores hardcodeados (rgba/inline) en una segunda tanda.
+
+### Cambiado
+- **Tipografías** (`index.html` carga Google Fonts; variables en `css/base.css`):
+  - Cuerpo `--font-body`: Inter → **Barlow**.
+  - Nueva `--font-cond`: **Barlow Condensed**, aplicada a **botones** (`.btn`) y **labels**
+    de formulario (`.form-group label`) — el uso condensado característico de Enric.
+  - Títulos `--font-display`: **Bebas Neue** (ya se usaba; sin cambios).
+- **Paleta** (`:root` de `css/base.css`) alineada con Enric, más sobria y mate:
+  fondo `#091929`, superficies `#0d2137`/`#102748`/`#163254`, **bordes sólidos** `#1a3566`
+  (antes azul translúcido brillante), apagado `#5b7aa8` (más tenue), acento `#4b8ef5`,
+  oro `#f5a623`. Nueva variable `--gold`.
+- **Fondo un poco más oscuro** (petición de Pablo): `--bg` `#091929` → `#06121e`, `--bg2` → `#08182a`,
+  conservando el brillo radial y la textura (solo se baja la base, el glow sigue resaltando).
+- Como la app usa variables CSS de forma consistente, el cambio se propaga a ~todas las pantallas.
+
+### No cambiado (a propósito)
+- **Fondo con brillo radial + textura de ruido**: se mantiene (decisión de Pablo).
+- Colores **hardcodeados** (rgba en CSS y ~94 estilos inline del HTML): quedan para una 2ª tanda.
+
+### Pendiente de verificación manual
+- Revisar en navegador login, admin y participante: legibilidad del texto en Barlow, contraste
+  del `--text-muted` más tenue, y que botones/labels en Barlow Condensed no queden apretados.
+
+---
+
 ## [0.1.8] — 2026-06-27 — Resultados: Classificació General (Enric embebida) + Resultat Repte nativo
 
 > Implementa el **Documento 2 de Enric** (`enric_Integracio-Botons-Reptes.md`). Complementa la
@@ -35,8 +65,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 > `.controls-row`, que su CSS esconde). En vez de depender de un cambio en su web, se reconstruye
 > la vista de resultados por reto con el motor de cálculo que la app **ya tenía**.
 - `nav-card-resultats` (home) → `showParticipantResultats()` (vista propia, no Enric).
-- Nuevo panel `participant-panel-resultats`: **desplegable de retos finalizados** (reciente→antiguo)
+- Nuevo panel `participant-panel-resultats`: **desplegable de retos** (reciente→antiguo)
   + ranking **detallado por criterios** (Creativitat / Composició / Temàtica + nota total).
+- **Diferenciado por tipo de cuenta (rol real)**: el **admin** ve **todos** los retos en el
+  desplegable (incluido el actual y los inactivos); el **participante**, solo los **finalizados**.
+  Misma regla que la App Resultats de Enric. Implica que el admin también los ve en modo
+  "veure com a participant" (excepción consciente a la réplica exacta del socio).
 - En `js/features/ranking.js`:
   - `getPhotoScoreBreakdown(photoId)` → `{ creativity, theme, composition, final }`. `getPhotoScore`
     pasa a delegar en ella (mismo resultado, sin cambiar comportamiento).

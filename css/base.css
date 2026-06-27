@@ -6,25 +6,28 @@
    ════════════════════════════════════════════════════════════════ */
 
 :root {
-  --bg:          #04091e;
-  --bg2:         #071233;
-  --surface:     #0d1d4a;
-  --surface2:    #112260;
-  --surface3:    #1a2f78;
-  --border:      rgba(80,130,255,0.22);
-  --border2:     rgba(80,130,255,0.5);
-  --accent:      #4f8fff;
+  /* Paleta alineada amb l'App Resultats (Enric): blaus més sobris i mats */
+  --bg:          #06121e;
+  --bg2:         #08182a;
+  --surface:     #0d2137;
+  --surface2:    #102748;
+  --surface3:    #163254;
+  --border:      #1a3566;
+  --border2:     #24477e;
+  --accent:      #4b8ef5;
   --accent2:     #7bb3ff;
-  --accent-glow: rgba(79,143,255,0.35);
+  --accent-glow: rgba(75,142,245,0.35);
   --text:        #e8f0ff;
-  --text-muted:  #8aa4d0;
+  --text-muted:  #5b7aa8;
   --success:     #3ecf8e;
-  --danger:      #f05252;
+  --danger:      #e05252;
   --warning:     #f5a623;
+  --gold:        #f5a623;
   --radius:      16px;
   --radius-sm:   10px;
   --font-display:'Bebas Neue', sans-serif;
-  --font-body:   'Inter', sans-serif;
+  --font-cond:   'Barlow Condensed', sans-serif;
+  --font-body:   'Barlow', sans-serif;
   --font-mono:   'JetBrains Mono', monospace;
   --tap:         52px;
   --text-base:   16px;
@@ -71,7 +74,8 @@ body::before {
 
 .form-group label {
   display: block;
-  font-size: 11px;
+  font-family: var(--font-cond);
+  font-size: 13px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -123,9 +127,10 @@ body::before {
   padding: 0 24px;
   border-radius: var(--radius-sm);
   border: none;
-  font-family: var(--font-body);
-  font-size: 15px;
+  font-family: var(--font-cond);
+  font-size: 16px;
   font-weight: 600;
+  letter-spacing: 0.6px;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
