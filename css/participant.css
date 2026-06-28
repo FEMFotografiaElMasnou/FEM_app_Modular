@@ -178,3 +178,41 @@
   color: var(--text-muted);
   margin-top: 2px;
 }
+
+/* ════════════════════════════════
+   PANELL EMBEGUT (App Resultats d'Enric) — PANTALLA COMPLETA
+   L'iframe omple tota la finestra; només sura a sobre el botó ← Tornar (marge
+   esquerre). La resta de controls de FEM queden a la pàgina principal. S'activa
+   amb la classe body.embedded-fullscreen (la posa openEmbedded; la treu
+   _hideAllParticipantPanels en sortir per qualsevol via de navegació).
+   ════════════════════════════════ */
+#iframe-resultats { display: block; border: none; }
+
+body.embedded-fullscreen #participant-panel-embedded {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  margin: 0;
+}
+/* L'iframe omple la finestra. --iframe-zoom agranda el contingut d'Enric:
+   1 = mida normal; puja a 1.1 / 1.15 / 1.2... per fer-lo més gran. */
+body.embedded-fullscreen #iframe-resultats {
+  --iframe-zoom: 1.15;
+  width: calc(100vw / var(--iframe-zoom));
+  height: calc(100dvh / var(--iframe-zoom));
+  transform: scale(var(--iframe-zoom));
+  transform-origin: top left;
+}
+/* Botó ← Tornar surant al marge esquerre, a sobre de l'iframe */
+body.embedded-fullscreen #participant-panel-embedded > div:first-child {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  z-index: 1002;
+  margin: 0;
+}
+/* Mida del botó ← Tornar en mode pantalla completa (ajustable) */
+body.embedded-fullscreen #participant-panel-embedded > div:first-child .btn {
+  font-size: 15px;
+  padding: 10px 18px;
+}

@@ -22,6 +22,8 @@ function _hideAllParticipantPanels() {
   document.getElementById('participant-panel-gallery').classList.add('hidden');
   document.getElementById('participant-panel-resultats').classList.add('hidden');
   document.getElementById('participant-panel-embedded').classList.add('hidden');
+  // Sortir del mode pantalla completa de l'App embeguda (per qualsevol via de navegació)
+  document.body.classList.remove('embedded-fullscreen');
 }
 
 export function showParticipantMain() {
@@ -122,10 +124,11 @@ export function openEmbedded(view) {
   const role = state.currentUser ? state.currentUser.role : 'participant';
   document.getElementById('iframe-resultats').src =
     `${RESULTATS_BASE}?role=${role}&view=${view}&embedded=true`;
-  document.getElementById('embedded-title').textContent =
-    t(view === 'classificacio' ? 'nav_classificacio' : 'nav_resultats');
+  // El títol el pinta la pròpia App d'Enric dins l'iframe; no en dupliquem un de nostre.
   _hideAllParticipantPanels();
   document.getElementById('participant-panel-embedded').classList.remove('hidden');
+  // Mode pantalla completa: l'iframe omple la finestra i els controls de FEM suren a sobre
+  document.body.classList.add('embedded-fullscreen');
 }
 
 export function closeEmbedded() {
