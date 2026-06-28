@@ -8,6 +8,41 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.11] — 2026-06-28 — "Resultat Repte" → App d'Enric a pantalla completa
+
+> Petición (Pablo): que el botón **"RESULTAT REPTE"** abra directamente la App
+> Resultats de Enric (como ya hacía "CLASSIFICACIÓ GENERAL"), embebida dentro de
+> FEM y ocupando toda la ventana para que no se vea encogida.
+
+### Cambiado
+- **Botón "RESULTAT REPTE"** (`index.html`): de `showParticipantResultats()` (vista
+  nativa con desplegable) a `openEmbedded('resultat')` — App de Enric en iframe con
+  `?role=<rol>&view=resultat&embedded=true`. El rol se calcula solo desde el usuario.
+- **Panel embebido a pantalla completa** (`css/participant.css`): el iframe pasa a
+  ocupar toda la ventana (`100vw × 100dvh`, `position:fixed`) mediante la clase
+  `body.embedded-fullscreen`, que pone `openEmbedded()` y quita
+  `_hideAllParticipantPanels()` (`js/screens/participant.js`) al salir por cualquier vía.
+- **Zoom del iframe** ajustable con la variable `--iframe-zoom` (por defecto `1.15`)
+  vía `transform: scale` — parche para agrandar el contenido de Enric desde fuera.
+- **Botón "← Tornar"** flotante sobre el iframe (margen izquierdo) y un poco más grande.
+
+### Eliminado
+- **Título duplicado** del panel embebido (`#embedded-title` en `index.html` + su
+  asignación en `participant.js`): el título lo pinta la propia App de Enric dentro
+  del iframe; nuestro `<h2>` blanco sobraba.
+- **Controles flotantes** de FEM (usuario/idioma/salir) arriba a la derecha: se
+  descartan por decisión de Pablo (queda más limpio; siguen en la página principal).
+
+### Notas / limitaciones
+- La vista nativa `showParticipantResultats()` / `onResultatsRepteChange()` y el panel
+  `#participant-panel-resultats` quedan en el código **sin enlazar** (referencia).
+- **Cross-origin**: no se pueden ajustar las fuentes internas de la App de Enric desde
+  FEM; `--iframe-zoom` es la única palanca. La solución definitiva sería rehacer la
+  pantalla nativa dentro de FEM en lugar de embeber.
+- Posible barra de scroll horizontal mínima por `100vw` en Windows (a vigilar).
+
+---
+
 ## [0.1.10] — 2026-06-27 — Despliegue como sitio estático (Netlify)
 
 > Objetivo: publicar la app online. Es HTML/CSS/JS puro sin build, así que cualquier
