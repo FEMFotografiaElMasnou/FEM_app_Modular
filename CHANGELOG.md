@@ -8,6 +8,173 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.15] — 2026-07-04 — Retocs Calendari + mòbil (feedback de la prova en Test)
+
+> Petición (Pablo), tras probar 0.1.14 con Live Server en modo Test: el apagado de la
+> automatización no desbloqueaba los toggles hasta pulsar "Desar calendari"; fechas del
+> histórico amontonadas en escritorio y en formato americano; y en móvil, unificar la ✕
+> de salir en las dos pantallas y aprovechar el ancho con las cards Controls + Vista i BD.
+
+### Cambiado
+- **Switch "Automatització" se guarda al instante** (`js/features/calendari.js`):
+  `toggleCalAutomation()` ahora persiste solo `automation_enabled` (upsert) al pulsarlo,
+  actualiza el estado local y (des)bloquea los toggles Pujada/Votació al momento — ya no
+  hace falta "Desar calendari" para eso (las **fechas** sí se siguen desando con el botón).
+  Al encenderlo aplica el calendario inmediatamente; si falla el guardado, revierte y avisa.
+- **Històric de reptes**: fechas en formato `DD-MM-YY`, en una sola línea (`white-space:nowrap`)
+  y celdas con `padding` — antes se amontonaban en escritorio. Los `<input type="date">` de la
+  card siguen el formato del navegador (no es controlable desde la app).
+- **Topbar admin en móvil**: botón "Sortir" → ✕ compacta, mismo patrón que el participant
+  (`index.html`, `css/base.css`; solo CSS, sin JS).
+- **Històric de reptes → tarjetas de Temàtiques**: eliminada la card "Històric de reptes" del
+  dashboard (quedaba cargado); las fechas de cada reto (📤 pujada · 🗳️ votació, `dd-mm-aa`) se
+  muestran ahora dentro de cada tarjeta de la pantalla Temàtiques (`renderCalendariHistoric()`
+  → `getCalendariDatesHtml(objectiveId)` en `calendari.js`, usada por `tematiques.js`; estilo
+  `.obj-dates` en `base.css`). El estado Obert/Tancat ya lo daba el badge propio de la temática.
+- Descartado tras probarlo (iba a entrar en esta versión): cards Controls + Vista i BD lado a
+  lado en móvil — el contenido no cabía; se quedan apiladas como antes.
+
+### Arreglado
+- **Participant real sin botón de salir en móvil** (`js/core/router.js`, `index.html`,
+  `css/base.css`): el inline `display:none` sobre la ✕ ganaba al CSS del media query y el
+  "Sortir" de texto lo oculta el CSS móvil → sin salida. Ahora para el participant normal
+  manda el CSS (escritorio texto, móvil ✕); el caso admin⇄participant fuerza la ✕ con
+  `display:flex` inline y se comporta igual que antes.
+
+## [0.1.14] — 2026-07-03 — Calendari automatitzat de reptes (cron + sincronització toggles)
+
+> Petición (Pablo): automatizar la apertura/cierre de subida y votación con un calendario de
+> fechas por reto, aplicado por **pg_cron** en Supabase. Los toggles de pujada/votació deben
+> **coincidir siempre** con el calendario (no descuadrarse). Versión **limpia sin snapshot**:
+> los contadores participantes/votantes no se congelan (se recalculan de datos crudos, ADR-015).
+> Además, pulido de la UI de la card: botones plásticos, tarjetas ajustadas y card BD solo en móvil.
+
+### Añadido
+- **Tabla `reptes_calendari`** (`sql/reptes_calendari.sql`): 4 fechas (`upload_start/end`,
+  `voting_start/end`) + `automation_enabled` por reto. RLS abierta (clave anon), FK a `objectives`.
+- **Función `fem_apply_calendar()` + cron `fem-calendar`** (pg_cron, diario 00:05 UTC): pone
+  `uploads_enabled`/`voting_enabled` en `app_settings` según las fechas del reto activo y revela
+  `names_revealed` al pasar `voting_end`. Idempotente.
+- **`calendari.js` enganchado** (`js/screens/admin.js` lo importa y llama en
+  `refreshAdminDashboard()`): `renderCalendariCard()` (editar 4 fechas + switch),
+  `renderCalendariHistoric()` (histórico con estado Obert/Tancat derivado de las fechas),
+  `saveCalendari()`.
+- **`applyCalendarAutomation()`** (`js/features/calendari.js`): replica el motor en el front —
+  si el reto activo tiene automatización ON, ajusta uploads/voting/names según la fecha (UTC) y
+  lo **persiste sin esperar al cron**. `isCalendarAutomationActive()` para el bloqueo.
+- **`toggleCalAutomation()`**: botón de plástico del switch de automatización.
+
+### Cambiado
+- **Toggles Pujada/Votació** (`js/core/router.js`, `js/screens/admin.js`): con automatización
+  ON los manda el calendario y quedan **bloqueados** (clase `.locked`); `plasticPress` rechaza el
+  cambio manual con toast. `applyCalendarAutomation()` se invoca en `showAdminScreen` y en el
+  auto-refresh `_refreshUI`, antes de pintar los toggles.
+- **UI de la card Calendari** (`index.html`, `css/admin.css`): switch "Automatització" +
+  "Desar calendari" → botones `.plastic-btn` (mismo estilo que Pujada/Votació, iconos rayo y
+  disquete); cards calendari/històric con `card-fit` (ancho ajustado al contenido).
+- **Card "Vista i base de dades"** (`index.html`): clase `.only-mobile` → oculta en escritorio
+  (los badges Admin ⇄ / NORMAL ya están en la topbar), visible en móvil.
+- **`data.js`** (`loadAllData`): el select de `reptes_calendari` ya no pide columnas de snapshot.
+
+### Notas / limitaciones
+- **Sin snapshot**: la tabla no guarda `participants/voters/closed_at` (se recalculan de los
+  datos crudos). El estado Obert/Tancat del histórico se deriva de `today > voting_end`.
+- El **cierre/finalización de temática sigue manual** ("Finalitzar temàtica"): ni el cron ni el
+  toggle acumulan al ranking general. Automatizarlo queda pendiente (la señal correcta es pasar
+  `voting_end`, **no** `voting = false`).
+- El bloqueo de toggles depende del estado **persistido**: tras apagar la automatización hay que
+  "Desar calendari" para desbloquear pujada/votació.
+- SQL aplicado de momento en proyecto **Test**; pendiente aplicarlo en **Normal**.
+
+---
+
+## [0.1.13] — 2026-07-02 — Progrés de votacions per votants + tancament unificat
+
+> Petición (Pablo): el contador de progreso debe mostrar **cuántos socios han votado**,
+> no cuántas fotos están completamente votadas (con muchos votantes la barra apenas se
+> movía). Los que no suben foto también pueden votar y el admin que participa cuenta.
+> Además: quitar el número de socio de las fotos y eliminar el botón "Tancar Votacions"
+> del 100%, fusionando el revelado de nombres/ranking en el toggle de votación.
+
+### Añadido
+- **`getVotingProgress()`** (`js/core/data.js`): progreso por votantes de la temática
+  activa. `voted` = socios que han **enviado votación definitiva**
+  (`seguiment_votacio.es_esborrany === false`); `total` = participantes (subieron foto)
+  ∪ los que enviaron; `pct = voted/total`.
+- **`revealNamesAndRanking()`** (`js/screens/admin.js`): pone `namesRevealed = true` y
+  re-renderiza los rankings (admin + participante). Reutilizable — la llamará el futuro
+  calendario automatizado.
+- **Contador de fotos** en la pestaña Fotos del admin (`index.html` `#admin-gallery-count`,
+  `js/features/fotos.js`): "Total: N · Publicades: X · Pendents: Y" (ES/CA).
+
+### Cambiado
+- **Barra PROGRÉS VOTACIONS (participante)** (`js/screens/participant.js`): usa
+  `getVotingProgress()` → muestra "voted/total votants" + %. Antes contaba fotos
+  completamente votadas / total fotos (`requiredVotesPerPhoto = nº fotos − 1`).
+- **Cierre de votación unificado** (`js/screens/admin.js`, `toggleVotingOpen`): al apagar
+  el toggle de votación se revelan nombres y ranking (antes lo hacía el botón del 100%).
+- **i18n** (`js/core/i18n.js`): `members_voted` "imatges votades/imágenes votadas" →
+  "votants/votantes".
+
+### Eliminado
+- **Botón "Tancar Votacions"** del 100% (`index.html` `#btn-close-voting`, función
+  `closeVoting()` y su `window.*` en `js/screens/admin.js`; import `confirmAction` que
+  quedaba sin uso). El cierre se hace con el toggle, con el revelado fusionado.
+- **Número de socio** en las fotos: pie "Participant #N" del grid de votación
+  (`js/features/votacio.js`) y `#N` del overlay de la galería del admin
+  (`js/features/fotos.js`, se conserva el icono ✅/⏳ de publicada/pendiente).
+
+### Notas / limitaciones
+- La barra de progreso **solo** se ve en la pantalla de participante; en el dashboard del
+  admin los `admin-progress-*` siguen siendo placeholders ocultos (sin barra).
+- Votar sin subir foto y que el admin cuente al participar ya funcionaban; no se tocó esa
+  lógica.
+
+---
+
+## [0.1.12] — 2026-06-28 — Iteració de la Galeria (carrusel + filtres + repte actual)
+
+> Petición (Pablo): iterar la galería según `Galeria de imagenes.md`. Card de portada
+> como carrusel, comportamiento de los desplegables reto/autor, y que el admin vea el
+> reto actual. Dato de dominio confirmado: **cada socio sube una sola foto por reto**.
+
+### Añadido
+- **Carrusel en la card GALERIA** de la pantalla principal (`index.html`,
+  `css/participant.css`, `js/features/galeria.js`): capas `<img>` que se funden lento
+  con brillo bajo (`brightness(.32)`, `transition opacity 1.5s`), con el label "GALERIA /
+  Fotos dels reptes finalitzats" legible encima. `startGalleryCarousel()` /
+  `stopGalleryCarousel()` son idempotentes (no parpadean con el auto-refresh) y limpian
+  el `setInterval`. Se arrancan/paran desde `refreshParticipantDashboard()` y
+  `_hideAllParticipantPanels()` (`js/screens/participant.js`).
+- **Cards por reto** en la galería: nuevo contenedor `.gallery-objective-card`
+  (`css/participant.css`) que agrupa la cabecera del reto + su rejilla de fotos.
+
+### Cambiado
+- **Desplegables reto/autor excluyentes** (`onGalleryFilterChange`): al elegir un valor
+  concreto en uno, el otro vuelve a "Todos". Como hay 1 foto por reto/autor, nunca
+  coinciden ambos concretos.
+- **Render por casos** (`renderGallery`):
+  - Por defecto / reto concreto → **cards por reto** (más nuevo arriba), dentro rejilla
+    **alfabética por autor**; label de cada foto = autor.
+  - Autor concreto → rejilla **cronológica** (nuevo→antiguo); label de cada foto =
+    **nombre del reto**.
+- **El admin ve el reto actual** (`getFinishedGalleryPhotos`, `_visibleObjectiveIds`):
+  por **rol real** (`currentUser.role === 'admin'`, también en "veure com a participant"),
+  la galería incluye el reto activo `state.currentObjective`. La fuente añade además las
+  fotos **no publicadas** del reto actual (las subidas aún no publicadas). La card de
+  galería se muestra al admin aunque no haya retos finalizados, si hay reto activo
+  (`applyParticipantButtonVisibility`).
+
+### Notas / limitaciones
+- Durante la votación el admin verá el **autor** de las fotos del reto actual aunque no
+  estén reveladas (decisión a confirmar si molesta).
+- El carrusel de la card también incluye, para el admin, fotos del reto actual.
+- El carrusel carga las imágenes a tamaño completo de Cloudinary (sin miniaturas): a
+  vigilar rendimiento; pendiente optimizar si hace falta.
+- La rama de cabeceras `.gallery-group-header` se reutiliza dentro de las cards.
+
+---
+
 ## [0.1.11] — 2026-06-28 — "Resultat Repte" → App d'Enric a pantalla completa
 
 > Petición (Pablo): que el botón **"RESULTAT REPTE"** abra directamente la App

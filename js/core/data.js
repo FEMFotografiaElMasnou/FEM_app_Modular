@@ -143,6 +143,19 @@ export async function loadAllData() {
 
   // ── Active objective
   state.currentObjective = state.objectives.find(o => o.status === 'active') || null;
+
+  // ── Calendari de reptes (taula nova; si encara no existeix, no trenca la resta)
+  const calRes = await sb.from('reptes_calendari')
+    .select('id,objective_id,upload_start,upload_end,voting_start,voting_end,automation_enabled');
+  state.reptesCalendari = calRes.error ? [] : (calRes.data || []).map(c => ({
+    id:                String(c.id || ''),
+    objectiveId:       String(c.objective_id || ''),
+    uploadStart:       c.upload_start || '',
+    uploadEnd:         c.upload_end || '',
+    votingStart:       c.voting_start || '',
+    votingEnd:         c.voting_end || '',
+    automationEnabled: !!c.automation_enabled,
+  }));
 }
 
 // ═══════════════════════════════════
@@ -258,6 +271,30 @@ export function getActiveVotes() {
   const objId = getActiveObjectiveId();
   if (!objId) return [];
   return state.votes.filter(v => v.objectiveId === objId);
+}
+
+// Progreso de votación por VOTANTES (temática activa)
+//   voted = socios que han enviado su votación definitiva (es_esborrany === false)
+//   total = participantes (subieron foto) ∪ socios que enviaron definitiva
+export function getVotingProgress() {
+  const objId = getActiveObjectiveId();
+  if (!objId) return { voted: 0, total: 0, pct: 0 };
+
+  // Participantes: los que subieron foto a la temática activa
+  const uploaderIds = new Set(getActiveAllPhotos().map(p => p.userId));
+
+  // Votantes que enviaron definitiva (clave `${userId}__${objId}`, es_esborrany === false)
+  const submitterIds = new Set(
+    Object.entries(state.submittedVoting)
+      .filter(([key, st]) => key.endsWith('__' + objId) && st && st.es_esborrany === false)
+      .map(([key]) => key.slice(0, key.length - ('__' + objId).length))
+  );
+
+  const voterUniverse = new Set([...uploaderIds, ...submitterIds]);
+  const total = voterUniverse.size;
+  const voted = submitterIds.size;
+  const pct   = total > 0 ? Math.round((voted / total) * 100) : 0;
+  return { voted, total, pct };
 }
 
 // ═══════════════════════════════════

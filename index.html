@@ -142,7 +142,8 @@
         <button type="button" class="lang-btn lang-btn-ca" onclick="setLang('ca')">CA</button>
         <button type="button" class="lang-btn lang-btn-es" onclick="setLang('es')">ES</button>
       </div>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="logout()" data-i18n="logout">Sortir</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-admin-logout" onclick="logout()" data-i18n="logout">Sortir</button>
+      <button type="button" class="btn-logout-x" id="btn-admin-logout-x" onclick="logout()" title="Sortir">✕</button>
     </div>
   </div>
 
@@ -179,7 +180,6 @@
       <!-- ═══ Iteració 2: caixes ocultes (placeholders) perquè el JS no peti ═══ -->
       <div style="display:none;" id="dashboard-placeholders">
         <span id="admin-progress-label"></span>
-        <button type="button" id="btn-close-voting" onclick="closeVoting()" style="display:none">Tancar Votacions</button>
         <div class="progress-bar" id="admin-progress-bar" style="width:0%"></div>
         <span id="admin-progress-left">0</span>
         <span id="admin-progress-right">0%</span>
@@ -219,6 +219,65 @@
         </div>
       </div>
 
+      <!-- Vista i base de dades — només en mòbil (a l'escriptori ja hi ha els badges a la topbar) -->
+      <div class="card only-mobile">
+        <div class="card-header">
+          <div>
+            <div class="card-title">VISTA I BASE DE DADES</div>
+            <div class="card-subtitle" data-i18n="view_db_subtitle">Alterna vista i base de dades</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAdminParticipantView()">
+            👤 <span data-i18n="view_as_participant">Veure com a participant</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm db-mode-btn" id="btn-db-mode-card" onclick="toggleDbMode()" title="Canviar base de dades (Normal / Test)">NORMAL</button>
+        </div>
+      </div>
+
+      <!-- Calendari del repte (programació automàtica via pg_cron a Supabase) -->
+      <div class="card card-fit" id="calendari-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">CALENDARI DEL REPTE</div>
+            <div class="card-subtitle">Programació automàtica de pujada i votació</div>
+          </div>
+        </div>
+        <div id="calendari-no-obj" class="hidden" style="color:var(--text-muted);">No hi ha temàtica activa.</div>
+        <div id="calendari-form" style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;flex-wrap:wrap;gap:16px;">
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-muted);">Pujada — obre
+              <input type="date" id="cal-upload-start" class="cal-date"></label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-muted);">Pujada — tanca
+              <input type="date" id="cal-upload-end" class="cal-date"></label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-muted);">Votació — obre
+              <input type="date" id="cal-voting-start" class="cal-date"></label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-muted);">Votació — tanca
+              <input type="date" id="cal-voting-end" class="cal-date"></label>
+          </div>
+          <!-- Botons de plàstic (mateix estil que Pujada/Votació) -->
+          <input type="checkbox" id="cal-automation" class="plastic-cb">
+          <div class="plastic-btn-row">
+            <button type="button" class="plastic-btn" id="pbtn-cal-automation" aria-label="Automatització"
+                    onclick="toggleCalAutomation()">
+              <span class="pb-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2L4.5 13.5H11l-1 8.5L19.5 10H12.5z"></path></svg>
+              </span>
+              <span class="pb-label">Automatització</span>
+            </button>
+            <button type="button" class="plastic-btn" id="pbtn-cal-save" aria-label="Desar calendari"
+                    onclick="saveCalendari()">
+              <span class="pb-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              </span>
+              <span class="pb-label">Desar calendari</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- (L'històric de dates dels reptes es mostra ara a cada targeta de Temàtiques) -->
+
       <!-- ═══ Iteració 2: temàtica actual oculta (placeholder) ═══ -->
       <div style="display:none;" id="current-objective-info"></div>
 
@@ -231,6 +290,7 @@
           <div>
             <div class="card-title">GESTIÓ DE FOTOS</div>
             <div class="card-subtitle" data-i18n="photos_subtitle">Fotos rebudes dels participants</div>
+            <div class="card-subtitle" id="admin-gallery-count" style="margin-top:2px;color:var(--accent);font-weight:600;"></div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button type="button" class="btn btn-secondary btn-sm" onclick="downloadAllPhotos()" id="btn-download-all">⬇ Descarregar Totes</button>
@@ -377,7 +437,7 @@
         <button type="button" class="lang-btn lang-btn-es" onclick="setLang('es')">ES</button>
       </div>
       <button type="button" class="btn btn-secondary btn-sm" id="btn-participant-logout" onclick="logout()" data-i18n="logout">Sortir</button>
-      <button type="button" class="btn-logout-x" id="btn-participant-logout-x" onclick="logout()" title="Sortir" style="display:none">✕</button>
+      <button type="button" class="btn-logout-x" id="btn-participant-logout-x" onclick="logout()" title="Sortir">✕</button>
     </div>
   </div>
 
@@ -388,21 +448,17 @@
         <span class="bnav-icon">🏠</span>
         <span data-i18n="nav_home">Inici</span>
       </button>
-      <button type="button" class="bnav-btn" id="bnav-photo" onclick="showParticipantMain(); setActiveNav('bnav-photo'); scrollToUpload()">
-        <span class="bnav-icon">📸</span>
-        <span data-i18n="nav_photo">La meva foto</span>
-      </button>
       <button type="button" class="bnav-btn" id="bnav-vote" onclick="showParticipantVoting(); setActiveNav('bnav-vote')">
         <span class="bnav-icon">🗳️</span>
         <span data-i18n="nav_vote">Votar</span>
       </button>
       <button type="button" class="bnav-btn" id="bnav-rank" onclick="openEmbedded('classificacio'); setActiveNav('bnav-rank')">
         <span class="bnav-icon">🏆</span>
-        <span data-i18n="ranking">Ranking</span>
+        <span data-i18n="nav_class_general">Classificació general</span>
       </button>
-      <button type="button" class="bnav-btn" id="bnav-out" onclick="logout()">
-        <span class="bnav-icon">🚪</span>
-        <span data-i18n="logout">Sortir</span>
+      <button type="button" class="bnav-btn" id="bnav-rank-reptes" onclick="openEmbedded('resultat'); setActiveNav('bnav-rank-reptes')">
+        <span class="bnav-icon">🏅</span>
+        <span data-i18n="nav_class_reptes">Classificació reptes</span>
       </button>
     </div>
   </nav>
@@ -476,6 +532,7 @@
 
         <!-- Targeta GALERIA — al costat de la card de pujar foto -->
         <div class="nav-card photo-gallery-tile" id="nav-card-gallery" onclick="showParticipantGallery()">
+          <div class="gallery-tile-carousel" id="gallery-tile-carousel" aria-hidden="true"></div>
           <div class="nav-icon">📷</div>
           <div class="nav-title" data-i18n="nav_gallery">GALERIA</div>
           <div class="nav-sub" data-i18n="nav_gallery_sub">Fotos dels reptes finalitzats</div>

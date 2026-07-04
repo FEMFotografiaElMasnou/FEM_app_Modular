@@ -4,12 +4,12 @@
 import { state, actingAsAdmin } from '../core/state.js';
 import { currentLang, t, applyTranslations } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
-import { getActivePublishedPhotos, getActiveVotes } from '../core/data.js';
+import { getVotingProgress } from '../core/data.js';
 import { renderVotingGrid, updateVoteButtonsState } from '../features/votacio.js';
 import { renderRanking, renderResultatsRepte } from '../features/ranking.js';
 import { updateUploadSection } from '../features/fotos.js';
 import { setActiveNav, switchTab } from '../core/router.js';
-import { populateGalleryFilters, renderGallery } from '../features/galeria.js';
+import { populateGalleryFilters, renderGallery, startGalleryCarousel, stopGalleryCarousel } from '../features/galeria.js';
 
 // ═══════════════════════════════════
 // PANELES
@@ -24,6 +24,8 @@ function _hideAllParticipantPanels() {
   document.getElementById('participant-panel-embedded').classList.add('hidden');
   // Sortir del mode pantalla completa de l'App embeguda (per qualsevol via de navegació)
   document.body.classList.remove('embedded-fullscreen');
+  // Aturar el carrusel de la card galeria (només viu al panell principal)
+  stopGalleryCarousel();
 }
 
 export function showParticipantMain() {
@@ -154,26 +156,11 @@ export function refreshParticipantDashboard() {
     ? (obj.description || '')
     : (currentLang === 'es' ? 'Sin temática activa' : 'Cap temàtica activa');
 
-  // Progress GLOBAL: cuántas fotos tienen todos sus votos completos
-  const activePublished = getActivePublishedPhotos();
-  const activeVotes     = getActiveVotes();
-  const totalPhotos = activePublished.length;
-  const totalVoters = totalPhotos; // Cada participante con foto puede votar
-  const requiredVotesPerPhoto = totalVoters - 1; // Todos votan menos el dueño
-
-  // Contar cuántas fotos tienen todos sus votos
-  let fullyVotedPhotos = 0;
-  for (const photo of activePublished) {
-    const votesForPhoto = activeVotes.filter(v => v.photoId === photo.id).length;
-    if (votesForPhoto >= requiredVotesPerPhoto) {
-      fullyVotedPhotos++;
-    }
-  }
-
-  const pct = totalPhotos > 0 ? Math.round((fullyVotedPhotos / totalPhotos) * 100) : 0;
+  // Progrés de votació per VOTANTS: socis que han enviat definitiva / participants ∪ votants
+  const { voted, total, pct } = getVotingProgress();
   document.getElementById('participant-progress-bar').style.width   = pct + '%';
   document.getElementById('participant-progress-left').textContent  =
-    `${fullyVotedPhotos}/${totalPhotos} ${t('members_voted')}`;
+    `${voted}/${total} ${t('members_voted')}`;
   document.getElementById('participant-progress-right').textContent = `${pct}%`;
 
   // Sección de subida: siempre con la lógica normal
@@ -184,6 +171,13 @@ export function refreshParticipantDashboard() {
   updateVoteButtonsState();
   // Aplicar visibilitat de nav-cards (estat repte + forçats admin)
   applyParticipantButtonVisibility();
+
+  // Carrusel de la card galeria: només si la card és visible i som al panell principal
+  const galCard    = document.getElementById('nav-card-gallery');
+  const mainVisible = !document.getElementById('participant-panel-main').classList.contains('hidden');
+  const galVisible  = galCard && galCard.style.display !== 'none';
+  if (mainVisible && galVisible) startGalleryCarousel();
+  else stopGalleryCarousel();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -217,9 +211,11 @@ export function applyParticipantButtonVisibility() {
   setDisplay('nav-card-vote',          v.showVote);
   setDisplay('nav-card-resultats',     v.showResultats);
   setDisplay('nav-card-classificacio', v.showClassificacio);
-  // Galeria: només visible si hi ha almenys un repte finalitzat
+  // Galeria: visible si hi ha algun repte finalitzat; l'admin (rol real) també
+  // la veu si hi ha repte actual, perquè a la galeria veu el repte en curs.
   const hasFinished = state.objectives.some(o => o.status === 'finished');
-  setDisplay('nav-card-gallery', hasFinished);
+  const isAdminRole = !!(state.currentUser && state.currentUser.role === 'admin');
+  setDisplay('nav-card-gallery', hasFinished || (isAdminRole && !!state.currentObjective));
 }
 
 // Exponer en window las funciones usadas desde onclick del HTML

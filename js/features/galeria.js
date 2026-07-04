@@ -1,9 +1,14 @@
 // ═══════════════════════════════════
 // GALERIA HISTÒRICA — fotos de reptes finalitzats, amb filtres repte/autor
 // ═══════════════════════════════════
-// Mostra només fotos de temàtiques amb status 'finished'. Visible per als socis
-// (l'admin hi accedeix amb "veure com a participant"). El visor a pantalla
-// completa (lightbox) es reutilitza tal qual; aquí només construïm la llista.
+// Mostra fotos de temàtiques amb status 'finished'. L'admin (pel ROL real, encara
+// que estigui "veient com a participant") veu a més el repte ACTUAL. Els socis
+// només veuen els finalitzats. El visor a pantalla completa (lightbox) es reutilitza
+// tal qual; aquí construïm la llista i el carrusel de la card.
+//
+// DESPLEGABLES EXCLOENTS: en triar un valor concret en un, l'altre torna a 'all'.
+// Com que cada soci puja UNA sola foto per repte, mai coincideixen repte+autor
+// concrets, així que no hi ha capçaleres de grup; sempre una sola graella.
 import { state } from '../core/state.js';
 import { currentLang, t } from '../core/i18n.js';
 import { openFullscreen } from '../ui/lightbox.js';
@@ -23,13 +28,39 @@ function _authorName(userId) {
   return (u && u.name) ? u.name : '—';
 }
 
-// Totes les fotos publicades que pertanyen a reptes finalitzats, enriquides.
-export function getFinishedGalleryPhotos() {
-  const finishedIds = new Set(
+// ¿Qui mira és admin pel ROL real? (no per actingAsAdmin, que és false en mode
+// "veure com a participant"). Volem que l'admin vegi el repte actual igualment.
+function _isAdminRole() {
+  return !!(state.currentUser && state.currentUser.role === 'admin');
+}
+
+// Ids dels reptes visibles a la galeria segons el rol:
+//  · soci  → només 'finished'
+//  · admin → 'finished' + el repte ACTUAL (state.currentObjective)
+function _visibleObjectiveIds() {
+  const ids = new Set(
     state.objectives.filter(o => o.status === 'finished').map(o => o.id)
   );
-  return state.publishedPhotos
-    .filter(p => finishedIds.has(p.objectiveId))
+  if (_isAdminRole() && state.currentObjective) ids.add(state.currentObjective.id);
+  return ids;
+}
+
+// Fotos dels reptes visibles, enriquides.
+// Font: les publicades de sempre; si qui mira és admin, també les NO publicades
+// del repte ACTUAL (perquè durant el repte en curs encara no estan publicades).
+export function getFinishedGalleryPhotos() {
+  const visibleIds = _visibleObjectiveIds();
+  const currentId  = state.currentObjective ? state.currentObjective.id : null;
+
+  let source = state.publishedPhotos;
+  if (_isAdminRole() && currentId) {
+    source = state.publishedPhotos.concat(
+      state.photos.filter(p => p.objectiveId === currentId)
+    );
+  }
+
+  return source
+    .filter(p => visibleIds.has(p.objectiveId))
     .map(p => {
       const obj = state.objectives.find(o => o.id === p.objectiveId);
       return {
@@ -42,16 +73,31 @@ export function getFinishedGalleryPhotos() {
         objectiveId:    p.objectiveId,
         objectiveTitle: obj ? obj.title : '—',
         objDate:        obj ? _objDate(obj) : '',
+        submittedAt:    p.submitted_at || '',
       };
     });
 }
 
-// Llista de reptes finalitzats, més recents a dalt (per al desplegable)
-function _finishedObjectivesSorted() {
+// Reptes visibles, més recents a dalt (per al desplegable)
+function _visibleObjectivesSorted() {
+  const ids = _visibleObjectiveIds();
   return state.objectives
-    .filter(o => o.status === 'finished')
+    .filter(o => ids.has(o.id))
     .slice()
     .sort((a, b) => String(_objDate(b)).localeCompare(String(_objDate(a))));
+}
+
+// ── Comparadors d'ordenació de fotos ──
+// Més nova primer (per data de pujada; desempat per id descendent)
+function _byNewest(a, b) {
+  const d = String(b.submittedAt).localeCompare(String(a.submittedAt));
+  if (d !== 0) return d;
+  return String(b.id).localeCompare(String(a.id), undefined, { numeric: true });
+}
+// Autor A→Z (desempat: més nova primer)
+function _byAuthorAZ(a, b) {
+  const d = a.authorName.localeCompare(b.authorName, undefined, { sensitivity: 'base' });
+  return d !== 0 ? d : _byNewest(a, b);
 }
 
 // Omple els dos desplegables (repte i autor) a partir de les fotos disponibles
@@ -62,7 +108,7 @@ export function populateGalleryFilters() {
   if (!objSel || !authSel) return;
 
   // ── Desplegable REPTE (cronològic, recent → antic)
-  const objs = _finishedObjectivesSorted();
+  const objs = _visibleObjectivesSorted();
   objSel.innerHTML =
     `<option value="all">${t('gallery_all_objectives')}</option>` +
     objs.map(o => `<option value="${o.id}">${_escape(o.title)}</option>`).join('');
@@ -79,24 +125,58 @@ export function populateGalleryFilters() {
   authSel.value = _galFilterAuthor;
 }
 
-// Llegeix els selects i repinta
+// Llegeix els selects i repinta. Desplegables EXCLOENTS: si l'usuari tria un valor
+// concret en un, l'altre torna a 'all'.
 export function onGalleryFilterChange() {
   const objSel  = document.getElementById('gallery-filter-objective');
   const authSel = document.getElementById('gallery-filter-author');
-  _galFilterObj    = objSel ? objSel.value : 'all';
-  _galFilterAuthor = authSel ? authSel.value : 'all';
+  const newObj  = objSel  ? objSel.value  : 'all';
+  const newAuth = authSel ? authSel.value : 'all';
+
+  if (newObj !== _galFilterObj && newObj !== 'all') {
+    // Ha triat un repte concret → reset autor
+    _galFilterObj = newObj; _galFilterAuthor = 'all';
+  } else if (newAuth !== _galFilterAuthor && newAuth !== 'all') {
+    // Ha triat un autor concret → reset repte
+    _galFilterAuthor = newAuth; _galFilterObj = 'all';
+  } else {
+    // Ha tornat a 'all' en algun → aplicar tal qual
+    _galFilterObj = newObj; _galFilterAuthor = newAuth;
+  }
+
+  populateGalleryFilters();  // reflecteix el reset visual als <select>
   renderGallery();
 }
 
-// Pinta el mosaic aplicant filtres + regla d'agrupació
+// HTML d'una foto. `secondaryLabel` és la 2a línia del peu (autor o nom del repte
+// segons la vista). Apunta `flat` perquè el visor navegui en l'ordre visual.
+function _photoHtml(p, secondaryLabel, flat) {
+  const idx = flat.length;
+  flat.push({ url: p.url, fileName: p.fileName, author: p.authorName });
+  return `
+      <div class="gallery-photo" onclick="openGalleryLightbox(${idx})">
+        <img src="${p.url}" alt="${_escape(p.fileName)}" loading="lazy">
+        <div class="gallery-photo-meta">
+          ${p.caption ? `<div class="gallery-photo-caption">${_escape(p.caption)}</div>` : ''}
+          <div class="gallery-photo-author">${_escape(secondaryLabel)}</div>
+        </div>
+      </div>`;
+}
+
+// Pinta la galeria segons el cas:
+//  · Autor concret           → graella simple, cronològic (nou→antic), peu = nom del REPTE
+//  · Per defecte / repte conc → cards per repte (nou→antic), dins rejilla alfabètica
+//                               per autor, peu = AUTOR
 export function renderGallery() {
   const grid  = document.getElementById('gallery-grid');
   const empty = document.getElementById('gallery-empty');
   if (!grid || !empty) return;
 
-  let photos = getFinishedGalleryPhotos();
-  if (_galFilterObj    !== 'all') photos = photos.filter(p => p.objectiveId === _galFilterObj);
-  if (_galFilterAuthor !== 'all') photos = photos.filter(p => p.authorId === _galFilterAuthor);
+  const all = getFinishedGalleryPhotos();
+  let photos;
+  if (_galFilterObj !== 'all')         photos = all.filter(p => p.objectiveId === _galFilterObj);
+  else if (_galFilterAuthor !== 'all') photos = all.filter(p => p.authorId === _galFilterAuthor);
+  else                                 photos = all;
 
   if (photos.length === 0) {
     grid.innerHTML = '';
@@ -106,50 +186,36 @@ export function renderGallery() {
   }
   empty.classList.add('hidden');
 
-  // Regla d'agrupació:
-  //  - Repte = "tots"            → agrupa per repte (cronològic, recent→antic)
-  //  - Repte concret + autor"tots"→ agrupa per autor (alfabètic)
-  //  - Tots dos concrets         → una sola graella sense capçaleres
-  let groups; // [{ title, photos }]
-  if (_galFilterObj === 'all') {
-    const byObj = new Map();
-    photos.forEach(p => {
-      if (!byObj.has(p.objectiveId)) byObj.set(p.objectiveId, { title: p.objectiveTitle, date: p.objDate, photos: [] });
-      byObj.get(p.objectiveId).photos.push(p);
-    });
-    groups = [...byObj.values()].sort((a, b) => String(b.date).localeCompare(String(a.date)));
-  } else if (_galFilterAuthor === 'all') {
-    const byAuthor = new Map();
-    photos.forEach(p => {
-      if (!byAuthor.has(p.authorId)) byAuthor.set(p.authorId, { title: p.authorName, photos: [] });
-      byAuthor.get(p.authorId).photos.push(p);
-    });
-    groups = [...byAuthor.values()].sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
-  } else {
-    groups = [{ title: null, photos }];
-  }
-
-  // Llista plana en l'ordre visual (per a la navegació del visor)
   const flat = [];
   let html = '';
-  for (const g of groups) {
-    if (g.title) html += `<div class="gallery-group-header">${_escape(g.title)}</div>`;
+
+  if (_galFilterAuthor !== 'all') {
+    // ── VISTA AUTOR: una sola graella, cronològic, peu = nom del repte
+    const ordered = photos.slice().sort(_byNewest);
     html += '<div class="gallery-mosaic-grid">';
-    for (const p of g.photos) {
-      const idx = flat.length;
-      flat.push({ url: p.url, fileName: p.fileName, author: p.authorName });
-      const meta = [p.caption, p.authorName].filter(Boolean);
-      html += `
-        <div class="gallery-photo" onclick="openGalleryLightbox(${idx})">
-          <img src="${p.url}" alt="${_escape(p.fileName)}" loading="lazy">
-          <div class="gallery-photo-meta">
-            ${p.caption ? `<div class="gallery-photo-caption">${_escape(p.caption)}</div>` : ''}
-            <div class="gallery-photo-author">${_escape(p.authorName)}</div>
-          </div>
-        </div>`;
-    }
+    for (const p of ordered) html += _photoHtml(p, p.objectiveTitle, flat);
     html += '</div>';
+  } else {
+    // ── VISTA PER REPTE: cards per repte (nou→antic), dins alfabètic per autor
+    const byObj = new Map();
+    for (const p of photos) {
+      if (!byObj.has(p.objectiveId)) {
+        byObj.set(p.objectiveId, { title: p.objectiveTitle, date: p.objDate, photos: [] });
+      }
+      byObj.get(p.objectiveId).photos.push(p);
+    }
+    const groups = [...byObj.values()]
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)));  // repte recent → antic
+    for (const g of groups) {
+      g.photos.sort(_byAuthorAZ);
+      html += '<div class="gallery-objective-card">';
+      html += `<div class="gallery-group-header">${_escape(g.title)}</div>`;
+      html += '<div class="gallery-mosaic-grid">';
+      for (const p of g.photos) html += _photoHtml(p, p.authorName, flat);
+      html += '</div></div>';
+    }
   }
+
   grid.innerHTML = html;
   window._galleryPhotosList = flat;
 }
@@ -160,6 +226,55 @@ export function openGalleryLightbox(index) {
   if (photos.length === 0) return;
   const photo = photos[index];
   openFullscreen(photo.url, photo.fileName, photos, index);
+}
+
+// ═══════════════════════════════════
+// CARRUSEL de la card GALERIA (pantalla principal)
+// ═══════════════════════════════════
+// Capes <img> que es fonen lentament amb brillantor baixa. Idempotent: si ja està
+// actiu no es reconstrueix (evita parpelleig amb l'auto-refresh del dashboard).
+let _carouselTimer  = null;
+let _carouselActive = false;
+
+export function startGalleryCarousel() {
+  if (_carouselActive) return;
+  const cont = document.getElementById('gallery-tile-carousel');
+  if (!cont) return;
+  const photos = getFinishedGalleryPhotos();
+  if (photos.length === 0) return;
+
+  // Barreja perquè l'ordre sigui calmat i variat
+  const shuffled = photos.slice().sort(() => Math.random() - 0.5);
+
+  cont.innerHTML = '';
+  const layerA = document.createElement('img');
+  const layerB = document.createElement('img');
+  layerA.className = 'gallery-tile-layer';
+  layerB.className = 'gallery-tile-layer';
+  cont.appendChild(layerA);
+  cont.appendChild(layerB);
+
+  let front = layerA, back = layerB, idx = 0;
+  front.src = shuffled[0].url;
+  front.classList.add('visible');
+  _carouselActive = true;
+
+  if (shuffled.length === 1) return;  // una sola foto: sense animació
+
+  _carouselTimer = setInterval(() => {
+    idx = (idx + 1) % shuffled.length;
+    back.src = shuffled[idx].url;
+    back.classList.add('visible');
+    front.classList.remove('visible');
+    const tmp = front; front = back; back = tmp;
+  }, 4500);
+}
+
+export function stopGalleryCarousel() {
+  if (_carouselTimer) { clearInterval(_carouselTimer); _carouselTimer = null; }
+  _carouselActive = false;
+  const cont = document.getElementById('gallery-tile-carousel');
+  if (cont) cont.innerHTML = '';
 }
 
 // Escapa text per inserir-lo en HTML de forma segura

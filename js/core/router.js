@@ -13,6 +13,7 @@ import { renderAdminVotingGrid, renderVotingGrid } from '../features/votacio.js'
 import { renderAdminGallery } from '../features/fotos.js';
 import { renderMembersTable } from '../features/socis.js';
 import { renderObjectivesList } from '../features/tematiques.js';
+import { applyCalendarAutomation } from '../features/calendari.js';
 import { refreshAdminDashboard, syncPlasticButtons } from '../screens/admin.js';
 import { refreshParticipantDashboard, showParticipantMain } from '../screens/participant.js';
 
@@ -44,6 +45,7 @@ export function showAdminScreen() {
   applyTranslations();
   _updateDbModeButton();
   document.getElementById('admin-username').textContent = state.currentUser.name;
+  applyCalendarAutomation();   // el calendari mana sobre pujada/votació (si automatització ON)
   document.getElementById('toggle-upload').checked  = state.settings.uploads_enabled;
   document.getElementById('toggle-voting').checked  = state.settings.voting_enabled;
   syncPlasticButtons();
@@ -73,15 +75,16 @@ export function showParticipantScreen() {
     roleBadge.title         = 'Tornar al panell admin';
     roleBadge.style.display = '';
     if (logoutBtn) logoutBtn.style.display = 'none';
-    if (logoutX)   logoutX.style.display   = '';
+    if (logoutX)   logoutX.style.display   = 'flex';
   } else {
     roleBadge.textContent   = '';
     roleBadge.className     = 'role-badge';
     roleBadge.onclick       = null;
     roleBadge.title         = '';
     roleBadge.style.display = '';
+    // Sense inline: mana el CSS (escriptori → "Sortir" de text; mòbil → la ✕ del media query)
     if (logoutBtn) logoutBtn.style.display = '';
-    if (logoutX)   logoutX.style.display   = 'none';
+    if (logoutX)   logoutX.style.display   = '';
   }
 
   showParticipantMain();
@@ -209,6 +212,7 @@ function _buildSignature() {
 function _refreshUI() {
   if (!state.currentUser) return;
   if (actingAsAdmin()) {
+    applyCalendarAutomation();   // el calendari mana sobre pujada/votació (si automatització ON)
     document.getElementById('toggle-upload').checked = state.settings.uploads_enabled;
     document.getElementById('toggle-voting').checked = state.settings.voting_enabled;
     syncPlasticButtons();

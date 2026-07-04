@@ -19,6 +19,17 @@ export function renderAdminGallery() {
   // Solo fotos de la temática activa (las pasadas se ven desde Gestión de Temáticas)
   const allPhotos = getActiveAllPhotos();
 
+  // Contador de fotos (total · publicadas · pendientes) en la cabecera
+  const countEl = document.getElementById('admin-gallery-count');
+  if (countEl) {
+    const total     = allPhotos.length;
+    const published = allPhotos.filter(p => p.published).length;
+    const pending   = total - published;
+    countEl.textContent = currentLang === 'es'
+      ? `Total: ${total} · Publicadas: ${published} · Pendientes: ${pending}`
+      : `Total: ${total} · Publicades: ${published} · Pendents: ${pending}`;
+  }
+
   if (allPhotos.length === 0) {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📷</div><p>No s'han rebut fotos encara.</p></div>`;
     return;
@@ -37,7 +48,7 @@ export function renderAdminGallery() {
         </div>
         <div class="check-overlay">✓</div>
         <div class="participant-num">
-          ${photo.published ? '✅ ' : '⏳ '}#${num}
+          ${photo.published ? '✅' : '⏳'}
         </div>
       </div>
     `;

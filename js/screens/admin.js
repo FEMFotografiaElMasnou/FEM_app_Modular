@@ -4,10 +4,10 @@
 import { state } from '../core/state.js';
 import { currentLang, t } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
-import { confirmAction } from '../ui/modals.js';
 import { getActivePublishedPhotos, getActiveAllPhotos, getActiveVotes, saveSettings } from '../core/data.js';
 import { updateVoteButtonsState } from '../features/votacio.js';
 import { renderRanking } from '../features/ranking.js';
+import { renderCalendariCard, isCalendarAutomationActive } from '../features/calendari.js';
 import { switchTab } from '../core/router.js';
 
 // ═══════════════════════════════════
@@ -43,10 +43,6 @@ export function refreshAdminDashboard() {
   document.getElementById('admin-progress-left').textContent   = `${fullyVotedPhotos}/${totalPhotos} ${t('members_voted')}`;
   document.getElementById('admin-progress-right').textContent  = `${pct}%`;
   document.getElementById('admin-progress-label').textContent  = '';
-
-  const btnClose = document.getElementById('btn-close-voting');
-  btnClose.style.display = (pct >= 100 && state.settings.voting_enabled) ? 'inline-flex' : 'none';
-
 
   // Admin own photo upload section (solo foto de la temática activa)
   const adminPhoto = getActiveAllPhotos().find(p => p.userId === state.currentUser.id);
@@ -84,6 +80,8 @@ export function refreshAdminDashboard() {
   } else {
     objEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><p>No hi ha temàtica activa.</p></div>`;
   }
+  // Calendari del repte: omplir dates/switch (l'històric de dates viu a Temàtiques)
+  renderCalendariCard();
   updateVoteButtonsState();
 }
 
@@ -112,29 +110,27 @@ export async function toggleVotingOpen() {
     return;
   }
   state.settings.voting_enabled = document.getElementById('toggle-voting').checked;
-  // If opening voting, auto-close uploads
   if (state.settings.voting_enabled) {
+    // Al abrir votación: cerrar subidas automáticamente
     state.settings.uploads_enabled = false;
     document.getElementById('toggle-upload').checked = false;
+  } else {
+    // Al cerrar votación: revelar nombres y ranking (antes lo hacía el botón "Tancar Votacions")
+    revealNamesAndRanking();
   }
   await saveSettings();
   showToast(state.settings.voting_enabled
     ? (currentLang === 'es' ? 'Votaciones abiertas ✅ (subida de fotos cerrada)' : 'Votacions obertes ✅ (pujada de fotos tancada)')
-    : (currentLang === 'es' ? 'Votaciones cerradas 🔒' : 'Votacions tancades 🔒'), 'info');
+    : (currentLang === 'es' ? 'Votaciones cerradas · nombres y ranking revelados 🏆' : 'Votacions tancades · noms i rànquing revelats 🏆'), 'success');
   refreshAdminDashboard();
 }
 
-export async function closeVoting() {
-  confirmAction(t('confirm_close_voting'), t('confirm_close_voting_msg'), async () => {
-    state.settings.voting_enabled = false;
-    state.settings.namesRevealed  = true;   // (iteració 4b) en tancar: revela noms i ranking de la temàtica
-    document.getElementById('toggle-voting').checked = false;
-    await saveSettings();
-    renderRanking('ranking-current-list', 'ranking-general-list');
-    renderRanking('p-ranking-current-list', 'p-ranking-general-list');
-    refreshAdminDashboard();
-    showToast(currentLang === 'es' ? 'Votaciones cerradas · nombres y ranking revelados 🏆' : 'Votacions tancades · noms i rànquing revelats 🏆', 'success');
-  });
+// Revela nombres y ranking de la temática activa.
+// Reutilizable: lo llama el toggle al cerrar la votación y (en el futuro) el calendario automatizado.
+export function revealNamesAndRanking() {
+  state.settings.namesRevealed = true;
+  renderRanking('ranking-current-list', 'ranking-general-list');
+  renderRanking('p-ranking-current-list', 'p-ranking-general-list');
 }
 
 // ═══════════════════════════════════
@@ -151,13 +147,24 @@ export function adminNav(tab) {
 
 // Iteració 3: botons de plàstic com a pell dels checkboxes
 export function syncPlasticButtons() {
+  var locked = isCalendarAutomationActive();   // el calendari mana → pujada/votació bloquejats
   [['pbtn-upload','toggle-upload'], ['pbtn-voting','toggle-voting']].forEach(function (pair) {
     var btn = document.getElementById(pair[0]);
     var cb  = document.getElementById(pair[1]);
-    if (btn && cb) btn.classList.toggle('on', cb.checked);
+    if (btn && cb) {
+      btn.classList.toggle('on', cb.checked);
+      btn.classList.toggle('locked', locked);
+    }
   });
 }
 export function plasticPress(btnId, cbId, fnName) {
+  // Si el calendari gestiona pujada/votació, no permetre el canvi manual
+  if ((cbId === 'toggle-upload' || cbId === 'toggle-voting') && isCalendarAutomationActive()) {
+    showToast(currentLang === 'es'
+      ? '🔒 Gestionado por el calendario (apaga la automatización para tocarlo)'
+      : '🔒 Gestionat pel calendari (apaga l\'automatització per tocar-ho)', 'info');
+    return;
+  }
   var cb = document.getElementById(cbId);
   if (!cb) return;
   cb.checked = !cb.checked;
@@ -170,7 +177,6 @@ export function plasticPress(btnId, cbId, fnName) {
 window.refreshAdminDashboard = refreshAdminDashboard;
 window.toggleUpload = toggleUpload;
 window.toggleVotingOpen = toggleVotingOpen;
-window.closeVoting = closeVoting;
 window.adminNav = adminNav;
 window.syncPlasticButtons = syncPlasticButtons;
 window.plasticPress = plasticPress;

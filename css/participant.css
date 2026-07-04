@@ -100,6 +100,36 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+/* El contingut (icona/títol/subtítol) per damunt del carrusel i llegible */
+.photo-gallery-tile > .nav-icon,
+.photo-gallery-tile > .nav-title,
+.photo-gallery-tile > .nav-sub {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .85);
+}
+/* Carrusel de fons: capes d'imatge que es fonen amb brillantor baixa */
+.gallery-tile-carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.gallery-tile-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  filter: brightness(.32);
+  transition: opacity 1.5s ease-in-out;
+}
+.gallery-tile-layer.visible {
+  opacity: 1;
 }
 
 /* ════════════════════════════════
@@ -127,6 +157,17 @@
   color: var(--text);
   font-family: inherit;
   font-size: 14px;
+}
+/* Card per repte: agrupa la capçalera del repte + la seva rejilla de fotos */
+.gallery-objective-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.gallery-objective-card .gallery-group-header {
+  margin-top: 0;
 }
 .gallery-group-header {
   font-family: var(--font-display);
@@ -215,4 +256,40 @@ body.embedded-fullscreen #participant-panel-embedded > div:first-child {
 body.embedded-fullscreen #participant-panel-embedded > div:first-child .btn {
   font-size: 15px;
   padding: 10px 18px;
+}
+/* En mòbil el ← Tornar es mou a la cantonada dreta i es fa compacte per no
+   trepitjar el títol de l'App d'Enric (les puntuacions retallades són cosa
+   d'aquella app, no de FEM). Posició ajustable després de veure-ho. */
+@media (max-width: 640px) {
+  /* En mòbil, el ← Tornar té la seva pròpia barra superior (no flota sobre
+     l'App d'Enric → no en trepitja el títol). L'iframe comença sota la barra. */
+  body.embedded-fullscreen #participant-panel-embedded > div:first-child {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 8px;
+    margin: 0;
+    background: rgba(7,18,51,0.97);
+    border-bottom: 1px solid var(--border2);
+    z-index: 1002;
+  }
+  body.embedded-fullscreen #participant-panel-embedded > div:first-child .btn {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+  /* Iframe a mida real sota la barra, i SENSE transform (el scale trencava el
+     scroll tàctil dins de l'iframe en mòbil). */
+  body.embedded-fullscreen #iframe-resultats {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    width: 100vw;
+    height: calc(100dvh - 44px);
+    transform: none;
+  }
 }

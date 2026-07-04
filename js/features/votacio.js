@@ -174,8 +174,7 @@ export function renderVotingGrid(containerId) {
       <div class="vote-card ${myVote ? 'voted' : ''}" data-photo="${photo.id}">
         <img src="${photo.url}" alt="Foto ${num}" loading="lazy" onclick="openFullscreen('${photo.url}')" style="cursor:zoom-in;width:100%;display:block;max-height:280px;object-fit:contain;background:var(--surface);">
         <div class="vote-card-footer" style="flex-direction:column;align-items:stretch;gap:6px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span class="vote-card-num">Participant #${num}</span>
+          <div style="display:flex;justify-content:flex-end;align-items:center;min-height:16px;">
             ${myVote ? '<span style="font-size:11px;color:var(--success);">✓ Votat</span>' : ''}
           </div>
           ${isOwn

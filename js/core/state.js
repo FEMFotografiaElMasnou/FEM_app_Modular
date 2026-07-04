@@ -21,6 +21,7 @@ export const state = {
   selectMode:      false,
   pendingFile:     null,
   currentObjective: null,
+  reptesCalendari: [],          // filas de reptes_calendari (programación + histórico)
   adminViewingAsParticipant: false,  // true when admin is browsing the participant view
   // ─── AUTOSAVE VOTING ─────────────────────────────────────────────
   // Map keyed by `${userId}__${objectiveId}` → { es_esborrany, submitted_at }

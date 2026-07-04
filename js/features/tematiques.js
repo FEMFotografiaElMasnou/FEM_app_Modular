@@ -10,6 +10,7 @@ import { getPhotoScore, assignPositionPoints, renderRanking } from './ranking.js
 import { renderAdminGallery } from './fotos.js';
 import { updateVoteButtonsState } from './votacio.js';
 import { refreshAdminDashboard } from '../screens/admin.js';
+import { getCalendariDatesHtml } from './calendari.js';
 
 export function renderObjectivesList() {
   const el = document.getElementById('objectives-list');
@@ -36,6 +37,7 @@ export function renderObjectivesList() {
       <div class="obj-info">
         <div class="obj-title">${obj.title}</div>
         <div class="obj-desc">${obj.description || ''}</div>
+        ${getCalendariDatesHtml(obj.id)}
       </div>
       ${statusBadge}
       ${editBtn}

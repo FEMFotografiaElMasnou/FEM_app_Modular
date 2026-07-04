@@ -103,19 +103,21 @@ export function _updateTestStamp() {
 
 export function _updateDbModeButton() {
   _updateTestStamp();
-  const btn = document.getElementById('btn-db-mode');
-  if (!btn) return;
-  if (_dbMode === 'test') {
-    btn.textContent     = 'TEST';
-    btn.style.background    = 'rgba(255,59,48,0.15)';
-    btn.style.borderColor   = 'rgba(255,59,48,0.5)';
-    btn.style.color         = '#ff3b30';
-  } else {
-    btn.textContent     = 'NORMAL';
-    btn.style.background    = 'rgba(52,199,89,0.15)';
-    btn.style.borderColor   = 'rgba(52,199,89,0.5)';
-    btn.style.color         = '#34c759';
-  }
+  // Actualiza todos los botones Normal/Test (cabecera + card del panel de control)
+  const btns = document.querySelectorAll('.db-mode-btn');
+  btns.forEach(btn => {
+    if (_dbMode === 'test') {
+      btn.textContent       = 'TEST';
+      btn.style.background   = 'rgba(255,59,48,0.15)';
+      btn.style.borderColor  = 'rgba(255,59,48,0.5)';
+      btn.style.color        = '#ff3b30';
+    } else {
+      btn.textContent       = 'NORMAL';
+      btn.style.background   = 'rgba(52,199,89,0.15)';
+      btn.style.borderColor  = 'rgba(52,199,89,0.5)';
+      btn.style.color        = '#34c759';
+    }
+  });
 }
 
 export const CLOUDINARY_CLOUD  = 'dz1n0g9yg';
