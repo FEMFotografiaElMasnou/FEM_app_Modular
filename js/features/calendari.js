@@ -170,27 +170,34 @@ export async function saveCalendari() {
     }
   }
 
-  const { error } = await sb.from('reptes_calendari').upsert({
-    objective_id:       objId,
-    upload_start:       uStart,
-    upload_end:         uEnd,
-    voting_start:       vStart,
-    voting_end:         vEnd,
-    automation_enabled: auto,
-    updated_at:         new Date().toISOString(),
-  }, { onConflict: 'objective_id' });
+  // Il·luminar el botó mentre dura el desat (mateix efecte .on que els toggles)
+  const saveBtn = document.getElementById('pbtn-cal-save');
+  if (saveBtn) saveBtn.classList.add('on');
+  try {
+    const { error } = await sb.from('reptes_calendari').upsert({
+      objective_id:       objId,
+      upload_start:       uStart,
+      upload_end:         uEnd,
+      voting_start:       vStart,
+      voting_end:         vEnd,
+      automation_enabled: auto,
+      updated_at:         new Date().toISOString(),
+    }, { onConflict: 'objective_id' });
 
-  if (error) {
-    console.error('saveCalendari error', error);
-    showToast(isES ? '❌ Error al guardar el calendario' : '❌ Error en desar el calendari', 'error');
-    return;
+    if (error) {
+      console.error('saveCalendari error', error);
+      showToast(isES ? '❌ Error al guardar el calendario' : '❌ Error en desar el calendari', 'error');
+      return;
+    }
+
+    await loadAllData();
+    renderCalendariCard();
+    // Refrescar les dates a les targetes de Temàtiques (via window per evitar import circular)
+    if (typeof window.renderObjectivesList === 'function') window.renderObjectivesList();
+    showToast(isES ? '✅ Calendario guardado' : '✅ Calendari desat', 'success');
+  } finally {
+    if (saveBtn) saveBtn.classList.remove('on');
   }
-
-  await loadAllData();
-  renderCalendariCard();
-  // Refrescar les dates a les targetes de Temàtiques (via window per evitar import circular)
-  if (typeof window.renderObjectivesList === 'function') window.renderObjectivesList();
-  showToast(isES ? '✅ Calendario guardado' : '✅ Calendari desat', 'success');
 }
 
 // ── Dates del calendari d'un repte, com a bloc HTML per a la targeta de Temàtiques ──
