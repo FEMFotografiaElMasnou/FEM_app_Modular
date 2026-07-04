@@ -8,6 +8,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.17] — 2026-07-04 — Calendari EN PRODUCCIÓ ✅
+
+> Hito, sin cambios de código: Pablo aplicó `sql/reptes_calendari.sql` en el proyecto
+> Supabase **Normal** (tabla + `fem_apply_calendar()` + cron `fem-calendar` a las 00:05 UTC).
+> Verificado por REST: la tabla existe y el reto activo ya está programado con automatización
+> ON (subida 01-06 → 17-07, votación 19-07 → 22-07; nombres se revelan solos el 23-07).
+> Con esto, la feature Calendari (bloques 1 y 2) queda completa en las dos bases de datos.
+> Recordatorio operativo: el cierre de temática sigue siendo manual ("Finalitzar temàtica"),
+> pasada la votación hay que finalizarla para computar los puntos del ranking general.
+
 ## [0.1.16] — 2026-07-04 — Calendari visual (Bloc 2): rejilla de mes amb franges per repte
 
 > Petición (Pablo): sustituir la card de 4 campos de fecha por un **calendario visual** tipo
