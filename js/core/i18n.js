@@ -70,6 +70,7 @@ export const TRANSLATIONS = {
     yes_btn: 'Sí, resetejar',
     // Settings
     uploads_toggle: 'Pujada de fotos', voting_toggle: 'Votacions obertes',
+    cal_mark_upload: 'Marcar pujada', cal_mark_voting: 'Marcar votació',
     reveal_toggle: 'Revelar Noms',
     reveal_hint: '🔒 Tanca les votacions primer',
     hide_ranking_toggle: 'Ocultar Ranking General',
@@ -237,6 +238,7 @@ export const TRANSLATIONS = {
     yes_btn: 'Sí, resetear',
     // Settings
     uploads_toggle: 'Subida de fotos', voting_toggle: 'Votaciones abiertas',
+    cal_mark_upload: 'Marcar subida', cal_mark_voting: 'Marcar votación',
     reveal_toggle: 'Revelar Nombres',
     reveal_hint: '🔒 Cierra las votaciones primero',
     hide_ranking_toggle: 'Ocultar Ranking General',

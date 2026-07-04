@@ -49,32 +49,173 @@ export function applyCalendarAutomation() {
   return changed;
 }
 
-// ── Render de la card d'edició (dates + switch) ──
+// ═══ CALENDARI VISUAL (rejilla de mes) ═══
+// La card és alhora l'històric (franges de tots els reptes, amb nom als acabats)
+// i l'editor del repte actiu: amb un chip actiu, clic marca el dia, un altre clic
+// omple el rang automàticament i clic sobre el marcat l'esborra. Res no es
+// persisteix fins a "Desar calendari" (esborrany a calDraft).
+const _avui = new Date();
+let calView  = { year: _avui.getFullYear(), month: _avui.getMonth() };  // mes mostrat (month 0-11)
+let calMode  = null;   // 'upload' | 'voting' | null — chip actiu
+let calDraft = null;   // esborrany de dates del repte actiu (dirty = canvis sense desar)
+
+const MONTHS_CA = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DOW_CA = ['Dl','Dt','Dc','Dj','Dv','Ds','Dg'];
+const DOW_ES = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+
+// y/m(0-11)/d → 'YYYY-MM-DD' (els rangs es comparen com a strings ISO)
+const isoDate = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+// ── Render de la card (estat del draft + switch + rejilla) ──
 export function renderCalendariCard() {
-  const objId = getActiveObjectiveId();
-  const wrap  = document.getElementById('calendari-card');
+  const wrap = document.getElementById('calendari-card');
   if (!wrap) return;
 
-  // Sense repte actiu: bloquejar
+  const objId = getActiveObjectiveId();
   const noObj = document.getElementById('calendari-no-obj');
   const form  = document.getElementById('calendari-form');
-  if (!objId) {
-    if (noObj) noObj.classList.remove('hidden');
-    if (form)  form.classList.add('hidden');
-    return;
-  }
-  if (noObj) noObj.classList.add('hidden');
+  // Sense repte actiu es pot consultar l'històric igualment; només s'amaga l'edició
+  if (noObj) noObj.classList.toggle('hidden', !!objId);
   if (form)  form.classList.remove('hidden');
 
-  const cal = getActiveCalendar();
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-  set('cal-upload-start', cal && cal.uploadStart);
-  set('cal-upload-end',   cal && cal.uploadEnd);
-  set('cal-voting-start', cal && cal.votingStart);
-  set('cal-voting-end',   cal && cal.votingEnd);
+  // Esborrany del repte actiu: es crea/refresca des de l'estat persistit,
+  // però MAI es trepitgen canvis pendents (dirty) — l'auto-refresh passa per aquí
+  if (objId) {
+    const cal = getActiveCalendar();
+    if (!calDraft || calDraft.objectiveId !== objId) {
+      calDraft = {
+        objectiveId: objId,
+        uploadStart: cal ? cal.uploadStart : '', uploadEnd: cal ? cal.uploadEnd : '',
+        votingStart: cal ? cal.votingStart : '', votingEnd: cal ? cal.votingEnd : '',
+        dirty: false,
+      };
+      calMode = null;
+    } else if (!calDraft.dirty && cal) {
+      calDraft.uploadStart = cal.uploadStart; calDraft.uploadEnd = cal.uploadEnd;
+      calDraft.votingStart = cal.votingStart; calDraft.votingEnd = cal.votingEnd;
+    }
+  } else {
+    calDraft = null; calMode = null;
+  }
+
   const auto = document.getElementById('cal-automation');
-  if (auto) auto.checked = cal ? !!cal.automationEnabled : true;
+  if (auto) { const cal = getActiveCalendar(); auto.checked = cal ? !!cal.automationEnabled : true; }
   syncAutomationButton();
+  renderCalMonth();
+}
+
+// ── Render del mes visible (títol, chips i rejilla) ──
+function renderCalMonth() {
+  const titleEl = document.getElementById('cal-month-title');
+  const grid    = document.getElementById('cal-grid');
+  if (!titleEl || !grid) return;
+
+  const isES  = currentLang === 'es';
+  const objId = getActiveObjectiveId();
+  titleEl.textContent = `${(isES ? MONTHS_ES : MONTHS_CA)[calView.month]} ${calView.year}`;
+
+  // Chips i botons d'acció: només amb repte actiu
+  const modeRow    = document.getElementById('cal-mode-row');
+  const actionsRow = document.getElementById('cal-actions-row');
+  if (modeRow)    modeRow.style.display    = objId ? '' : 'none';
+  if (actionsRow) actionsRow.style.display = objId ? '' : 'none';
+  const chipU = document.getElementById('cal-mode-upload');
+  const chipV = document.getElementById('cal-mode-voting');
+  if (chipU) chipU.classList.toggle('active', calMode === 'upload');
+  if (chipV) chipV.classList.toggle('active', calMode === 'voting');
+
+  // Rangs a pintar: tots els reptes de reptes_calendari; el repte actiu surt del draft
+  // (previsualització dels canvis abans de desar). Nom del repte només als acabats.
+  const ranges = [];
+  (state.reptesCalendari || []).forEach(c => {
+    if (calDraft && c.objectiveId === calDraft.objectiveId) return;   // el pinta el draft
+    const o = state.objectives.find(o => o.id === c.objectiveId);
+    const name = (o && o.status === 'finished') ? o.title : (o ? o.title : c.objectiveId);
+    if (c.uploadStart && c.uploadEnd) ranges.push({ start: c.uploadStart, end: c.uploadEnd, cls: 'cal-up',   name });
+    if (c.votingStart && c.votingEnd) ranges.push({ start: c.votingStart, end: c.votingEnd, cls: 'cal-vote', name });
+  });
+  if (calDraft) {
+    if (calDraft.uploadStart && calDraft.uploadEnd) ranges.push({ start: calDraft.uploadStart, end: calDraft.uploadEnd, cls: 'cal-up',   name: '' });
+    if (calDraft.votingStart && calDraft.votingEnd) ranges.push({ start: calDraft.votingStart, end: calDraft.votingEnd, cls: 'cal-vote', name: '' });
+  }
+
+  const daysInMonth = new Date(calView.year, calView.month + 1, 0).getDate();
+  const firstDow    = (new Date(calView.year, calView.month, 1).getDay() + 6) % 7;  // dilluns = 0
+  const avui        = new Date();
+  const todayIso    = isoDate(avui.getFullYear(), avui.getMonth(), avui.getDate());
+
+  let html = (isES ? DOW_ES : DOW_CA).map(d => `<div class="cal-dow">${d}</div>`).join('');
+  for (let i = 0; i < firstDow; i++) html += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dIso = isoDate(calView.year, calView.month, d);
+    let cls = 'cal-day', label = '', tip = '';
+    for (const r of ranges) {
+      if (dIso < r.start || dIso > r.end) continue;
+      cls += ' ' + r.cls;
+      if (dIso === r.start) cls += ' r-start';
+      if (dIso === r.end)   cls += ' r-end';
+      if (r.name) {
+        tip = r.name;
+        // Nom del repte al 1r dia de la franja i al 1r dia de cada setmana que travessa
+        const col = (firstDow + d - 1) % 7;
+        if (dIso === r.start || col === 0) label = r.name;
+      }
+    }
+    if (dIso === todayIso)     cls += ' cal-today';
+    if (calMode && objId)      cls += ' clickable';
+    html += `<div class="${cls}"${tip ? ` title="${tip}"` : ''}${objId ? ` onclick="calDayClick('${dIso}')"` : ''}>`
+          + `<span class="cal-num">${d}</span>${label ? `<span class="cal-name">${label}</span>` : ''}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+// ── Navegació de mes (fletxes ‹ ›). El rang a mig marcar sobreviu entre mesos ──
+export function calNavMonth(delta) {
+  let m = calView.month + delta, y = calView.year;
+  if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+  calView = { year: y, month: m };
+  renderCalMonth();
+}
+
+// ── Chip de mode: què estàs marcant (tornar a clicar el chip actiu el desactiva) ──
+export function calSetMode(mode) {
+  calMode = calMode === mode ? null : mode;
+  if (calMode) {
+    showToast(currentLang === 'es'
+      ? 'Clic: marca el día · otro clic: rellena el rango · clic en lo marcado: borra'
+      : 'Clic: marca el dia · un altre clic: omple el rang · clic al marcat: esborra', 'info');
+  }
+  renderCalMonth();
+}
+
+// ── Clic en un dia (chip actiu) — el calendari omple sol: ──
+// · sense rang → marca aquest dia (rang d'1 dia)
+// · amb rang i clic a fora → estén el rang fins al dia clicat (omple entremig)
+// · clic sobre el rang ja marcat → l'esborra sencer (per rectificar)
+export function calDayClick(dateIso) {
+  if (!calDraft) return;
+  if (!calMode) {
+    showToast(currentLang === 'es'
+      ? 'Elige primero "Marcar subida" o "Marcar votación"'
+      : 'Tria primer "Marcar pujada" o "Marcar votació"', 'info');
+    return;
+  }
+  const ks = calMode === 'upload' ? 'uploadStart' : 'votingStart';
+  const ke = calMode === 'upload' ? 'uploadEnd'   : 'votingEnd';
+  const start = calDraft[ks], end = calDraft[ke];
+
+  if (start && end && dateIso >= start && dateIso <= end) {
+    calDraft[ks] = ''; calDraft[ke] = '';                       // esborrar el rang
+  } else if (!start || !end) {
+    calDraft[ks] = dateIso; calDraft[ke] = dateIso;             // primer dia marcat
+  } else if (dateIso < start) {
+    calDraft[ks] = dateIso;                                     // omplir cap enrere
+  } else {
+    calDraft[ke] = dateIso;                                     // omplir cap endavant
+  }
+  calDraft.dirty = true;
+  renderCalMonth();
 }
 
 // Reflecteix l'estat del checkbox ocult al botó de plàstic
@@ -134,20 +275,15 @@ export async function toggleCalAutomation() {
     : (isES ? 'Automatización desactivada: toggles manuales' : 'Automatització desactivada: toggles manuals'), 'success');
 }
 
-// ── Guardar dates + switch (upsert per objective_id) ──
+// ── Guardar dates + switch (upsert per objective_id) — llegeix de l'esborrany ──
 export async function saveCalendari() {
   const objId = getActiveObjectiveId();
-  if (!objId) { showToast(currentLang === 'es' ? 'No hay temática activa' : 'No hi ha temàtica activa', 'error'); return; }
+  if (!objId || !calDraft) { showToast(currentLang === 'es' ? 'No hay temática activa' : 'No hi ha temàtica activa', 'error'); return; }
 
-  const val = id => {
-    const el = document.getElementById(id);
-    const v = el ? el.value.trim() : '';
-    return v || null;
-  };
-  const uStart = val('cal-upload-start');
-  const uEnd   = val('cal-upload-end');
-  const vStart = val('cal-voting-start');
-  const vEnd   = val('cal-voting-end');
+  const uStart = calDraft.uploadStart || null;
+  const uEnd   = calDraft.uploadEnd   || null;
+  const vStart = calDraft.votingStart || null;
+  const vEnd   = calDraft.votingEnd   || null;
   const auto   = !!(document.getElementById('cal-automation') && document.getElementById('cal-automation').checked);
 
   const isES = currentLang === 'es';
@@ -190,6 +326,7 @@ export async function saveCalendari() {
       return;
     }
 
+    if (calDraft) calDraft.dirty = false;   // desat: l'esborrany torna a seguir l'estat persistit
     await loadAllData();
     renderCalendariCard();
     // Refrescar les dates a les targetes de Temàtiques (via window per evitar import circular)
@@ -221,3 +358,6 @@ export function getCalendariDatesHtml(objectiveId) {
 // Exposar per als onclick del HTML
 window.saveCalendari = saveCalendari;
 window.toggleCalAutomation = toggleCalAutomation;
+window.calNavMonth = calNavMonth;
+window.calSetMode = calSetMode;
+window.calDayClick = calDayClick;

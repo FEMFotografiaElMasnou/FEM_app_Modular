@@ -239,25 +239,28 @@
       <div class="card card-fit" id="calendari-card">
         <div class="card-header">
           <div>
-            <div class="card-title">CALENDARI DEL REPTE</div>
-            <div class="card-subtitle">Programació automàtica de pujada i votació</div>
+            <div class="card-title">CALENDARI</div>
+            <div class="card-subtitle">Programació i històric dels reptes</div>
           </div>
         </div>
-        <div id="calendari-no-obj" class="hidden" style="color:var(--text-muted);">No hi ha temàtica activa.</div>
+        <div id="calendari-no-obj" class="hidden" style="color:var(--text-muted);">No hi ha temàtica activa: només consulta de l'històric.</div>
         <div id="calendari-form" style="display:flex;flex-direction:column;gap:14px;">
-          <div style="display:flex;flex-wrap:wrap;gap:16px;">
-            <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-muted);">Pujada — obre
-              <input type="date" id="cal-upload-start" class="cal-date"></label>
-            <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-muted);">Pujada — tanca
-              <input type="date" id="cal-upload-end" class="cal-date"></label>
-            <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-muted);">Votació — obre
-              <input type="date" id="cal-voting-start" class="cal-date"></label>
-            <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-muted);">Votació — tanca
-              <input type="date" id="cal-voting-end" class="cal-date"></label>
+          <!-- Navegació de mes -->
+          <div class="cal-month-nav">
+            <button type="button" class="cal-nav-btn" onclick="calNavMonth(-1)" aria-label="Mes anterior">‹</button>
+            <div class="cal-month-title" id="cal-month-title"></div>
+            <button type="button" class="cal-nav-btn" onclick="calNavMonth(1)" aria-label="Mes següent">›</button>
           </div>
+          <!-- Chips: què estàs marcant (1r clic = obre, 2n clic = tanca) -->
+          <div class="cal-mode-row" id="cal-mode-row">
+            <button type="button" class="cal-chip cal-chip-up" id="cal-mode-upload" onclick="calSetMode('upload')">📤 <span data-i18n="cal_mark_upload">Marcar pujada</span></button>
+            <button type="button" class="cal-chip cal-chip-vote" id="cal-mode-voting" onclick="calSetMode('voting')">🗳️ <span data-i18n="cal_mark_voting">Marcar votació</span></button>
+          </div>
+          <!-- Rejilla del mes (la pinta calendari.js) -->
+          <div class="cal-grid" id="cal-grid"></div>
           <!-- Botons de plàstic (mateix estil que Pujada/Votació) -->
           <input type="checkbox" id="cal-automation" class="plastic-cb">
-          <div class="plastic-btn-row">
+          <div class="plastic-btn-row" id="cal-actions-row">
             <button type="button" class="plastic-btn" id="pbtn-cal-automation" aria-label="Automatització"
                     onclick="toggleCalAutomation()">
               <span class="pb-icon">

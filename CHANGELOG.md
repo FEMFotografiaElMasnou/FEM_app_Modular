@@ -8,6 +8,34 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.16] — 2026-07-04 — Calendari visual (Bloc 2): rejilla de mes amb franges per repte
+
+> Petición (Pablo): sustituir la card de 4 campos de fecha por un **calendario visual** tipo
+> Google Calendar que sea a la vez editor e histórico: rejilla del mes con flechas ‹ ›,
+> marcar rangos clicando día de apertura y día de cierre, franja azul para subida y azul
+> cian para votación (translúcidas, se leen los números), y nombre del reto sobre las
+> franjas de los retos acabados. Solo admin.
+
+### Añadido
+- **Rejilla de mes** (`js/features/calendari.js`: `renderCalMonth()`, `calNavMonth()`,
+  `calSetMode()`, `calDayClick()`; CSS `.cal-*` en `admin.css`): semana empezando en lunes,
+  hoy marcado con aro, navegación de meses, franjas de **todos** los retos de
+  `reptes_calendari` (histórico incluido) con tooltip y rótulo del nombre en los acabados.
+- **Edición por clics "inteligente"**: chips "📤 Marcar pujada" / "🗳️ Marcar votació" (i18n
+  `cal_mark_upload`/`cal_mark_voting`). Con un chip activo: clic en un día → lo marca;
+  clic en otro día → **rellena el rango automáticamente** (también hacia atrás y cruzando
+  meses); clic sobre la zona ya marcada → **borra el rango** (para rectificar). Iterado con
+  Pablo: la 1ª versión (clic abre / clic cierra obligatorio) no dejaba rectificar a medias.
+  El rango se previsualiza al momento sobre la rejilla (borrador `calDraft`), pero **no se
+  persiste hasta "Desar calendari"** (mismas validaciones de siempre). El auto-refresh no
+  pisa un borrador con cambios.
+
+### Cambiado
+- **Card "CALENDARI DEL REPTE" → "CALENDARI"** (`index.html`): eliminados los 4
+  `<input type="date">`; sus funciones quedan integradas en la rejilla. Sin temática
+  activa la rejilla sigue visible (solo consulta del histórico); se ocultan chips y
+  botones. "Automatització" y "Desar calendari" se conservan tal cual.
+
 ## [0.1.15] — 2026-07-04 — Retocs Calendari + mòbil (feedback de la prova en Test)
 
 > Petición (Pablo), tras probar 0.1.14 con Live Server en modo Test: el apagado de la
