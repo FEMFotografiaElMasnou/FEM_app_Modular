@@ -257,6 +257,31 @@ body.embedded-fullscreen #participant-panel-embedded > div:first-child .btn {
   font-size: 15px;
   padding: 10px 18px;
 }
+/* ESCRIPTORI ESTRET: quan la finestra és prou estreta perquè el títol de l'App
+   d'Enric arribi al marge esquerre (i el botó flotant el trepitgi), el ← Tornar
+   puja a una FILA FIXA a dalt i l'iframe baixa just aquesta fila. IMPORTANT:
+   es MANTÉ l'escala 1.15 (l'iframe NO s'empetiteix, només es desplaça avall).
+   Ajusta el max-width fins que coincideixi amb l'amplada on el títol toca el
+   marge esquerre. */
+@media (min-width: 641px) and (max-width: 1300px) {
+  body.embedded-fullscreen #participant-panel-embedded > div:first-child {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    background: rgba(7,18,51,0.97);
+    border-bottom: 1px solid var(--border2);
+  }
+  /* L'iframe baixa la fila del botó però conserva l'escala (--iframe-zoom) */
+  body.embedded-fullscreen #iframe-resultats {
+    margin-top: 44px;
+    height: calc((100dvh - 44px) / var(--iframe-zoom));
+  }
+}
+
 /* En mòbil el ← Tornar es mou a la cantonada dreta i es fa compacte per no
    trepitjar el títol de l'App d'Enric (les puntuacions retallades són cosa
    d'aquella app, no de FEM). Posició ajustable després de veure-ho. */
