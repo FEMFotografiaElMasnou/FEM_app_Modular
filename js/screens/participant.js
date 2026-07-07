@@ -118,9 +118,9 @@ export function showParticipantClassificacio() {
 }
 
 // ── APP RESULTATS (Enric) embeguda dins l'app ──
-// Carrega https://fem-reptes.netlify.app/ en un iframe, passant el rol de l'usuari.
+// Carrega https://fem-resultats.vercel.app/ en un iframe, passant el rol de l'usuari.
 // view: 'resultats' (resultats del repte) | 'classificacio' (rànquing acumulat).
-const RESULTATS_BASE = 'https://fem-reptes.netlify.app/';
+const RESULTATS_BASE = 'https://fem-resultats.vercel.app/';
 
 export function openEmbedded(view) {
   const role = state.currentUser ? state.currentUser.role : 'participant';

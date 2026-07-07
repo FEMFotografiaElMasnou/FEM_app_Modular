@@ -8,6 +8,33 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.19] — 2026-07-07 — App Resultats (Enric): Netlify → Vercel
+
+> Petición (Pablo): la web de clasificaciones/resultados de Enric dejó de estar en Netlify
+> (`https://fem-reptes.netlify.app/`) y ahora vive en Vercel (`https://fem-resultats.vercel.app/`).
+> Los botones **"Classificació general"** y **"Resultat reptes"** de la pantalla de participante
+> la cargan en un iframe, así que apuntaban a un dominio muerto.
+
+### Cambiado
+- **URL base de la App Resultats** (`js/screens/participant.js`): `RESULTATS_BASE` pasa de
+  `https://fem-reptes.netlify.app/` a `https://fem-resultats.vercel.app/`. Solo cambia el host;
+  los query params (`role`, `view`, `embedded`) se mantienen, la app de Enric los sigue leyendo igual.
+- **Docs**: `CLAUDE.md` (nota de integraciones de Enric) actualizada a la nueva URL.
+
+## [0.1.18] — 2026-07-05 — "← Tornar" en barra fixa a amplades intermèdies
+
+> Petición (Pablo): en la app embebida (Resultat Repte / Classificació General), el botón
+> flotante **"← Tornar"** se solapaba sobre el título de la App de Enric en ventanas de
+> ancho intermedio (escritorio estrecho). En móvil y a partir de ~1300px ya estaba bien.
+
+### Arreglado
+- **Botón "← Tornar" en barra fija** (`css/participant.css`): nuevo
+  `@media (min-width:641px) and (max-width:1300px)` que, en ese rango, saca el botón de
+  flotar (arriba-izquierda) y lo fija en una barra superior de 44px; el iframe baja esa
+  fila conservando la escala (`--iframe-zoom`, sin encoger). Mismo patrón que ya se usaba
+  en móvil (≤640px). Los botones de criterio (creativitat/temàtica/composició) que "se
+  mueven" son de la App de Enric (iframe cross-origin) y quedan fuera de este arreglo.
+
 ## [0.1.17] — 2026-07-04 — Calendari EN PRODUCCIÓ ✅
 
 > Hito, sin cambios de código: Pablo aplicó `sql/reptes_calendari.sql` en el proyecto
@@ -310,6 +337,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 ### Verificado (cambió respecto al bloqueo de 0.1.4)
 - La web de Enric **ya lee los parámetros de URL**. La URL buena es la **raíz**
   `https://fem-reptes.netlify.app/` (la `FEM-Resultat_Ranquing.html` de los documentos da **404**).
+  <!-- → movida a Vercel: https://fem-resultats.vercel.app/ (v0.1.19) -->
   - `role` → `admin` ve todos los retos; `participant`/sin sesión solo los finalizados.
   - `view=resultats` → resultados del reto · `view=classificacio` → ranking acumulado (`switchToGeneral`).
   - `embedded=true` → su CSS `body.embedded` **oculta su topbar/título/controles** (no se duplican).
@@ -471,6 +499,7 @@ Sin esta columna, `loadAllData()` falla (pide `caption` en el SELECT) y la app n
 ### Pendiente — Documento 2 de Enric (botón "Resultats" → web de Enric embebida)
 - URL de la app de Enric: **https://fem-reptes.netlify.app/** (Netlify; la app vive en la raíz `/`,
   NO en `FEM-Resultat_Ranquing.html`, que da 404).
+  <!-- → movida a Vercel: https://fem-resultats.vercel.app/ (v0.1.19) -->
 - El iframe es técnicamente posible (su servidor **no** envía `X-Frame-Options` ni CSP que lo bloqueen).
 - **BLOQUEO funcional:** la versión desplegada **no lee** los parámetros que prometía el documento:
   no usa `role` (no filtra por rol), ni `view` (no abre directo en resultats/classificacio; navega
