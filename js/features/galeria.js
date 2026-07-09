@@ -190,11 +190,15 @@ export function renderGallery() {
   let html = '';
 
   if (_galFilterAuthor !== 'all') {
-    // ── VISTA AUTOR: una sola graella, cronològic, peu = nom del repte
+    // ── VISTA AUTOR: una sola card amb el nom de l'autor a la capçalera (homogeni
+    //    amb la vista per repte). Dins, graella cronològica (nou→antic), peu = repte.
+    const authorName = _authorName(_galFilterAuthor);
     const ordered = photos.slice().sort(_byNewest);
+    html += '<div class="gallery-objective-card">';
+    html += `<div class="gallery-group-header">${_escape(authorName)}</div>`;
     html += '<div class="gallery-mosaic-grid">';
     for (const p of ordered) html += _photoHtml(p, p.objectiveTitle, flat);
-    html += '</div>';
+    html += '</div></div>';
   } else {
     // ── VISTA PER REPTE: cards per repte (nou→antic), dins alfabètic per autor
     const byObj = new Map();

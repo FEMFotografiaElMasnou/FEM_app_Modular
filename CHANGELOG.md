@@ -8,6 +8,20 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.20] — 2026-07-09 — Galeria "per Autor": card amb el nom de l'autor
+
+> Petición (Enric): en la galería histórica, la vista **por repte** ya muestra las fotos dentro
+> de una caja con el nombre del reto; la vista **por autor** las pintaba en una rejilla plana.
+> Para mantener homogeneidad, la vista por autor debe envolverse igual, con el nombre del autor
+> en la cabecera.
+
+### Cambiado
+- **Vista por autor de la galería** (`js/features/galeria.js`, `renderGallery()`): la rama
+  `_galFilterAuthor !== 'all'` ahora envuelve la rejilla en una `.gallery-objective-card` con
+  cabecera `.gallery-group-header` = nombre del autor (vía `_authorName()`), reutilizando las
+  mismas clases que la vista por repte. El pie de cada foto sigue siendo el nombre del reto.
+  Sin cambios de CSS ni de HTML.
+
 ## [0.1.19] — 2026-07-07 — App Resultats (Enric): Netlify → Vercel
 
 > Petición (Pablo): la web de clasificaciones/resultados de Enric dejó de estar en Netlify
