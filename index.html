@@ -180,12 +180,25 @@
       <!-- ═══ Iteració 2: caixes ocultes (placeholders) perquè el JS no peti ═══ -->
       <div style="display:none;" id="dashboard-placeholders">
         <span id="admin-progress-label"></span>
-        <div class="progress-bar" id="admin-progress-bar" style="width:0%"></div>
-        <span id="admin-progress-left">0</span>
-        <span id="admin-progress-right">0%</span>
         <span id="stat-photos">—</span>
         <span id="stat-votes-done">0</span>
         <span id="stat-votes-total">0</span>
+      </div>
+
+      <!-- PROGRÉS VOTACIONS: mogut des del panell de participant (v0.1.21) -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title" data-i18n="voting_progress">PROGRÉS VOTACIONS</div>
+          </div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-bar" id="admin-progress-bar" style="width:0%"></div>
+        </div>
+        <div class="progress-label">
+          <span id="admin-progress-left">Carregant...</span>
+          <span id="admin-progress-right">0%</span>
+        </div>
       </div>
 
       <div class="card card-fit">
@@ -472,21 +485,6 @@
       <div class="card" style="text-align:center; padding:32px;">
         <div id="participant-objective-name" style="font-family:var(--font-display);font-size:clamp(26px,7vw,36px);letter-spacing:3px;color:var(--accent2);margin-bottom:4px;">—</div>
         <div id="participant-objective-desc" style="font-size:15px;color:var(--text-muted);"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title" data-i18n="voting_progress">PROGRÉS VOTACIONS</div>
-          </div>
-        </div>
-        <div class="progress-wrap">
-          <div class="progress-bar" id="participant-progress-bar" style="width:0%"></div>
-        </div>
-        <div class="progress-label">
-          <span id="participant-progress-left">Carregant...</span>
-          <span id="participant-progress-right">0%</span>
-        </div>
       </div>
 
       <!-- Fila: card "La meva foto" (meitat) + targeta GALERIA (meitat) -->

@@ -4,7 +4,6 @@
 import { state, actingAsAdmin } from '../core/state.js';
 import { currentLang, t, applyTranslations } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
-import { getVotingProgress } from '../core/data.js';
 import { renderVotingGrid, updateVoteButtonsState } from '../features/votacio.js';
 import { renderRanking, renderResultatsRepte } from '../features/ranking.js';
 import { updateUploadSection } from '../features/fotos.js';
@@ -156,12 +155,8 @@ export function refreshParticipantDashboard() {
     ? (obj.description || '')
     : (currentLang === 'es' ? 'Sin temática activa' : 'Cap temàtica activa');
 
-  // Progrés de votació per VOTANTS: socis que han enviat definitiva / participants ∪ votants
-  const { voted, total, pct } = getVotingProgress();
-  document.getElementById('participant-progress-bar').style.width   = pct + '%';
-  document.getElementById('participant-progress-left').textContent  =
-    `${voted}/${total} ${t('members_voted')}`;
-  document.getElementById('participant-progress-right').textContent = `${pct}%`;
+  // (La barra PROGRÉS VOTACIONS s'ha mogut al dashboard d'admin, v0.1.21:
+  //  els socis ja no la veuen.)
 
   // Sección de subida: siempre con la lógica normal
   updateUploadSection();

@@ -8,6 +8,27 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.21] — 2026-07-09 — Barra "PROGRÉS VOTACIONS": del panell de participant a l'admin
+
+> Petición (Pablo): el progreso de votación es información de seguimiento, útil para quien
+> gestiona la temática, no para el socio que solo vota. Se mueve al panel de admin.
+
+### Cambiado
+- **Card "PROGRÉS VOTACIONS"** (`index.html`): eliminada del panel de participante y creada en el
+  dashboard de admin, con la misma estructura (`.progress-wrap` + `.progress-bar` + `.progress-label`).
+  Los tres `<span>` sueltos que vivían ocultos en `#dashboard-placeholders` se retiran de allí,
+  porque ahora existen de verdad en la card. Sin cambios de CSS: `.progress-*` ya está en `base.css`.
+- **`refreshAdminDashboard()`** (`js/screens/admin.js`): rellena la barra con `getVotingProgress()`
+  (progreso por **votantes**: socios que han enviado votación definitiva sobre participantes ∪ votantes),
+  el mismo cálculo que usaba el participante. Antes la barra de admin —oculta— medía otra cosa:
+  fotos completamente votadas.
+- **`refreshParticipantDashboard()`** (`js/screens/participant.js`): deja de pintar la barra y de
+  importar `getVotingProgress` de `core/data.js`.
+
+### Eliminado
+- Variable muerta `pct` en `refreshAdminDashboard()` (`js/screens/admin.js`): alimentaba la barra
+  antigua y ya no la lee nadie. Las estadísticas `stat-votes-done` / `stat-votes-total` no la usaban.
+
 ## [0.1.20] — 2026-07-09 — Galeria "per Autor": card amb el nom de l'autor
 
 > Petición (Enric): en la galería histórica, la vista **por repte** ya muestra las fotos dentro

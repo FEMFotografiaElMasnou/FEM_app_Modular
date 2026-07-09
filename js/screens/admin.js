@@ -4,7 +4,7 @@
 import { state } from '../core/state.js';
 import { currentLang, t } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
-import { getActivePublishedPhotos, getActiveAllPhotos, getActiveVotes, saveSettings } from '../core/data.js';
+import { getActivePublishedPhotos, getActiveAllPhotos, getActiveVotes, getVotingProgress, saveSettings } from '../core/data.js';
 import { updateVoteButtonsState } from '../features/votacio.js';
 import { renderRanking } from '../features/ranking.js';
 import { renderCalendariCard, isCalendarAutomationActive } from '../features/calendari.js';
@@ -33,15 +33,16 @@ export function refreshAdminDashboard() {
     }
   }
 
-  const pct = totalPhotos > 0 ? Math.round((fullyVotedPhotos / totalPhotos) * 100) : 0;
-
   document.getElementById('stat-photos').textContent        = activeAll.length;
   document.getElementById('stat-votes-done').textContent    = fullyVotedPhotos;
   document.getElementById('stat-votes-total').textContent   = totalPhotos;
 
-  document.getElementById('admin-progress-bar').style.width    = pct + '%';
-  document.getElementById('admin-progress-left').textContent   = `${fullyVotedPhotos}/${totalPhotos} ${t('members_voted')}`;
-  document.getElementById('admin-progress-right').textContent  = `${pct}%`;
+  // Barra PROGRÉS VOTACIONS (moguda des del panell de participant, v0.1.21):
+  // progrés per VOTANTS (socis que han enviat definitiva / participants ∪ votants).
+  const votingProgress = getVotingProgress();
+  document.getElementById('admin-progress-bar').style.width    = votingProgress.pct + '%';
+  document.getElementById('admin-progress-left').textContent   = `${votingProgress.voted}/${votingProgress.total} ${t('members_voted')}`;
+  document.getElementById('admin-progress-right').textContent  = `${votingProgress.pct}%`;
   document.getElementById('admin-progress-label').textContent  = '';
 
   // Admin own photo upload section (solo foto de la temática activa)
