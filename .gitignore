@@ -19,3 +19,5 @@ Desktop.ini
 # Arranque local de desarrollo (herramienta personal, no se despliega)
 server.js
 Iniciar_FEM.bat
+.vercel
+.env*

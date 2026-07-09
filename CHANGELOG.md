@@ -8,6 +8,27 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.23] — 2026-07-09 — Neteja hosting: consolidació definitiva a Vercel
+
+> Incidència (Enric): femfotografiaelmasnou.cat va deixar de respondre (DEPLOYMENT_NOT_FOUND) perquè
+> el domini s'havia desvinculat del projecte de Vercel, i el desplegament automàtic dels pushes d'en
+> Pablo quedava bloquejat (pla Hobby de Vercel no permet auto-deploy de col·laboradors externs en
+> aquest Team). Es reconnecta el domini i es desplega manualment; s'aprofita per eliminar tota
+> referència residual a Netlify (l'app ja fa temps que és 100% Vercel).
+
+### Eliminat
+- **`netlify.toml`**: configuració de Netlify obsoleta, ja no s'utilitza cap hosting Netlify per
+  aquesta app.
+
+### Canviat
+- **`CLAUDE.md`**: secció "Stack" actualitzada — Hosting passa de "Netlify" a "Vercel"
+  (`vercel.json`); nota sobre repo privat eliminada (el repo és ara **públic** a GitHub).
+- **Repositori GitHub**: visibilitat canviada de privat a públic (cap secret exposat, verificat:
+  les úniques claus al codi són anon keys de Supabase).
+- **Flux de desplegament**: com que el pla Hobby de Vercel bloqueja el desplegament automàtic quan
+  el commit no és de l'Owner del Team, Enric desplega manualment amb `git pull && npx vercel --prod`
+  després de cada push d'en Pablo.
+
 ## [0.1.22] — 2026-07-09 — UI: logo i nav-cards més grans, text-muted amb més contrast
 
 > Petición (Pablo): el logo de la barra superior y los rótulos de las nav-cards se leían pequeños,
