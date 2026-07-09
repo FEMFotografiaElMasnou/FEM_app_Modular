@@ -18,7 +18,7 @@
   --accent2:     #7bb3ff;
   --accent-glow: rgba(75,142,245,0.35);
   --text:        #e8f0ff;
-  --text-muted:  #5b7aa8;
+  --text-muted:  #9db8e0;
   --success:     #3ecf8e;
   --danger:      #e05252;
   --warning:     #f5a623;
@@ -201,7 +201,7 @@ body::before {
 
 .topbar-logo {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 36px;
   letter-spacing: 3px;
   background: linear-gradient(135deg, #fff, var(--accent2));
   -webkit-background-clip: text;

@@ -74,8 +74,8 @@
 }
 
 .nav-card .nav-icon { font-size: 40px; margin-bottom: 10px; }
-.nav-card .nav-title { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; }
-.nav-card .nav-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.nav-card .nav-title { font-family: var(--font-display); font-size: 27px; letter-spacing: 2px; }
+.nav-card .nav-sub { font-size: 18px; color: var(--text-muted); margin-top: 4px; }
 
 /* Responsivo: en móvil se muestra bottom-nav y se ocultan las nav-cards */
 @media (max-width: 640px) {

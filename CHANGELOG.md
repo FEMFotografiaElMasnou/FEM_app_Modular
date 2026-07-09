@@ -8,6 +8,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.22] — 2026-07-09 — UI: logo i nav-cards més grans, text-muted amb més contrast
+
+> Petición (Pablo): el logo de la barra superior y los rótulos de las nav-cards se leían pequeños,
+> y el texto secundario tenía poco contraste sobre el fondo oscuro.
+
+### Cambiado
+- **`css/base.css`**: `--text-muted` pasa de `#5b7aa8` a `#9db8e0` (más contraste sobre el fondo
+  oscuro); `.topbar-logo` de `26px` a `36px`.
+- **`css/participant.css`**: `.nav-card .nav-title` de `22px` a `27px`; `.nav-card .nav-sub` de
+  `12px` a `18px`.
+- **`index.html`**: `<title>` pasa de "FEM VOTACIONS" a "FEM Fotografia El Masnou".
+
 ## [0.1.21] — 2026-07-09 — Barra "PROGRÉS VOTACIONS": del panell de participant a l'admin
 
 > Petición (Pablo): el progreso de votación es información de seguimiento, útil para quien
