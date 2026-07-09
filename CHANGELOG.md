@@ -8,6 +8,30 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.24] — 2026-07-10 — Gestió de fotos: autor i títol sota cada foto
+
+### Afegit
+- **`js/features/fotos.js`** (`renderAdminGallery()`): sota cada foto es mostra ara
+  `#N · Nom real de l'autor` i, si la foto en té, el **títol/descripció opcional** que hi va
+  posar el participant (camp `caption`). Si no hi ha títol, no es deixa espai buit.
+- **`css/admin.css`**: estils nous acotats a `#admin-gallery`. El títol es retalla a 2 línies
+  (l'atribut `title` en mostra el text sencer en passar-hi el ratolí).
+
+### Canviat
+- La imatge i els seus overlays (lupa, descàrrega, check de selecció i badge ✅/⏳) passen a
+  estar dins d'un `.gallery-thumb` amb `position: relative`. Cal perquè el badge d'estat
+  (`.participant-num`, `bottom: 0`) s'ancori a la foto i no al fons de la card sencera.
+
+### Notes
+- L'autor es mostra amb el **nom real**, no amb `getDisplayName()`: l'anonimat de la votació no
+  s'aplica al panell d'admin, que gestiona i publica les fotos.
+- El `caption` l'escriu el soci, per tant s'**escapa** abans d'inserir-lo a l'HTML.
+- Deute tècnic: `_escape()` existeix ara a `fotos.js`, `galeria.js` i `lightbox.js`. Unificar-la
+  en un helper compartit en una tasca a part.
+- Neteja: s'eliminen `admin.css` i `fotos.js` de l'arrel del repo, pujats per error des de la
+  interfície web de GitHub (`Add file → Upload files` puja a la carpeta on ets). Eren duplicats;
+  els fitxers bons són `css/admin.css` i `js/features/fotos.js`.
+
 ## [0.1.23] — 2026-07-09 — Neteja hosting: consolidació definitiva a Vercel
 
 > Incidència (Enric): femfotografiaelmasnou.cat va deixar de respondre (DEPLOYMENT_NOT_FOUND) perquè

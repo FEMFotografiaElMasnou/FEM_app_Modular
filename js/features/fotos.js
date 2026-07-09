@@ -14,6 +14,21 @@ import { refreshParticipantDashboard } from '../screens/participant.js';
 // ═══════════════════════════════════
 // ADMIN GALLERY
 // ═══════════════════════════════════
+
+// Escapa text per inserir-lo en HTML de forma segura
+function _escape(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Nom real de l'autor. Només per al panell d'admin: aquí no s'aplica
+// l'anonimat de la votació (getDisplayName), l'admin gestiona i ha de saber qui és qui.
+function _authorName(userId) {
+  const u = state.users.find(x => x.id === userId);
+  return (u && u.name) ? u.name : '—';
+}
+
 export function renderAdminGallery() {
   const grid      = document.getElementById('admin-gallery');
   // Solo fotos de la temática activa (las pasadas se ven desde Gestión de Temáticas)
@@ -39,16 +54,24 @@ export function renderAdminGallery() {
     const isSelected = state.selectedPhotos.has(photo.id);
     const num = getParticipantNumber(photo.userId);
     const fname = photo.fileName || 'foto_' + num + '.jpg';
+    const author = _escape(_authorName(photo.userId));
+    const caption = _escape(photo.caption);
     return `
       <div class="gallery-item ${isSelected ? 'selected' : ''}" onclick="toggleSelectPhoto('${photo.id}')" data-id="${photo.id}">
-        <img src="${photo.url}" alt="Photo" loading="lazy" ondblclick="event.stopPropagation(); openFullscreen('${photo.url}', '${fname}')" title="Clic: seleccionar · Doble clic: ampliar" style="cursor:pointer;">
-        <div class="gallery-actions">
-          <button type="button" class="gallery-act-btn" onclick="event.stopPropagation(); openFullscreen('${photo.url}', '${fname}')" title="Ampliar">🔍</button>
-          <button type="button" class="gallery-act-btn" onclick="event.stopPropagation(); downloadPhoto('${photo.url}', '${fname}')" title="Descarregar">⬇</button>
+        <div class="gallery-thumb">
+          <img src="${photo.url}" alt="Photo" loading="lazy" ondblclick="event.stopPropagation(); openFullscreen('${photo.url}', '${fname}')" title="Clic: seleccionar · Doble clic: ampliar" style="cursor:pointer;">
+          <div class="gallery-actions">
+            <button type="button" class="gallery-act-btn" onclick="event.stopPropagation(); openFullscreen('${photo.url}', '${fname}')" title="Ampliar">🔍</button>
+            <button type="button" class="gallery-act-btn" onclick="event.stopPropagation(); downloadPhoto('${photo.url}', '${fname}')" title="Descarregar">⬇</button>
+          </div>
+          <div class="check-overlay">✓</div>
+          <div class="participant-num">
+            ${photo.published ? '✅' : '⏳'}
+          </div>
         </div>
-        <div class="check-overlay">✓</div>
-        <div class="participant-num">
-          ${photo.published ? '✅' : '⏳'}
+        <div class="gallery-meta">
+          <div class="gallery-author">#${num} · ${author}</div>
+          ${caption ? `<div class="gallery-caption" title="${caption}">${caption}</div>` : ''}
         </div>
       </div>
     `;

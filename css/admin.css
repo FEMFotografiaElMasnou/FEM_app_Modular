@@ -245,3 +245,29 @@
   .tab-nav { width: 100%; }
   .only-mobile { display: block; }
 }
+
+/* ── GESTIÓ DE FOTOS: autor i títol sota cada foto ── */
+/* El badge d'estat (.participant-num) s'ancora a la foto, no a la card sencera */
+#admin-gallery .gallery-thumb { position: relative; }
+
+#admin-gallery .gallery-meta { padding: 8px 10px 10px; }
+
+#admin-gallery .gallery-author {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#admin-gallery .gallery-caption {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
