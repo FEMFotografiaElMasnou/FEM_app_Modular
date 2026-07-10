@@ -8,6 +8,27 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.26] — 2026-07-10 — Menú inferior mòbil: bugs de traducció i visibilitat
+
+> Petició (Enric): al menú inferior mòbil el botó "Inici" mostrava la clau sense traduir
+> (`NAV_HOME`), el botó "Votar" es veia sempre encara que la votació no estigués oberta, i
+> els textos de "Classificació general/reptes" es solapaven per massa llargs.
+
+### Arreglat
+- **`js/core/i18n.js`**: afegida la clau `nav_home` (CA/ES), que no existia al diccionari
+  (`t()` retornava la clau en brut com a fallback).
+- **`js/screens/participant.js`** (`applyParticipantButtonVisibility`): `#bnav-vote` ara
+  segueix la mateixa lògica `showVote` que la targeta d'escriptori `nav-card-vote` — abans
+  no tenia cap control de visibilitat i sortia sempre.
+
+### Canviat
+- **`js/core/i18n.js`**: `nav_class_general` → "Class.General"/"Clas.General",
+  `nav_class_reptes` → "Reptes"/"Retos" (CA/ES), per evitar solapament al menú mòbil.
+
+### Pendent
+- Repensar la navegació mòbil: homologar totes les seccions com a targetes equivalents
+  (com a escriptori) en lloc del menú inferior fix actual — proposta pendent.
+
 ## [0.1.25] — 2026-07-10 — Topbar i favicon: logo oficial de la FEM
 
 > Petició (Enric): la topbar mostrava "FEM VOTACIONS" en text; es canvia per la icona oficial

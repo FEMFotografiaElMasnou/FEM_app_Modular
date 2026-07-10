@@ -204,6 +204,7 @@ export function applyParticipantButtonVisibility() {
     if (el) el.style.display = show ? '' : 'none';
   };
   setDisplay('nav-card-vote',          v.showVote);
+  setDisplay('bnav-vote',              v.showVote);
   setDisplay('nav-card-resultats',     v.showResultats);
   setDisplay('nav-card-classificacio', v.showClassificacio);
   // Galeria: visible si hi ha algun repte finalitzat; l'admin (rol real) també
