@@ -1205,37 +1205,4 @@ body::before {
   .lightbox-nav-btn.next { right: 10px; }
 }
 
-/* ════════════════════════════════
-   WATERMARK
-════════════════════════════════ */
-@keyframes pv-pulse {
-  0%, 100% { opacity: 0.25; }
-  50%       { opacity: 0.70; }
-}
 
-.pv-watermark {
-  position: fixed;
-  bottom: 12px;
-  right: 16px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 9999;
-  pointer-events: none;
-  animation: pv-pulse 3s ease-in-out infinite;
-}
-.pv-watermark svg {
-  width: 22px;
-  height: 22px;
-}
-.pv-watermark span {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 300;
-  color: #fff;
-  letter-spacing: 0.5px;
-}
-
-.pv-watermark:hover {
-  opacity: 0.8;
-}
