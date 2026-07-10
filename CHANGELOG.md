@@ -8,6 +8,24 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.25] — 2026-07-10 — Topbar i favicon: logo oficial de la FEM
+
+> Petició (Enric): la topbar mostrava "FEM VOTACIONS" en text; es canvia per la icona oficial
+> del cercle (les tres mitges llunes) + "FEM Fotografia El Masnou", i s'afegeix el mateix
+> cercle com a favicon (amb el blau real de la marca, `#3253A2`, perquè sigui visible a
+> qualsevol pestanya).
+
+### Afegit
+- `img/logo-icon.png`: icona del cercle amb cantonades transparents, per a la topbar.
+- `img/favicon.png`: mateixa icona sobre fons blau sòlid (marca), per al favicon.
+
+### Canviat
+- `index.html`: topbar (admin i participant) substitueix el text per icona + "FEM Fotografia
+  El Masnou"; `<head>` afegeix `<link rel="icon">` apuntant al nou favicon local.
+- `css/base.css`: `.topbar-logo` passa a contenidor flex (icona + text); nou
+  `.topbar-logo-text` amb tipografia Barlow Condensed (Bebas Neue no distingeix
+  majúscules/minúscules) i mides responsive ajustades a mòbil.
+
 ## [0.1.24] — 2026-07-10 — Gestió de fotos: autor i títol sota cada foto
 
 ### Afegit

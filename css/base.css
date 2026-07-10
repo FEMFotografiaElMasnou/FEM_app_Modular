@@ -200,14 +200,33 @@ body::before {
 }
 
 .topbar-logo {
-  font-family: var(--font-display);
-  font-size: 36px;
-  letter-spacing: 3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.topbar-logo-icon {
+  height: 34px;
+  width: auto;
+  flex-shrink: 0;
+  display: block;
+}
+
+.topbar-logo-text {
+  font-family: var(--font-cond);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: 0.3px;
   background: linear-gradient(135deg, #fff, var(--accent2));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .topbar-right {
@@ -1006,11 +1025,13 @@ body::before {
 
   /* Topbar: compact */
   .topbar { height: 56px; }
-  .topbar-logo { font-size: 22px; }
+  .topbar-logo-icon { height: 26px; }
+  .topbar-logo-text { font-size: 15px; }
   .user-badge { display: none; } /* hidden on mobile - name shown in badge */
   .role-badge { display: none; }
   /* El logo no debe empujar/tapar los controles de la derecha */
-  .topbar-logo { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar-logo { flex-shrink: 1; min-width: 0; }
+  .topbar-logo-text { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* Participante: salir con la ✕ compacta; ocultar el botón "Sortir" de texto */
   #btn-participant-logout { display: none; }
   #btn-participant-logout-x { display: flex; }
