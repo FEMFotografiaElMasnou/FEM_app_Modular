@@ -169,6 +169,12 @@ export function updateUploadSection() {
     labelEl.textContent = myPhoto.published ? t('photo_published') : t('photo_pending');
     document.getElementById('my-photo-preview').innerHTML =
       `<img src="${myPhoto.url}" style="width:100%;border-radius:12px;">`;
+    // Precarregar el títol/descripció ja desat al camp editable, i amagar el
+    // botó "Desar canvis" fins que l'usuari hi torni a fer un canvi real.
+    const captionEditEl = document.getElementById('caption-edit-input');
+    if (captionEditEl) captionEditEl.value = myPhoto.caption || '';
+    const saveCaptionBtn = document.getElementById('btn-save-caption');
+    if (saveCaptionBtn) saveCaptionBtn.classList.add('hidden');
     // Ocultar botón "Eliminar i Tornar a Pujar" si la subida está cerrada
     const deleteBtn = doneSect.querySelector('[data-i18n="delete_photo_btn"]');
     if (deleteBtn) deleteBtn.style.display = state.settings.uploads_enabled ? '' : 'none';
@@ -465,6 +471,47 @@ export async function deleteMyPhoto() {
   });
 }
 
+// ═══════════════════════════════════
+// EDICIÓ DEL TÍTOL/DESCRIPCIÓ (un cop la foto ja està pujada)
+// ═══════════════════════════════════
+// Desa el nou títol/descripció de la foto ja pujada per l'usuari actual.
+// El botó "Desar canvis" (#btn-save-caption) només és visible quan
+// index.html detecta que el text ha canviat respecte al valor precarregat.
+export async function saveCaptionEdit() {
+  const input = document.getElementById('caption-edit-input');
+  if (!input) return;
+  const newCaption = input.value.trim();
+  const uid   = state.currentUser.id;
+  const objId = state.currentObjective ? state.currentObjective.id : '';
+  const btn   = document.getElementById('btn-save-caption');
+
+  if (btn) btn.disabled = true;
+  showLoader(currentLang === 'es' ? 'Guardando...' : 'Desant...');
+
+  const { error } = await sb.from('photo_submissions')
+    .update({ caption: newCaption })
+    .eq('user_id', uid)
+    .eq('objective_id', objId);
+
+  hideLoader();
+  if (btn) btn.disabled = false;
+
+  if (error) {
+    console.error('Caption update error:', error);
+    showToast(currentLang === 'es' ? 'Error al guardar el título.' : 'Error en desar el títol.', 'error');
+    return;
+  }
+
+  await loadAllData();
+  if (actingAsAdmin()) {
+    refreshAdminDashboard();
+  } else {
+    refreshParticipantDashboard();
+  }
+  if (btn) btn.classList.add('hidden');
+  showToast(currentLang === 'es' ? '¡Título guardado! ✅' : 'Títol desat! ✅', 'success');
+}
+
 // Exponer en window las funciones usadas desde onclick del HTML
 window.toggleSelectPhoto = toggleSelectPhoto;
 window.deleteSelectedPhotos = deleteSelectedPhotos;
@@ -476,3 +523,4 @@ window.handleFileSelect = handleFileSelect;
 window.cancelPreview = cancelPreview;
 window.uploadPhoto = uploadPhoto;
 window.deleteMyPhoto = deleteMyPhoto;
+window.saveCaptionEdit = saveCaptionEdit;

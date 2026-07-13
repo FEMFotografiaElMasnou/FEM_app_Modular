@@ -455,93 +455,62 @@
   <div class="main-content">
     <!-- Panel Principal -->
     <div id="participant-panel-main">
-      <!-- FILA PRINCIPAL — Repte/La meva foto (esquerra) + Galeria (dreta):
-           les dues targetes principals, més grans i gràfiques que la resta.
-           Quan calgui obrir/tancar votacions, probablement s'afegirà aquí
-           mateix (dins la targeta de Repte), ja que hi està associat i
-           tindrà sentit quan hi hagi múltiples reptes actius. -->
-      <div class="hero-grid">
+      <div class="card" style="text-align:center; padding:32px;">
+        <div id="participant-objective-name" style="font-family:var(--font-display);font-size:clamp(26px,7vw,36px);letter-spacing:3px;color:var(--accent2);margin-bottom:4px;">—</div>
+        <div id="participant-objective-desc" style="font-size:15px;color:var(--text-muted);"></div>
+      </div>
 
-        <!-- REPTE + LA MEVA FOTO — unificats: la foto pujada pertany a aquest repte.
-             NOTA (futur multi-repte): aquest box és una unitat autocontinguda;
-             si en el futur hi ha més d'un repte actiu, caldria repetir aquest
-             mateix bloc un cop per repte (això no s'implementa encara). -->
-        <div class="card objective-card" id="card-objective-photo">
-
-          <!-- Capçalera del repte — sense subdivisions, només nom + text informatiu
-               (les dates ja hi surten dins el propi text; no cal repetir-les). -->
-          <div class="objective-header">
-            <div class="objective-title">Repte: <span id="participant-objective-name">—</span></div>
-            <div id="participant-objective-desc" class="objective-desc"></div>
-          </div>
-
-          <!-- La meva foto d'aquest repte -->
-          <div class="objective-photo-section">
-            <div class="objective-photo-header">
-              <div class="card-title objective-photo-title" id="card-my-photo-title" data-i18n="my_photo">LA MEVA FOTO</div>
-              <!-- Amagat (no eliminat): el JS hi escriu l'estat de la pujada; el text
-                   actual ("Foto pujada (pendent)") confonia perquè la foto ja es veu.
-                   Es manté a l'DOM perquè el JS no peti; cal decidir amb participant.js
-                   si es reintrodueix amb un text correcte o es treu del tot. -->
-              <div class="card-subtitle hidden" id="upload-status-label">Puja la teva foto per participar</div>
-            </div>
-
-            <!-- MODO PARTICIPANTE: Upload section -->
-            <div id="participant-mode-section">
-              <div id="upload-section">
-                <div class="upload-zone" id="upload-zone" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFile(event)">
-                  <input type="file" accept="image/*" id="file-input" onchange="handleFileSelect(event)">
-                  <div class="upload-icon">📸</div>
-                  <h3>Selecciona o arrossega la teva foto</h3>
-                  <p>JPG, PNG, WEBP · Sense límit de mida</p>
-                </div>
-                <div id="upload-closed-msg" class="hidden">
-                  <div class="empty-state"><div class="empty-icon">🔒</div>
-                  <p id="upload-closed-text">La pujada de fotos està tancada.</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Estat: foto seleccionada (abans de confirmar) -->
-              <div id="upload-preview-section" class="hidden" style="margin-top:16px;">
-                <div class="upload-preview" id="upload-preview-wrap"></div>
-                <div class="caption-field caption-field--preview">
-                  <input type="text" id="caption-input" maxlength="300" data-i18n-placeholder="caption_label" placeholder="Títol / descripció (opcional)" class="caption-input">
-                </div>
-                <div style="margin-top:16px; display:flex; gap:10px; justify-content:center;">
-                  <button type="button" class="btn btn-primary btn-inline" onclick="uploadPhoto()" id="btn-upload-confirm" data-i18n="confirm_upload_btn">
-                    Confirmar Pujada
-                  </button>
-                </div>
-              </div>
-
-              <!-- Estat: foto ja pujada — títol editable, sense icona de confirmació permanent -->
-              <div id="upload-done-section" class="hidden" style="margin-top:16px;">
-                <div id="my-photo-preview" style="max-width:300px;margin:0 auto 12px;border-radius:12px;overflow:hidden;"></div>
-                <div class="caption-field caption-field--done">
-                  <!-- PLACEHOLDER: el JS ha d'omplir aquest input amb el títol ja desat -->
-                  <input type="text" id="caption-edit-input" maxlength="300" class="caption-input" data-i18n-placeholder="caption_label" placeholder="Títol / descripció (opcional)">
-                </div>
-                <div style="margin-top:16px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-                  <button type="button" class="btn btn-secondary btn-sm hidden" id="btn-save-caption" onclick="saveCaptionEdit()">💾 Desar canvis</button>
-                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteMyPhoto()" data-i18n="delete_photo_btn">🗑 Eliminar i Tornar a Pujar</button>
-                </div>
-              </div>
-            </div>
+      <!-- LA MEVA FOTO — card funcional a amplada completa (conté l'estat de pujada) -->
+      <div class="card" id="card-my-photo">
+        <div class="card-header">
+          <div style="flex:1;min-width:0;">
+            <div class="card-title" id="card-my-photo-title" data-i18n="my_photo">LA MEVA FOTO</div>
+            <div class="card-subtitle" id="upload-status-label">Puja la teva foto per participar</div>
           </div>
         </div>
 
-        <!-- GALERIA — targeta principal (hero), més gran i gràfica que la resta -->
-        <div class="nav-card photo-gallery-tile hero-gallery-tile" id="nav-card-gallery" onclick="showParticipantGallery()">
+        <!-- MODO PARTICIPANTE: Upload section -->
+        <div id="participant-mode-section">
+          <div id="upload-section">
+            <div class="upload-zone" id="upload-zone" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFile(event)">
+              <input type="file" accept="image/*" id="file-input" onchange="handleFileSelect(event)">
+              <div class="upload-icon">📸</div>
+              <h3>Selecciona o arrossega la teva foto</h3>
+              <p>JPG, PNG, WEBP · Sense límit de mida</p>
+            </div>
+            <div id="upload-closed-msg" class="hidden">
+              <div class="empty-state"><div class="empty-icon">🔒</div>
+              <p id="upload-closed-text">La pujada de fotos està tancada.</p>
+              </div>
+            </div>
+          </div>
+          <div id="upload-preview-section" class="hidden" style="margin-top:16px;">
+            <div class="upload-preview" id="upload-preview-wrap"></div>
+            <textarea id="caption-input" maxlength="300" rows="2" data-i18n-placeholder="caption_placeholder" placeholder="Què vols transmetre amb la teva foto? (opcional)" style="width:100%;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--surface,#16243a);border:1px solid rgba(255,255,255,.15);color:inherit;font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
+            <div style="margin-top:16px; display:flex; gap:10px; justify-content:center;">
+              <button type="button" class="btn btn-primary" onclick="uploadPhoto()" id="btn-upload-confirm" data-i18n="confirm_upload_btn">
+                Confirmar Pujada
+              </button>
+            </div>
+          </div>
+          <div id="upload-done-section" class="hidden" style="margin-top:16px;text-align:center;">
+            <div style="font-size:48px;">✅</div>
+            <p style="margin:12px 0;font-weight:600;">Foto pujada correctament</p>
+            <div id="my-photo-preview" style="max-width:300px;margin:16px auto;border-radius:12px;overflow:hidden;"></div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteMyPhoto()" data-i18n="delete_photo_btn">🗑 Eliminar i Tornar a Pujar</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Accessos ràpids — targetes equivalents, mateixa graella a tots els dispositius -->
+      <div class="section-grid">
+        <div class="nav-card photo-gallery-tile" id="nav-card-gallery" onclick="showParticipantGallery()">
           <div class="gallery-tile-carousel" id="gallery-tile-carousel" aria-hidden="true"></div>
           <div class="nav-icon">📷</div>
           <div class="nav-title" data-i18n="nav_gallery">GALERIA</div>
           <div class="nav-sub" data-i18n="nav_gallery_sub">Fotos dels reptes finalitzats</div>
         </div>
-      </div>
-
-      <!-- Accessos ràpids restants — es mantenen com estaven -->
-      <div class="section-grid">
         <div class="nav-card" id="nav-card-vote" onclick="showParticipantVoting()">
           <div class="nav-icon">🗳️</div>
           <div class="nav-title" data-i18n="nav_vote">VOTAR</div>
@@ -550,7 +519,7 @@
         <div class="nav-card" id="nav-card-resultats" onclick="openEmbedded('resultat')">
           <div class="nav-icon">🏅</div>
           <div class="nav-title" data-i18n="nav_resultats">RESULTAT REPTE</div>
-          <div class="nav-sub" data-i18n="nav_resultats_sub">Resultats dels reptes finalitzats</div>
+          <div class="nav-sub" data-i18n="nav_resultats_sub">Resultats del repte actual</div>
         </div>
         <div class="nav-card" id="nav-card-classificacio" onclick="openEmbedded('classificacio')">
           <div class="nav-icon">🏆</div>
@@ -814,38 +783,6 @@
     text-transform:uppercase;
   ">Connectant...</div>
 </div>
-
-<!-- ══════════════════════════════════
-     REDISSENY NAVEGACIÓ (2026-07) — edició de títol de la foto pujada.
-     Aquest script NOMÉS gestiona quan apareix el botó "Desar canvis"
-     (compara el text actual amb el text que hi havia quan el camp va
-     rebre el focus). NO desa res a Supabase ni omple el valor inicial:
-     cal que qui porti js/screens/participant.js:
-       1) ompli #caption-edit-input amb el títol/caption ja guardat
-          quan es renderitzi l'estat "foto pujada",
-       2) implementi window.saveCaptionEdit() de debò (persistir el
-          canvi i tornar a amagar el botó).
-     Mentre no hi hagi implementació real, saveCaptionEdit() només
-     avisa per consola i amb un alert perquè es noti que falta connectar.
-══════════════════════════════════ -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var editInput = document.getElementById('caption-edit-input');
-    var saveBtn = document.getElementById('btn-save-caption');
-    if (!editInput || !saveBtn) return;
-    var original = editInput.value;
-    editInput.addEventListener('focus', function () { original = editInput.value; });
-    editInput.addEventListener('input', function () {
-      saveBtn.classList.toggle('hidden', editInput.value === original);
-    });
-  });
-  if (typeof window.saveCaptionEdit !== 'function') {
-    window.saveCaptionEdit = function () {
-      console.warn('[FEM] saveCaptionEdit() encara no està connectat a cap lògica de desat real.');
-      alert('Aquesta funció encara no està connectada (pendent de desenvolupament).');
-    };
-  }
-</script>
 
 <!-- App modular: punto de entrada -->
 <script type="module" src="js/main.js"></script>
