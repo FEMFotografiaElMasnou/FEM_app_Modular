@@ -6,7 +6,7 @@ import { sb, _dbMode } from '../core/config.js';
 import { t, applyTranslations } from '../core/i18n.js';
 import { showToast, showLoader, hideLoader } from '../ui/toast.js';
 import { openModal, closeModal, confirmAction } from '../ui/modals.js';
-import { loadAllData } from '../core/data.js';
+import { loadAllData, loadAppTexts } from '../core/data.js';
 import { showScreen, showAdminScreen, showParticipantScreen, stopAutoRefresh } from '../core/router.js';
 
 // ═══════════════════════════════════
@@ -34,7 +34,9 @@ function clearSession() {
 export async function init() {
   showLoader(t('connecting'));
   try {
-    await loadAllData();
+    // Dades i textos en paral·lel: loadAppTexts() no bloqueja si triga o falla
+    // (es queda amb el diccionari estàtic de i18n.js com a xarxa de seguretat).
+    await Promise.all([loadAllData(), loadAppTexts()]);
   } catch(e) {
     console.error('init error:', e);
     showToast(t('supabase_connect_error_short'), 'error');

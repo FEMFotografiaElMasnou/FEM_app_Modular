@@ -8,8 +8,8 @@
 import { state } from './state.js';
 import { showToast } from '../ui/toast.js';
 import { logout, enterAsEmail } from '../screens/login.js';
-import { loadAllData } from './data.js';
-import { t } from './i18n.js';
+import { loadAllData, loadAppTexts } from './data.js';
+import { t, applyTranslations } from './i18n.js';
 
 export const SUPABASE_CONFIGS = {
   normal: {
@@ -32,6 +32,13 @@ function _createSupabaseClient(mode) {
   const cfg = SUPABASE_CONFIGS[mode];
   if (!window.supabase || !window.supabase.createClient) return null;
   return window.supabase.createClient(cfg.url, cfg.key);
+}
+
+// Exportada perquè la pantalla de Textos pugui obrir un client puntual cap a
+// l'entorn NO actiu (botó "Replica a les dues bases") sense tocar la sessió
+// activa ni l'estat de l'app — és només un client JS nou, cap query pròpia.
+export function getClientForMode(mode) {
+  return _createSupabaseClient(mode);
 }
 
 sb = _createSupabaseClient(_dbMode);
@@ -58,6 +65,10 @@ export async function switchDbMode(newMode) {
 
   // Recrea el client apuntant a la nova BD
   sb = _createSupabaseClient(_dbMode);
+
+  // Torna a carregar els textos des de l'entorn nou (Normal i Test poden tenir
+  // valors diferents a app_texts si s'han editat per separat) i repinta.
+  try { await loadAppTexts(); applyTranslations(); } catch (_) {}
 
   // Reinicia estat en memòria (evita barrejar dades de les dues BD)
   state.users             = [];

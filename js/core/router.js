@@ -55,6 +55,7 @@ export function showAdminScreen() {
   renderObjectivesList();
   renderMembersTable();
   renderRanking('ranking-current-list', 'ranking-general-list');
+  if (typeof window.renderTextsList === 'function') window.renderTextsList();
 }
 
 export function showParticipantScreen() {

@@ -143,6 +143,9 @@ export function adminNav(tab) {
     var oc = el.getAttribute('onclick') || '';
     el.classList.toggle('active', oc.indexOf("'" + tab + "'") !== -1);
   });
+  // Repinta la llista de textos en entrar-hi, per descartar edicions no
+  // desades d'una visita anterior i reflectir l'estat actual del diccionari.
+  if (tab === 'texts' && typeof window.renderTextsList === 'function') window.renderTextsList();
 }
 
 // Iteració 3: botons de plàstic com a pell dels checkboxes

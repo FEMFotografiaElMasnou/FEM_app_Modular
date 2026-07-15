@@ -154,6 +154,9 @@
       <button type="button" class="sidebar-item" onclick="adminNav('members')">
         <span class="sidebar-icon">👥</span><span class="sidebar-label" data-i18n="members">Socis</span>
       </button>
+      <button type="button" class="sidebar-item" onclick="adminNav('texts')">
+        <span class="sidebar-icon">📝</span><span class="sidebar-label" data-i18n="texts_nav_label">Textos</span>
+      </button>
     </aside>
   <div class="main-content">
     <!-- Tab Nav (ocult: navegació moguda al sidebar) -->
@@ -164,6 +167,7 @@
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'ranking')" data-i18n="ranking">Ranking</button>
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'objectives')" data-i18n="objectives">Reptes</button>
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'members')" data-i18n="members">Socis</button>
+      <button type="button" class="tab-btn" onclick="switchTab('admin', 'texts')" data-i18n="texts_nav_label">Textos</button>
     </div>
 
     <!-- TAB: DASHBOARD -->
@@ -425,6 +429,33 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- TAB: TEXTOS (Fase 3 d'i18n — edició en calent del diccionari, sense passar per SQL) -->
+    <div id="admin-tab-texts" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title" data-i18n="texts_title">Gestió de textos</div>
+            <div class="card-subtitle" data-i18n="texts_subtitle">Edita els textos de l'aplicació (CA / ES)</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span id="texts-count" style="font-size:12px;color:var(--text-muted);white-space:nowrap;"></span>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-save-texts" onclick="saveAllTexts()" data-i18n="save_all_texts_btn">Desar tots els canvis</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-save-texts-both" onclick="saveAllTextsToBoth()" data-i18n="save_all_texts_both_btn">Replica a les dues bases</button>
+          </div>
+        </div>
+        <div class="card-subtitle" style="margin-top:-6px;margin-bottom:10px;" data-i18n="texts_save_hint">"Desar tots els canvis" només escriu a la base activa ara mateix (mira el botó Normal/Test de dalt). "Replica a les dues bases" escriu a Normal i Test alhora.</div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <input type="text" id="texts-search" oninput="filterTexts(this.value)" data-i18n-placeholder="texts_search_placeholder" placeholder="Cerca per clau o text...">
+        </div>
+        <div id="texts-table-head" style="display:flex;gap:12px;padding:0 10px 8px;font-size:11px;color:var(--text-muted);font-weight:600;">
+          <div style="width:200px;flex-shrink:0;" data-i18n="texts_col_key">Clau</div>
+          <div style="flex:1;">CA</div>
+          <div style="flex:1;">ES</div>
+        </div>
+        <div id="texts-list" style="display:flex;flex-direction:column;gap:6px;max-height:65vh;overflow-y:auto;border-top:1px solid var(--border);"></div>
       </div>
     </div>
   </div>

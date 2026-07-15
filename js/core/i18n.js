@@ -312,6 +312,19 @@ export const TRANSLATIONS = {
     username_field_label: "Nom d'Usuari",
     setup_banner_title: '⚙️ Primera configuració',
     save_changes_btn: '💾 Desar canvis',
+    // Fase 3 — pantalla Admin de Textos
+    texts_nav_label: 'Textos',
+    texts_title: 'Gestió de textos',
+    texts_subtitle: "Edita els textos de l'aplicació (CA / ES)",
+    save_all_texts_btn: 'Desar tots els canvis',
+    texts_search_placeholder: 'Cerca per clau o text...',
+    texts_col_key: 'Clau',
+    no_texts_found: 'Cap text coincideix amb la cerca.',
+    texts_save_error: '❌ Error en desar els textos',
+    texts_saved: '✅ Textos desats',
+    save_all_texts_both_btn: 'Replica a les dues bases',
+    texts_saved_both: '✅ Textos desats a Normal i Test',
+    texts_save_hint: '"Desar tots els canvis" només escriu a la base activa ara mateix (mira el botó Normal/Test de dalt). "Replica a les dues bases" escriu a Normal i Test alhora.',
   },
   es: {
     // Foto: título/descripción opcional del autor
@@ -619,10 +632,33 @@ export const TRANSLATIONS = {
     username_field_label: 'Nombre de Usuario',
     setup_banner_title: '⚙️ Primera configuración',
     save_changes_btn: '💾 Guardar cambios',
+    // Fase 3 — pantalla Admin de Textos
+    texts_nav_label: 'Textos',
+    texts_title: 'Gestión de textos',
+    texts_subtitle: 'Edita los textos de la aplicación (CA / ES)',
+    save_all_texts_btn: 'Guardar todos los cambios',
+    texts_search_placeholder: 'Busca por clave o texto...',
+    texts_col_key: 'Clave',
+    no_texts_found: 'Ningún texto coincide con la búsqueda.',
+    texts_save_error: '❌ Error al guardar los textos',
+    texts_saved: '✅ Textos guardados',
+    save_all_texts_both_btn: 'Replicar en las dos bases',
+    texts_saved_both: '✅ Textos guardados en Normal y Test',
+    texts_save_hint: '"Guardar todos los cambios" solo escribe en la base activa ahora mismo (mira el botón Normal/Test de arriba). "Replicar en las dos bases" escribe en Normal y Test a la vez.',
   }
 };
 
 export let currentLang = localStorage.getItem('femrank_lang') || 'ca';
+
+// Fusiona un diccionari carregat de Supabase (taula app_texts, Fase 2) per
+// sobre del diccionari estàtic d'aquest fitxer. Les claus que la BD encara
+// no tingui es queden amb el valor estàtic (xarxa de seguretat: si algú
+// afegeix una clau nova al codi però encara no s'ha sincronitzat a la BD,
+// o si la BD no respon, l'app mai es queda sense text).
+export function mergeTranslations(lang, obj) {
+  if (!TRANSLATIONS[lang] || !obj || typeof obj !== 'object') return;
+  Object.assign(TRANSLATIONS[lang], obj);
+}
 
 export function t(key) {
   return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) ||

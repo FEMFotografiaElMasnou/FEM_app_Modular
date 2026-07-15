@@ -22,6 +22,7 @@ import './features/votacio.js';
 import './features/fotos.js';
 import './features/socis.js';
 import './features/tematiques.js';
+import './features/textos.js';
 
 // ── Screens ──
 import { init, handleLogin } from './screens/login.js';

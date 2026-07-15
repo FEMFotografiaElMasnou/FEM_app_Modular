@@ -4,6 +4,30 @@
 import { state, _localVoteEdits } from './state.js';
 import { sb } from './config.js';
 import { showToast } from '../ui/toast.js';
+import { mergeTranslations } from './i18n.js';
+
+// ═══════════════════════════════════
+// TEXTOS DE LA INTERFÍCIE (app_texts, Fase 2 d'i18n)
+// ═══════════════════════════════════
+// Fetch separat de loadAllData(): els textos gairebé mai canvien, mentre que
+// loadAllData() es crida molt sovint (cada pujada de foto, cada canvi de
+// soci, l'auto-refresh...). Barrejar-ho tot allà voldria dir re-descarregar
+// ~30KB de traduccions en cada refresc trivial. Es crida un cop a l'arrencada
+// (login.js:init) i en canviar d'entorn (config.js:switchDbMode).
+// Si Supabase no respon o la taula encara no existeix, l'app es queda amb
+// el diccionari estàtic de i18n.js — no es trenca res.
+export async function loadAppTexts() {
+  try {
+    const { data, error } = await sb.from('app_texts').select('lang,content');
+    if (error || !data) {
+      console.warn('loadAppTexts: sense resposta de Supabase, es fa servir el diccionari estàtic.', error);
+      return;
+    }
+    data.forEach(row => mergeTranslations(row.lang, row.content));
+  } catch (e) {
+    console.warn('loadAppTexts: error de connexió, es fa servir el diccionari estàtic.', e);
+  }
+}
 
 export async function loadAllData() {
   const results = await Promise.all([
