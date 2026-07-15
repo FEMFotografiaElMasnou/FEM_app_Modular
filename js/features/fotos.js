@@ -9,7 +9,9 @@ import { confirmAction } from '../ui/modals.js';
 import { getActiveAllPhotos, getParticipantNumber, loadAllData } from '../core/data.js';
 import { renderAdminVotingGrid, renderVotingGrid, resetVoteButtons } from './votacio.js';
 import { refreshAdminDashboard } from '../screens/admin.js';
-import { refreshParticipantDashboard } from '../screens/participant.js';
+import { refreshParticipantDashboard, getButtonVisibility } from '../screens/participant.js';
+import { renderVoteMosaic } from './galeria.js';
+import { getActiveCalendar } from './calendari.js';
 
 // ═══════════════════════════════════
 // ADMIN GALLERY
@@ -20,6 +22,17 @@ function _escape(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Formata una data ISO "AAAA-MM-DD" (com es desa a reptes_calendari.voting_end)
+// com "DD-MM-AAAA". Fem servir slicing de string, no new Date(), pel mateix
+// motiu que getCalendariDatesHtml() a calendari.js: evita que un parsing amb
+// fus horari desplaci el dia. Retorna '' si la data no és vàlida/no existeix
+// (qui la crida fa fallback al text genèric en aquest cas).
+function _formatDateEs(dateVal) {
+  if (!dateVal || typeof dateVal !== 'string' || dateVal.length < 10) return '';
+  const yyyy = dateVal.slice(0, 4), mm = dateVal.slice(5, 7), dd = dateVal.slice(8, 10);
+  return `${dd}-${mm}-${yyyy}`;
 }
 
 // Nom real de l'autor. Només per al panell d'admin: aquí no s'aplica
@@ -153,6 +166,42 @@ export function updateUploadSection() {
   const uploadZone = document.getElementById('upload-zone');
   const closedMsg  = document.getElementById('upload-closed-msg');
   const closedText = document.getElementById('upload-closed-text');
+  const objectiveCard = document.getElementById('card-objective-photo');
+  const voteSection    = document.getElementById('vote-mosaic-section');
+  const voteTitleEl    = document.getElementById('vote-mosaic-title');
+  const voteSubEl      = document.getElementById('vote-mosaic-sub');
+
+  // VOTACIÓ OBERTA: TOTA la targeta "Repte + La meva foto" es substitueix per
+  // la de Votar (mateixa mida que Galeria), amb "Votar el repte: [nom]" com a
+  // títol i la data fi de votació com a subtítol. Lligat al repte, no un botó
+  // global — té sentit de cara a múltiples reptes actius en el futur (cadascun
+  // tindrà el seu propi accés a Votar).
+  if (getButtonVisibility().showVote) {
+    if (objectiveCard) objectiveCard.classList.add('hidden');
+    if (voteSection) {
+      voteSection.classList.remove('hidden');
+      const objTitle = state.currentObjective ? state.currentObjective.title : '—';
+      if (voteTitleEl) {
+        voteTitleEl.textContent = currentLang === 'es'
+          ? `Votar el reto: ${objTitle}`
+          : `Votar el repte: ${objTitle}`;
+      }
+      if (voteSubEl) {
+        // Data fi de votació real: ve de reptes_calendari.voting_end (fila del
+        // repte actiu), NO de objectives.end_date (que és un altre camp, no
+        // gestionat pel calendari). getActiveCalendar() ja fa aquest lookup.
+        const cal = getActiveCalendar();
+        const endDate = cal ? _formatDateEs(cal.votingEnd) : '';
+        voteSubEl.textContent = endDate
+          ? (currentLang === 'es' ? `Votaciones abiertas hasta el ${endDate}` : `Votacions obertes fins el ${endDate}`)
+          : t('nav_vote_sub');
+      }
+      renderVoteMosaic('vote-mosaic-grid', 6);
+    }
+    return;
+  }
+  if (voteSection)    voteSection.classList.add('hidden');
+  if (objectiveCard)  objectiveCard.classList.remove('hidden');
 
   // OVERRIDE ADMIN: si force_hide_upload està actiu, ocultar tota la secció
   if (!actingAsAdmin() && state.settings.force_hide_upload) {

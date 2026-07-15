@@ -463,6 +463,8 @@
       <div class="hero-grid">
 
         <!-- REPTE + LA MEVA FOTO — unificats: la foto pujada pertany a aquest repte.
+             Amagada sencera quan la votació és oberta (la substitueix
+             #vote-mosaic-section, de mida i tractament idèntics a Galeria).
              NOTA (futur multi-repte): aquest box és una unitat autocontinguda;
              si en el futur hi ha més d'un repte actiu, caldria repetir aquest
              mateix bloc un cop per repte (això no s'implementa encara). -->
@@ -477,7 +479,7 @@
 
           <!-- La meva foto d'aquest repte -->
           <div class="objective-photo-section">
-            <div class="objective-photo-header">
+            <div class="objective-photo-header" id="objective-photo-header">
               <div class="card-title objective-photo-title" id="card-my-photo-title" data-i18n="my_photo">LA MEVA FOTO</div>
               <!-- Amagat (no eliminat): el JS hi escriu l'estat de la pujada; el text
                    actual ("Foto pujada (pendent)") confonia perquè la foto ja es veu.
@@ -531,6 +533,22 @@
           </div>
         </div>
 
+        <!-- VOTAR — substitueix TOTA la targeta de Repte quan la votació és oberta.
+             Mateixa mida i tractament que Galeria (hero-gallery-tile): mosaic fix
+             de 6 fotos del repte (3 columnes x 2 files) de fons, amb "Votar el
+             repte: [nom]" com a títol per damunt (no un botó global: lligat al
+             repte, llest per a múltiples reptes actius en el futur). El JS omple
+             #vote-mosaic-title i #vote-mosaic-sub (data fi de votació) a fotos.js.
+             NOTA: el .nav-sub NO porta data-i18n perquè el text es genera
+             dinàmicament (amb la data); si en portés, applyTranslations()
+             el sobreescriuria cada refresc amb el text estàtic del diccionari. -->
+        <div class="nav-card photo-gallery-tile hero-gallery-tile vote-mosaic-tile hidden" id="vote-mosaic-section" onclick="showParticipantVoting()">
+          <div class="vote-mosaic-grid" id="vote-mosaic-grid"></div>
+          <div class="nav-icon">🗳️</div>
+          <div class="nav-title" id="vote-mosaic-title">—</div>
+          <div class="nav-sub" id="vote-mosaic-sub">Accedeix a la votació de fotos</div>
+        </div>
+
         <!-- GALERIA — targeta principal (hero), més gran i gràfica que la resta -->
         <div class="nav-card photo-gallery-tile hero-gallery-tile" id="nav-card-gallery" onclick="showParticipantGallery()">
           <div class="gallery-tile-carousel" id="gallery-tile-carousel" aria-hidden="true"></div>
@@ -540,13 +558,8 @@
         </div>
       </div>
 
-      <!-- Accessos ràpids restants — es mantenen com estaven -->
+      <!-- Accessos ràpids restants — Votar ja no hi és (viu dins la targeta de Repte) -->
       <div class="section-grid">
-        <div class="nav-card" id="nav-card-vote" onclick="showParticipantVoting()">
-          <div class="nav-icon">🗳️</div>
-          <div class="nav-title" data-i18n="nav_vote">VOTAR</div>
-          <div class="nav-sub" data-i18n="nav_vote_sub">Accedeix a la votació de fotos</div>
-        </div>
         <div class="nav-card" id="nav-card-resultats" onclick="openEmbedded('resultat')">
           <div class="nav-icon">🏅</div>
           <div class="nav-title" data-i18n="nav_resultats">RESULTAT REPTE</div>
@@ -817,16 +830,11 @@
 
 <!-- ══════════════════════════════════
      REDISSENY NAVEGACIÓ (2026-07) — edició de títol de la foto pujada.
-     Aquest script NOMÉS gestiona quan apareix el botó "Desar canvis"
-     (compara el text actual amb el text que hi havia quan el camp va
-     rebre el focus). NO desa res a Supabase ni omple el valor inicial:
-     cal que qui porti js/screens/participant.js:
-       1) ompli #caption-edit-input amb el títol/caption ja guardat
-          quan es renderitzi l'estat "foto pujada",
-       2) implementi window.saveCaptionEdit() de debò (persistir el
-          canvi i tornar a amagar el botó).
-     Mentre no hi hagi implementació real, saveCaptionEdit() només
-     avisa per consola i amb un alert perquè es noti que falta connectar.
+     Aquest script només gestiona quan apareix el botó "Desar canvis"
+     (compara el text actual amb el que hi havia quan el camp va rebre
+     el focus — es recalcula cada cop, per si updateUploadSection() ha
+     precarregat un valor nou). El desat real i el precarregat del valor
+     ja viuen a js/features/fotos.js (updateUploadSection / saveCaptionEdit).
 ══════════════════════════════════ -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -839,12 +847,6 @@
       saveBtn.classList.toggle('hidden', editInput.value === original);
     });
   });
-  if (typeof window.saveCaptionEdit !== 'function') {
-    window.saveCaptionEdit = function () {
-      console.warn('[FEM] saveCaptionEdit() encara no està connectat a cap lògica de desat real.');
-      alert('Aquesta funció encara no està connectada (pendent de desenvolupament).');
-    };
-  }
 </script>
 
 <!-- App modular: punto de entrada -->

@@ -203,8 +203,8 @@ export function applyParticipantButtonVisibility() {
     const el = document.getElementById(id);
     if (el) el.style.display = show ? '' : 'none';
   };
-  setDisplay('nav-card-vote',          v.showVote);
-  setDisplay('bnav-vote',              v.showVote);
+  // Votar ja no és una targeta pròpia: la substitueix el mosaic dins la
+  // targeta de Repte/La meva foto (vegeu updateUploadSection a fotos.js).
   setDisplay('nav-card-resultats',     v.showResultats);
   setDisplay('nav-card-classificacio', v.showClassificacio);
   // Galeria: visible si hi ha algun repte finalitzat; l'admin (rol real) també

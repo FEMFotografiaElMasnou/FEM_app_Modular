@@ -281,6 +281,49 @@ export function stopGalleryCarousel() {
   if (cont) cont.innerHTML = '';
 }
 
+// ═══════════════════════════════════
+// MOSAIC de VOTAR — targeta "La meva foto" quan la votació és oberta
+// ═══════════════════════════════════
+// Mosaic fix de fotos PUBLICADES del repte ACTUAL (no de reptes finalitzats,
+// a diferència del carrusel de Galeria). La selecció es fixa un cop per
+// repte/sessió: NO es torna a barrejar en cada refresc del dashboard
+// (auto-refresh cada 30s a router.js), només quan canvia el repte actiu o
+// falten fotos per completar el mosaic (p. ex. se n'ha eliminat alguna).
+let _voteMosaicPhotoIds    = null;
+let _voteMosaicObjectiveId = null;
+
+function _shuffledPick(arr, n) {
+  return arr.slice().sort(() => Math.random() - 0.5).slice(0, n);
+}
+
+export function renderVoteMosaic(containerId, count = 6) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return;
+
+  const objId = state.currentObjective ? state.currentObjective.id : null;
+  const pool  = objId ? state.publishedPhotos.filter(p => p.objectiveId === objId) : [];
+
+  // Repte nou (o primer cop en aquesta sessió): fixem una selecció nova
+  if (_voteMosaicObjectiveId !== objId) {
+    _voteMosaicObjectiveId = objId;
+    _voteMosaicPhotoIds = _shuffledPick(pool, count).map(p => p.id);
+  }
+
+  // Recuperem les fotos ja fixades; si alguna ha desaparegut (eliminada),
+  // completem el mosaic amb fotos noves del mateix repte.
+  let chosen = _voteMosaicPhotoIds
+    .map(id => pool.find(p => p.id === id))
+    .filter(Boolean);
+  if (chosen.length < Math.min(count, pool.length)) {
+    const used  = new Set(chosen.map(p => p.id));
+    const extra = _shuffledPick(pool.filter(p => !used.has(p.id)), count - chosen.length);
+    chosen = chosen.concat(extra);
+    _voteMosaicPhotoIds = chosen.map(p => p.id);
+  }
+
+  cont.innerHTML = chosen.map(p => `<img src="${p.url}" alt="" loading="lazy">`).join('');
+}
+
 // Escapa text per inserir-lo en HTML de forma segura
 function _escape(s) {
   return String(s == null ? '' : s)

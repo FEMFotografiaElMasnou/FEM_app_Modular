@@ -11,7 +11,14 @@ módulos por pantalla y por función.
 - Runtime / build: **ninguno** — no hay build step ni bundler. El navegador carga los módulos tal cual.
 - Base de datos: **Supabase** (Postgres + API REST/JS). La seguridad real recae en las RLS, no en ocultar la clave anon.
 - Imágenes: **Cloudinary** (cloud `dz1n0g9yg`, preset `Fem_Apps`).
-- Hosting: **Vercel** (sitio estático, `vercel.json`; desplegado manualmente por Enric con `git pull && npx vercel --prod` tras cada push de Pablo — el plan Hobby de Vercel bloquea el auto-deploy de colaboradores externos). Repo público en GitHub. `netlify.toml` eliminado (2026-07-09), ya no se usa Netlify.
+- Hosting: **Vercel** (sitio estático, `vercel.json`). Repo público en GitHub:
+  `https://github.com/FEMFotografiaElMasnou/FEM_app_Modular`. Proyecto Vercel:
+  `https://vercel.com/femfotografiaiapps/fem-app/`, vinculado al dominio
+  `https://www.femfotografiaelmasnou.cat`. El deploy a Vercel se dispara
+  **automáticamente** con cada push a GitHub — ya NO hace falta el
+  `git pull && npx vercel --prod` manual (actualizado 2026-07-13; la limitación
+  del plan Hobby con colaboradores externos que motivaba el paso manual ya no
+  aplica / no se reproduce en la práctica). `netlify.toml` eliminado (2026-07-09), ya no se usa Netlify.
 - Modo BD: conmutable **Normal / Test** (dos proyectos Supabase), persistido en `localStorage`.
 
 ## Comandos
@@ -19,7 +26,10 @@ módulos por pantalla y por función.
   - VS Code → extensión **Live Server** → clic derecho en `index.html` → "Open with Live Server".
   - o terminal en esta carpeta: `npx serve` · `python -m http.server 8000` · `node server.js` (si existe el lanzador).
 - **Validar un módulo** — `node --check js/ruta/al/modulo.js` (solo sintaxis, no resuelve imports).
-- **Desplegar** — push a Vercel; sirve los archivos tal cual, sin cambios respecto al monolito.
+- **Desplegar** — `git push` a GitHub; Vercel despliega automáticamente el sitio
+  (vinculado a `https://www.femfotografiaelmasnou.cat`), sirviendo los archivos
+  tal cual, sin cambios respecto al monolito. No hace falta ningún comando de
+  Vercel manual.
 
 ## Estructura del proyecto
 - `index.html` — núcleo: contenedores de pantalla (login/admin/participant) + modales. Carga `js/main.js` como módulo.

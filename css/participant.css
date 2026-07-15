@@ -60,32 +60,7 @@
 /* Botó que no ha de forçar amplada completa (ex: Confirmar Pujada) */
 .btn-inline { width: auto; }
 
-/* ── FILA PRINCIPAL (hero) — Repte/La meva foto + Galeria ──
-   Les dues targetes principals: més grans i gràfiques que la resta.
-   align-items:stretch fa que Galeria s'estiri a la mateixa alçada que la
-   targeta de Repte (que ja és alta pel seu contingut). */
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  align-items: stretch;
-  margin-bottom: 16px;
-}
-
-.hero-gallery-tile {
-  min-height: 260px;
-  padding: 24px 18px;
-}
-.hero-gallery-tile .nav-icon { font-size: 46px; margin-bottom: 12px; }
-.hero-gallery-tile .nav-title { font-size: 28px; letter-spacing: 2px; }
-.hero-gallery-tile .nav-sub { font-size: 15px; }
-
-@media (max-width: 700px) {
-  .hero-grid { grid-template-columns: 1fr; }
-  .hero-gallery-tile { min-height: 180px; }
-}
-
-/* ── SECTION GRID — targetes equivalents (Votar, Resultat, Classificació) ──
+/* ── SECTION GRID — targetes equivalents (Resultat, Classificació) ──
    Mateixa graella de 2 columnes a mòbil, tauleta i escriptori (màxima homologació). */
 .section-grid {
   display: grid;
@@ -116,7 +91,8 @@
 /* Subtítol: mida augmentada per llegibilitat (usuari mitjà +65 anys) */
 .nav-card .nav-sub { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-top: 3px; line-height: 1.35; }
 
-/* Targeta GALERIA: mateixa mida compacta que la resta, amb el carrusel de fons */
+/* Targeta GALERIA (i VOTAR, que en reutilitza el mateix llenguatge visual):
+   mida compacta base, amb un fons de fotos i icona/títol/subtítol per damunt. */
 .photo-gallery-tile {
   display: flex;
   flex-direction: column;
@@ -126,7 +102,7 @@
   overflow: hidden;
   min-height: 100px;
 }
-/* El contingut (icona/títol/subtítol) per damunt del carrusel i llegible */
+/* El contingut (icona/títol/subtítol) per damunt del fons i llegible */
 .photo-gallery-tile > .nav-icon,
 .photo-gallery-tile > .nav-title,
 .photo-gallery-tile > .nav-sub {
@@ -134,7 +110,7 @@
   z-index: 1;
   text-shadow: 0 1px 6px rgba(0, 0, 0, .85);
 }
-/* Carrusel de fons: capes d'imatge que es fonen amb brillantor baixa */
+/* Carrusel de fons (Galeria): capes d'imatge que es fonen amb brillantor baixa */
 .gallery-tile-carousel {
   position: absolute;
   inset: 0;
@@ -154,6 +130,65 @@
 .gallery-tile-layer.visible {
   opacity: 1;
 }
+
+/* ── FILA PRINCIPAL (hero) — Repte/La meva foto (o Votar) + Galeria ──
+   Les dues targetes principals: més grans i gràfiques que la resta.
+   align-items:stretch fa que totes dues s'estirin a la mateixa alçada —
+   com que són elements GERMANS directes del grid, funciona igual per a
+   qualsevol combinació de les dues visibles en cada moment. Aquestes regles
+   van DESPRÉS de .nav-card/.photo-gallery-tile perquè les han de sobreescriure
+   (mateixa especificitat: guanya la que surt més tard en el full d'estils). */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.hero-gallery-tile {
+  min-height: 260px;
+  padding: 24px 18px;
+}
+.hero-gallery-tile .nav-icon { font-size: 46px; margin-bottom: 12px; }
+.hero-gallery-tile .nav-title { font-size: 28px; letter-spacing: 2px; }
+.hero-gallery-tile .nav-sub { font-size: 15px; }
+
+@media (max-width: 700px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero-gallery-tile { min-height: 180px; }
+}
+
+/* ── VOTAR (mosaic) — substitueix TOTA la targeta de Repte quan la votació
+   és oberta. Reutilitza .hero-gallery-tile (mateixa mida que Galeria: això
+   és el que garanteix que totes dues quedin igual d'altes).
+   Graella FIXA de 6 fotos (3 columnes x 2 files). NOTA: es posiciona cada
+   imatge amb percentatges explícits (position:absolute + top/left/width/
+   height calculats), NO amb CSS Grid — dins un contenidor ell mateix
+   absolut (inset:0) el repartiment amb `1fr` de files/columnes no es
+   calculava bé (la 2a fila quedava d'un parell de píxels). Percentatges
+   directes és el mateix mecanisme, ja provat, del carrusel de Galeria. */
+.vote-mosaic-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.vote-mosaic-grid img {
+  position: absolute;
+  width: calc((100% - 4px) / 3);
+  height: calc((100% - 2px) / 2);
+  object-fit: cover;
+  object-position: center;
+  filter: brightness(.32);
+  display: block;
+  border-radius: 2px;
+}
+.vote-mosaic-grid img:nth-child(1) { top: 0; left: 0; }
+.vote-mosaic-grid img:nth-child(2) { top: 0; left: calc((100% - 4px) / 3 + 2px); }
+.vote-mosaic-grid img:nth-child(3) { top: 0; left: calc(2 * (100% - 4px) / 3 + 4px); }
+.vote-mosaic-grid img:nth-child(4) { top: calc((100% - 2px) / 2 + 2px); left: 0; }
+.vote-mosaic-grid img:nth-child(5) { top: calc((100% - 2px) / 2 + 2px); left: calc((100% - 4px) / 3 + 2px); }
+.vote-mosaic-grid img:nth-child(6) { top: calc((100% - 2px) / 2 + 2px); left: calc(2 * (100% - 4px) / 3 + 4px); }
 
 /* ════════════════════════════════
    GALERIA — filtres, capçaleres de grup i mosaic
