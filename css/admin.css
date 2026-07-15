@@ -17,9 +17,9 @@
 }
 .admin-sidebar .sidebar-title {
   font-family: var(--font-display);
+  font-weight: 700;
   font-size: 14px; letter-spacing: 2px;
   color: var(--text-muted);
-  text-transform: uppercase;
   padding: 0 12px 12px;
 }
 .sidebar-item {
@@ -73,6 +73,7 @@
   padding: 0; border: 0; background: transparent;
   cursor: pointer;
   font-family: var(--font-display);
+  font-weight: 700;
   color: rgba(232,240,255,0.55);
   transition: color 0.25s ease;
 }
@@ -98,7 +99,6 @@
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 1.2px;
-  text-transform: uppercase;
   text-align: center;
   max-width: 110px;
   line-height: 1.25;
@@ -136,8 +136,8 @@
 }
 .cal-nav-btn:hover { color: var(--accent2); border-color: var(--accent); }
 .cal-month-title {
-  font-family: var(--font-display); font-size: 17px; letter-spacing: 1.5px;
-  min-width: 150px; text-align: center; text-transform: uppercase;
+  font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 1.5px;
+  min-width: 150px; text-align: center;
 }
 .cal-mode-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .cal-chip {
@@ -160,7 +160,7 @@
 }
 .cal-dow {
   text-align: center; font-size: 10px; color: var(--text-muted);
-  text-transform: uppercase; letter-spacing: 1px; padding-bottom: 4px;
+  letter-spacing: 1px; padding-bottom: 4px;
 }
 .cal-day {
   position: relative; height: 40px; border-radius: 8px;

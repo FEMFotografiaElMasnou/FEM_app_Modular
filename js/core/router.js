@@ -4,7 +4,7 @@
 // ═══════════════════════════════════
 import { state, actingAsAdmin } from './state.js';
 import { sb, _dbMode, _updateDbModeButton, switchDbMode } from './config.js';
-import { applyTranslations } from './i18n.js';
+import { applyTranslations, t } from './i18n.js';
 import { loadAllData } from './data.js';
 import { showToast } from '../ui/toast.js';
 import { openModal, closeModal } from '../ui/modals.js';
@@ -95,13 +95,13 @@ export function showParticipantScreen() {
 // ═══════════════════════════════════
 export function toggleDbMode() {
   const next = _dbMode === 'normal' ? 'test' : 'normal';
-  const modeLabel = next === 'test' ? 'TEST 🔴' : 'NORMAL 🟢';
+  const modeLabel = next === 'test' ? (t('db_mode_test') + ' 🔴') : (t('db_mode_normal') + ' 🟢');
   // Confirm before switching — accidental switches could be confusing
-  document.getElementById('confirm-title').textContent = 'Canviar Base de Dades';
+  document.getElementById('confirm-title').textContent = t('confirm_switch_db_title');
   document.getElementById('confirm-msg').textContent   =
-    `Canviaràs a mode ${modeLabel}.\nEs tancarà la sessió i caldrà tornar a entrar.`;
+    t('confirm_switch_db_msg').replace('{mode}', modeLabel);
   const okBtn = document.getElementById('confirm-ok-btn');
-  okBtn.textContent = 'Canviar';
+  okBtn.textContent = t('confirm_switch_db_btn');
   const newBtn = okBtn.cloneNode(true);
   okBtn.parentNode.replaceChild(newBtn, okBtn);
   newBtn.addEventListener('click', () => {

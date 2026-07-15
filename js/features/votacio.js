@@ -3,7 +3,7 @@
 // ═══════════════════════════════════
 import { state, _localVoteEdits } from '../core/state.js';
 import { sb } from '../core/config.js';
-import { currentLang, t } from '../core/i18n.js';
+import { t } from '../core/i18n.js';
 import { showToast, showLoader, hideLoader } from '../ui/toast.js';
 import { confirmAction } from '../ui/modals.js';
 import { getActivePublishedPhotos, getParticipantNumber } from '../core/data.js';
@@ -124,7 +124,7 @@ export function renderVotingGrid(containerId) {
   const activePhotos = getActivePublishedPhotos();
 
   if (activePhotos.length === 0) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🗳️</div><p>No hi ha fotos publicades per votar.</p></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🗳️</div><p>${t('no_photos_to_vote')}</p></div>`;
     return;
   }
 
@@ -142,14 +142,14 @@ export function renderVotingGrid(containerId) {
       <div style="grid-column:1/-1;background:rgba(62,207,142,0.1);border:1px solid rgba(62,207,142,0.3);
                   border-radius:10px;padding:12px 16px;text-align:center;
                   color:var(--success);font-size:13px;margin-bottom:4px;">
-        ✅ ${currentLang === 'es' ? 'Ya enviaste tu votación. La pantalla queda bloqueada.' : 'Ja has enviat la teva votació. La pantalla queda bloquejada.'}
+        ✅ ${t('already_voted_locked_msg')}
       </div>`;
   } else if (!hasActiveObj || !state.settings.voting_enabled) {
     lockedBanner = `
       <div style="grid-column:1/-1;background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);
                   border-radius:10px;padding:12px 16px;text-align:center;
                   color:var(--accent);font-size:13px;margin-bottom:4px;">
-        🔒 ${currentLang === 'es' ? 'Votaciones no abiertas — puedes ver las fotos pero aún no puedes votar' : 'Votacions no obertes — pots veure les fotos però encara no pots votar'}
+        🔒 ${t('voting_not_open_msg')}
       </div>`;
   }
 
@@ -175,10 +175,10 @@ export function renderVotingGrid(containerId) {
         <img src="${photo.url}" alt="Foto ${num}" loading="lazy" onclick="openFullscreen('${photo.url}')" style="cursor:zoom-in;width:100%;display:block;max-height:280px;object-fit:contain;background:var(--surface);">
         <div class="vote-card-footer" style="flex-direction:column;align-items:stretch;gap:6px;">
           <div style="display:flex;justify-content:flex-end;align-items:center;min-height:16px;">
-            ${myVote ? '<span style="font-size:11px;color:var(--success);">✓ Votat</span>' : ''}
+            ${myVote ? `<span style="font-size:11px;color:var(--success);">${t('voted_label')}</span>` : ''}
           </div>
           ${isOwn
-            ? `<div style="font-size:12px;color:var(--accent);text-align:center;padding:6px 0;font-weight:600;">⭐ La teva foto</div>`
+            ? `<div style="font-size:12px;color:var(--accent);text-align:center;padding:6px 0;font-weight:600;">${t('your_photo')}</div>`
             : starRow('creativity',t('creativity')) + starRow('theme',t('theme')) + starRow('composition',t('composition'))
           }
         </div>
@@ -191,7 +191,7 @@ export async function handleStar(photoId, criteria, value, containerId) {
   // Block if voting closed or no active objective
   const hasActiveObj = state.objectives.some(o => o.status === 'active');
   if (!hasActiveObj || !state.settings.voting_enabled) {
-    showToast(currentLang === 'es' ? '🔒 Las votaciones están cerradas' : '🔒 Les votacions estan tancades', 'error');
+    showToast(t('voting_closed_error'), 'error');
     return;
   }
 
@@ -199,7 +199,7 @@ export async function handleStar(photoId, criteria, value, containerId) {
   const uid = state.currentUser ? state.currentUser.id : null;
   const objId = state.currentObjective ? state.currentObjective.id : null;
   if (uid && objId && isVotingSubmitted(uid, objId)) {
-    showToast(currentLang === 'es' ? '🔒 Ya enviaste tu votación' : '🔒 Ja vas enviar la teva votació', 'error');
+    showToast(t('already_voted_error'), 'error');
     return;
   }
 
@@ -219,12 +219,7 @@ export async function handleStar(photoId, criteria, value, containerId) {
   // 4) Persist to Supabase in the background (autosave)
   const ok = await saveVoteOnClick(photoId, criteria, newVal);
   if (!ok) {
-    showToast(
-      currentLang === 'es'
-        ? '⚠️ El voto no se ha podido guardar. Revisa tu conexión.'
-        : '⚠️ El vot no s\'ha pogut desar. Revisa la connexió.',
-      'error'
-    );
+    showToast(t('vote_save_error'), 'error');
     return;
   }
 
@@ -266,7 +261,7 @@ export async function submitFinalVoting(btnId, refreshCallback) {
 
   // Guard: already submitted
   if (isVotingSubmitted(uid, objId)) {
-    showToast(currentLang === 'es' ? '🔒 Ya enviaste tu votación' : '🔒 Ja vas enviar la teva votació', 'error');
+    showToast(t('already_voted_error'), 'error');
     return;
   }
 
@@ -281,17 +276,12 @@ export async function submitFinalVoting(btnId, refreshCallback) {
   }
 
   // Build modal message
-  const isES = currentLang === 'es';
-  const title = isES ? 'Enviar Votación Definitiva' : 'Enviar Votació Definitiva';
+  const title = t('confirm_send_vote_title');
   let msg;
   if (unvotedCount > 0) {
-    msg = isES
-      ? `Tienes ${unvotedCount} foto(s) sin valorar. Si envías ahora, esas fotos no recibirán ningún voto tuyo y NO podrás cambiarlo después. ¿Seguro que quieres enviar?`
-      : `Tens ${unvotedCount} foto(es) sense valorar. Si envies ara, aquestes fotos no rebran cap vot teu i NO podràs canviar-ho després. Segur que vols enviar?`;
+    msg = t('unvoted_photos_warning').replace('{count}', unvotedCount);
   } else {
-    msg = isES
-      ? '¿Enviar votación definitiva? Una vez enviada NO podrás cambiar ningún voto.'
-      : 'Enviar votació definitiva? Un cop enviada NO podràs canviar cap vot.';
+    msg = t('confirm_send_vote_msg');
   }
 
   // Open confirm modal — reuses generic confirmAction
@@ -304,7 +294,7 @@ export async function submitFinalVoting(btnId, refreshCallback) {
 export async function doSubmitFinalVoting(btnId, uid, objId, refreshCallback) {
   const btn = document.getElementById(btnId);
   if (btn) { btn.innerHTML = '<span class="loader"></span>'; btn.disabled = true; }
-  showLoader(currentLang === 'es' ? 'Enviando votación...' : 'Enviant votació...');
+  showLoader(t('sending_vote_loader'));
 
   // 1 UPDATE — set es_esborrany = false for this user/objective
   const { error } = await sb
@@ -318,10 +308,7 @@ export async function doSubmitFinalVoting(btnId, uid, objId, refreshCallback) {
   if (error) {
     console.error('submitFinalVoting error', error);
     if (btn) { btn.innerHTML = t('save_votes_btn'); btn.disabled = false; }
-    showToast(
-      currentLang === 'es' ? '❌ Error al enviar. Inténtalo de nuevo.' : '❌ Error en enviar. Torna-ho a intentar.',
-      'error'
-    );
+    showToast(t('send_vote_error'), 'error');
     return;
   }
 
@@ -335,16 +322,13 @@ export async function doSubmitFinalVoting(btnId, uid, objId, refreshCallback) {
   // Re-render the appropriate panels
   if (typeof refreshCallback === 'function') refreshCallback();
 
-  showToast(
-    currentLang === 'es' ? '✅ Votación enviada correctamente' : '✅ Votació enviada correctament',
-    'success'
-  );
+  showToast(t('vote_sent_ok'), 'success');
 }
 
 // Mark a vote button as "saved" (green, permanent)
 export function markVoteButtonSaved(btn) {
   if (!btn) return;
-  btn.innerHTML = currentLang === 'es' ? '✅ Votos Enviados' : '✅ Vots Enviats';
+  btn.innerHTML = t('votes_sent_btn');
   btn.style.background = 'rgba(62,207,142,0.2)';
   btn.style.borderColor = 'var(--success)';
   btn.style.color = 'var(--success)';
@@ -393,3 +377,9 @@ export function updateVoteButtonsState() {
 window.handleStar = handleStar;
 window.saveAdminVotes = saveAdminVotes;
 window.saveParticipantVotes = saveParticipantVotes;
+// Exposada perquè applyTranslations() (i18n.js) repinti els mosaics de votació
+// en canviar d'idioma (contingut dinàmic generat amb t()).
+window._refreshVotingGrids = function () {
+  renderAdminVotingGrid();
+  renderVotingGrid('participant-voting-grid');
+};

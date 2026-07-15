@@ -2,7 +2,7 @@
 // PANTALLA ADMIN — dashboard, controles (toggles), tabs y nav lateral
 // ═══════════════════════════════════
 import { state } from '../core/state.js';
-import { currentLang, t } from '../core/i18n.js';
+import { t } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
 import { getActivePublishedPhotos, getActiveAllPhotos, getActiveVotes, getVotingProgress, saveSettings } from '../core/data.js';
 import { updateVoteButtonsState } from '../features/votacio.js';
@@ -14,6 +14,9 @@ import { switchTab } from '../core/router.js';
 // ADMIN DASHBOARD
 // ═══════════════════════════════════
 export function refreshAdminDashboard() {
+  // Guard: cridada també des d'applyTranslations() en canviar d'idioma, que pot
+  // dispararse abans del login (encara sense state.currentUser).
+  if (!state.currentUser) return;
   // ── Filtrado por temática activa (no mezclar temáticas pasadas)
   const activePublished = getActivePublishedPhotos();
   const activeAll       = getActiveAllPhotos();
@@ -56,7 +59,7 @@ export function refreshAdminDashboard() {
       adminUploadSect.classList.add('hidden');
       if (adminPrevSect) adminPrevSect.classList.add('hidden');
       if (adminDoneSect) { adminDoneSect.classList.remove('hidden'); }
-      if (adminLabelEl) adminLabelEl.textContent = adminPhoto.published ? 'Foto publicada ✅' : 'Foto pujada (pendent) ⏳';
+      if (adminLabelEl) adminLabelEl.textContent = adminPhoto.published ? t('photo_published') : t('photo_pending');
       const prev = document.getElementById('admin-my-photo-preview');
       if (prev) prev.innerHTML = '<img src="'+adminPhoto.url+'" style="width:100%;border-radius:12px;">';
       // Ocultar botón "Eliminar i Tornar a Pujar" si la subida está cerrada
@@ -67,7 +70,7 @@ export function refreshAdminDashboard() {
     } else {
       adminUploadSect.classList.remove('hidden');
       if (adminDoneSect) adminDoneSect.classList.add('hidden');
-      if (adminLabelEl) adminLabelEl.textContent = 'Puja la teva foto per participar';
+      if (adminLabelEl) adminLabelEl.textContent = t('upload_photo_label');
     }
   }
 
@@ -79,7 +82,7 @@ export function refreshAdminDashboard() {
       <div style="font-size:14px;color:var(--text-muted);margin-top:8px;">${state.currentObjective.description}</div>
     `;
   } else {
-    objEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><p>No hi ha temàtica activa.</p></div>`;
+    objEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><p>${t('no_active_objective_short')}.</p></div>`;
   }
   // Calendari del repte: omplir dates/switch (l'històric de dates viu a Temàtiques)
   renderCalendariCard();
@@ -93,21 +96,19 @@ export async function toggleUpload() {
   // Block upload activation if no active objective/temàtica
   if (document.getElementById('toggle-upload').checked && !state.currentObjective) {
     document.getElementById('toggle-upload').checked = false;
-    showToast(currentLang === 'es' ? '🔒 Crea una temática primero' : '🔒 Crea una temàtica primer', 'error');
+    showToast(t('create_objective_first'), 'error');
     return;
   }
   state.settings.uploads_enabled = document.getElementById('toggle-upload').checked;
   await saveSettings();
-  showToast(state.settings.uploads_enabled
-    ? (currentLang === 'es' ? 'Subida de fotos activada ✅' : 'Pujada de fotos activada ✅')
-    : (currentLang === 'es' ? 'Subida de fotos desactivada 🔒' : 'Pujada de fotos desactivada 🔒'), 'info');
+  showToast(state.settings.uploads_enabled ? t('upload_enabled_msg') : t('upload_disabled_msg'), 'info');
 }
 
 export async function toggleVotingOpen() {
   // Block voting if no published photos
   if (document.getElementById('toggle-voting').checked && state.publishedPhotos.length === 0) {
     document.getElementById('toggle-voting').checked = false;
-    showToast(currentLang === 'es' ? '🔒 Publica las fotos primero' : '🔒 Publica les fotos primer', 'error');
+    showToast(t('publish_photos_first'), 'error');
     return;
   }
   state.settings.voting_enabled = document.getElementById('toggle-voting').checked;
@@ -120,9 +121,7 @@ export async function toggleVotingOpen() {
     revealNamesAndRanking();
   }
   await saveSettings();
-  showToast(state.settings.voting_enabled
-    ? (currentLang === 'es' ? 'Votaciones abiertas ✅ (subida de fotos cerrada)' : 'Votacions obertes ✅ (pujada de fotos tancada)')
-    : (currentLang === 'es' ? 'Votaciones cerradas · nombres y ranking revelados 🏆' : 'Votacions tancades · noms i rànquing revelats 🏆'), 'success');
+  showToast(state.settings.voting_enabled ? t('voting_opened_msg') : t('voting_closed_ranking_msg'), 'success');
   refreshAdminDashboard();
 }
 
@@ -161,9 +160,7 @@ export function syncPlasticButtons() {
 export function plasticPress(btnId, cbId, fnName) {
   // Si el calendari gestiona pujada/votació, no permetre el canvi manual
   if ((cbId === 'toggle-upload' || cbId === 'toggle-voting') && isCalendarAutomationActive()) {
-    showToast(currentLang === 'es'
-      ? '🔒 Gestionado por el calendario (apaga la automatización para tocarlo)'
-      : '🔒 Gestionat pel calendari (apaga l\'automatització per tocar-ho)', 'info');
+    showToast(t('managed_by_calendar_msg'), 'info');
     return;
   }
   var cb = document.getElementById(cbId);

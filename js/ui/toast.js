@@ -1,12 +1,14 @@
 // ═══════════════════════════════════
 // GLOBAL LOADER + TOAST
 // ═══════════════════════════════════
+import { t } from '../core/i18n.js';
+
 let _loaderSafetyTimer = null;
 
 export function showLoader(text) {
   const el = document.getElementById('global-loader');
   const tx = document.getElementById('global-loader-text');
-  if (tx) tx.textContent = text || 'Carregant...';
+  if (tx) tx.textContent = text || t('loading');
   if (el) el.style.display = 'flex';
   // Safety: always hide after 30s to avoid permanent block
   clearTimeout(_loaderSafetyTimer);

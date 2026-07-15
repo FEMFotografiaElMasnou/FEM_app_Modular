@@ -9,6 +9,7 @@ import { state } from './state.js';
 import { showToast } from '../ui/toast.js';
 import { logout, enterAsEmail } from '../screens/login.js';
 import { loadAllData } from './data.js';
+import { t } from './i18n.js';
 
 export const SUPABASE_CONFIGS = {
   normal: {
@@ -79,7 +80,7 @@ export async function switchDbMode(newMode) {
     try {
       await loadAllData();
       if (enterAsEmail(prevEmail)) {
-        showToast('Base de dades canviada a 🔴 TEST', 'error');
+        showToast(t('db_mode_changed').replace('{mode}', '🔴 ' + t('db_mode_test')), 'error');
         return;
       }
     } catch (e) {
@@ -90,14 +91,15 @@ export async function switchDbMode(newMode) {
   // Fallback (no s'ha trobat l'usuari a test) o tornada a Normal → login
   logout();
 
-  const modeLabel = _dbMode === 'test' ? '🔴 TEST' : '🟢 Normal';
-  showToast(`Base de dades canviada a ${modeLabel}`, _dbMode === 'test' ? 'error' : 'success');
+  const modeLabel = _dbMode === 'test' ? ('🔴 ' + t('db_mode_test')) : ('🟢 ' + t('db_mode_normal'));
+  showToast(t('db_mode_changed').replace('{mode}', modeLabel), _dbMode === 'test' ? 'error' : 'success');
 }
 
 // Mostra/amaga el segell "TEST" (indicador global, independent de la pantalla)
 export function _updateTestStamp() {
   const stamp = document.getElementById('test-stamp');
   if (!stamp) return;
+  stamp.textContent = t('test_stamp_label');
   stamp.style.display = _dbMode === 'test' ? 'flex' : 'none';
 }
 
@@ -107,12 +109,12 @@ export function _updateDbModeButton() {
   const btns = document.querySelectorAll('.db-mode-btn');
   btns.forEach(btn => {
     if (_dbMode === 'test') {
-      btn.textContent       = 'TEST';
+      btn.textContent       = t('db_mode_test');
       btn.style.background   = 'rgba(255,59,48,0.15)';
       btn.style.borderColor  = 'rgba(255,59,48,0.5)';
       btn.style.color        = '#ff3b30';
     } else {
-      btn.textContent       = 'NORMAL';
+      btn.textContent       = t('db_mode_normal');
       btn.style.background   = 'rgba(52,199,89,0.15)';
       btn.style.borderColor  = 'rgba(52,199,89,0.5)';
       btn.style.color        = '#34c759';
@@ -125,3 +127,7 @@ export const CLOUDINARY_PRESET = 'Fem_Apps';
 export const CLOUDINARY_URL    = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
 
 window.switchDbMode = switchDbMode;
+// Exposats via window perquè applyTranslations() (i18n.js) els pugui refrescar
+// en canviar d'idioma sense crear un import circular config.js ↔ i18n.js.
+window._updateDbModeButton = _updateDbModeButton;
+window._updateTestStamp    = _updateTestStamp;

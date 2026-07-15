@@ -10,7 +10,7 @@
 // Com que cada soci puja UNA sola foto per repte, mai coincideixen repte+autor
 // concrets, així que no hi ha capçaleres de grup; sempre una sola graella.
 import { state } from '../core/state.js';
-import { currentLang, t } from '../core/i18n.js';
+import { t } from '../core/i18n.js';
 import { openFullscreen } from '../ui/lightbox.js';
 
 // Estat dels filtres (àmbit de mòdul). 'all' = tots.
@@ -334,3 +334,7 @@ function _escape(s) {
 // Exposa en window les funcions usades des d'onclick del HTML
 window.onGalleryFilterChange = onGalleryFilterChange;
 window.openGalleryLightbox   = openGalleryLightbox;
+// Exposada perquè applyTranslations() (i18n.js) refresqui les opcions "Tots els
+// reptes"/"Tots els autors" en canviar d'idioma, sense crear un import circular.
+window._refreshGalleryFilters = populateGalleryFilters;
+window._refreshGalleryGrid    = renderGallery;

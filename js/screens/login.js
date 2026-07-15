@@ -3,7 +3,7 @@
 // ═══════════════════════════════════
 import { state } from '../core/state.js';
 import { sb, _dbMode } from '../core/config.js';
-import { currentLang, t, applyTranslations } from '../core/i18n.js';
+import { t, applyTranslations } from '../core/i18n.js';
 import { showToast, showLoader, hideLoader } from '../ui/toast.js';
 import { openModal, closeModal, confirmAction } from '../ui/modals.js';
 import { loadAllData } from '../core/data.js';
@@ -37,7 +37,7 @@ export async function init() {
     await loadAllData();
   } catch(e) {
     console.error('init error:', e);
-    showToast('❌ Error connectant amb Supabase', 'error');
+    showToast(t('supabase_connect_error_short'), 'error');
   }
 
   hideLoader();
@@ -67,7 +67,7 @@ export async function init() {
 
 export async function initializeDB() {
   const btn = document.getElementById('btn-init');
-  btn.innerHTML = '<span class="loader"></span> Inicialitzant...';
+  btn.innerHTML = '<span class="loader"></span> ' + t('init_db_loader');
   btn.disabled  = true;
 
   const now = new Date().toISOString();
@@ -94,11 +94,11 @@ export async function initializeDB() {
     document.getElementById('setup-banner').style.display = 'none';
     document.getElementById('login-user').value = 'admin@femrank.cat';
     document.getElementById('login-pass').value  = 'admin123';
-    showToast('✅ BD inicialitzada! admin@femrank.cat / admin123', 'success');
+    showToast(t('db_initialized'), 'success');
   } else {
-    btn.innerHTML = 'Inicialitzar Base de Dades';
+    btn.innerHTML = t('init_db_btn');
     btn.disabled  = false;
-    showToast('❌ Error connectant amb Supabase. Comprova la URL i la clau.', 'error');
+    showToast(t('sheets_error'), 'error');
   }
 }
 
@@ -115,11 +115,11 @@ export async function handleLogin() {
 
   if (!username || !password) {
     errEl.style.display   = 'block';
-    errEl.textContent     = 'Introdueix usuari/email i contrasenya.';
+    errEl.textContent     = t('login_fill_fields');
     return;
   }
 
-  btn.innerHTML = '<span class="loader"></span> Comprovant...';
+  btn.innerHTML = '<span class="loader"></span> ' + t('checking_loader');
   btn.disabled  = true;
 
   // Only reload from Supabase if data is not already in memory (init() already loaded it)
@@ -133,15 +133,13 @@ export async function handleLogin() {
     hideLoader();
   }
 
-  btn.innerHTML = 'ENTRAR';
+  btn.innerHTML = t('enter_btn');
   btn.disabled  = false;
 
   if (state.users.length === 0) {
     document.getElementById('setup-banner').style.display = 'block';
     errEl.style.display = 'block';
-    errEl.textContent   = currentLang === 'es'
-      ? 'No se encontraron usuarios en Supabase. Ejecuta el SQL o pulsa Inicializar.'
-      : 'No s\'han trobat usuaris a Supabase. Executa el SQL o prem Inicialitzar.';
+    errEl.textContent   = t('no_users_found');
     return;
   }
 
@@ -171,9 +169,7 @@ export async function handleLogin() {
 
   if (!user) {
     errEl.style.display = 'block';
-    errEl.textContent   = currentLang === 'es'
-      ? 'Usuario/email o contraseña incorrectos.'
-      : 'Usuari/email o contrasenya incorrectes.';
+    errEl.textContent   = t('login_invalid');
     return;
   }
 
@@ -252,7 +248,7 @@ export async function saveNewPassword() {
     .eq('id', _pendingPasswordUser.id);
 
   if (error) {
-    errEl.textContent = '❌ Error';
+    errEl.textContent = t('generic_error');
     errEl.style.display = 'block';
     return;
   }
@@ -302,19 +298,19 @@ export async function handleRegister() {
 
   // Validations
   if (!name || !email || !pass || !pass2) {
-    errEl.style.display = 'block'; errEl.textContent = 'Omple tots els camps.'; return;
+    errEl.style.display = 'block'; errEl.textContent = t('register_fill_fields'); return;
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errEl.style.display = 'block'; errEl.textContent = 'Introdueix un email vàlid.'; return;
+    errEl.style.display = 'block'; errEl.textContent = t('register_invalid_email'); return;
   }
   if (pass.length < 6) {
-    errEl.style.display = 'block'; errEl.textContent = 'La contrasenya ha de tenir mínim 6 caràcters.'; return;
+    errEl.style.display = 'block'; errEl.textContent = t('register_pass_short'); return;
   }
   if (pass !== pass2) {
-    errEl.style.display = 'block'; errEl.textContent = 'Les contrasenyes no coincideixen.'; return;
+    errEl.style.display = 'block'; errEl.textContent = t('register_pass_mismatch'); return;
   }
 
-  btn.innerHTML = '<span class="loader"></span> Registrant...';
+  btn.innerHTML = '<span class="loader"></span> ' + t('registering_loader');
   btn.disabled  = true;
   showLoader(t('creating_account'));
 
@@ -342,8 +338,8 @@ export async function handleRegister() {
     // Duplicate email
     hideLoader();
     errEl.style.display = 'block';
-    errEl.textContent   = currentLang === 'es' ? 'Este email ya está registrado. Inicia sesión.' : 'Aquest email ja està registrat. Inicia sessió.';
-    btn.innerHTML = 'CREAR COMPTE'; btn.disabled = false; return;
+    errEl.textContent   = t('register_email_exists');
+    btn.innerHTML = t('create_account_btn'); btn.disabled = false; return;
   }
 
   if (!error) {
@@ -360,17 +356,17 @@ export async function handleRegister() {
     showParticipantScreen();
   } else {
     errEl.style.display = 'block';
-    errEl.textContent   = 'Error en crear el compte. Torna-ho a intentar.';
+    errEl.textContent   = t('register_error');
   }
 
   hideLoader();
-  btn.innerHTML = 'CREAR COMPTE'; btn.disabled = false;
+  btn.innerHTML = t('create_account_btn'); btn.disabled = false;
 }
 
 export function confirmUnsubscribe() {
   confirmAction(
-    'Donar-se de Baixa',
-    'Estàs segur que vols eliminar el teu compte? Es perdran totes les teves dades (foto, vots). Aquesta acció no es pot desfer.',
+    t('unsubscribe_title'),
+    t('unsubscribe_msg'),
     handleUnsubscribe
   );
 }

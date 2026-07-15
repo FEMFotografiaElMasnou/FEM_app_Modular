@@ -5,7 +5,7 @@
 // ═══════════════════════════════════
 import { state } from '../core/state.js';
 import { sb } from '../core/config.js';
-import { currentLang } from '../core/i18n.js';
+import { currentLang, t } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
 import { getActiveObjectiveId, loadAllData, saveSettings } from '../core/data.js';
 
@@ -182,9 +182,7 @@ export function calNavMonth(delta) {
 export function calSetMode(mode) {
   calMode = calMode === mode ? null : mode;
   if (calMode) {
-    showToast(currentLang === 'es'
-      ? 'Clic: marca el día · otro clic: rellena el rango · clic en lo marcado: borra'
-      : 'Clic: marca el dia · un altre clic: omple el rang · clic al marcat: esborra', 'info');
+    showToast(t('cal_mode_hint'), 'info');
   }
   renderCalMonth();
 }
@@ -196,9 +194,7 @@ export function calSetMode(mode) {
 export function calDayClick(dateIso) {
   if (!calDraft) return;
   if (!calMode) {
-    showToast(currentLang === 'es'
-      ? 'Elige primero "Marcar subida" o "Marcar votación"'
-      : 'Tria primer "Marcar pujada" o "Marcar votació"', 'info');
+    showToast(t('cal_choose_mode_first'), 'info');
     return;
   }
   const ks = calMode === 'upload' ? 'uploadStart' : 'votingStart';
@@ -232,9 +228,8 @@ function syncAutomationButton() {
 export async function toggleCalAutomation() {
   const cb = document.getElementById('cal-automation');
   if (!cb) return;
-  const isES  = currentLang === 'es';
   const objId = getActiveObjectiveId();
-  if (!objId) { showToast(isES ? 'No hay temática activa' : 'No hi ha temàtica activa', 'error'); return; }
+  if (!objId) { showToast(t('no_active_objective_short'), 'error'); return; }
 
   cb.checked = !cb.checked;
   syncAutomationButton();
@@ -249,7 +244,7 @@ export async function toggleCalAutomation() {
     console.error('toggleCalAutomation error', error);
     cb.checked = !cb.checked;   // revertir: no s'ha pogut desar
     syncAutomationButton();
-    showToast(isES ? '❌ Error al guardar la automatización' : '❌ Error en desar l\'automatització', 'error');
+    showToast(t('automation_save_error'), 'error');
     return;
   }
 
@@ -270,15 +265,13 @@ export async function toggleCalAutomation() {
   if (cbV) cbV.checked = !!state.settings.voting_enabled;
   if (typeof window.syncPlasticButtons === 'function') window.syncPlasticButtons();
 
-  showToast(cb.checked
-    ? (isES ? '⚡ Automatización activada: el calendario manda' : '⚡ Automatització activada: el calendari mana')
-    : (isES ? 'Automatización desactivada: toggles manuales' : 'Automatització desactivada: toggles manuals'), 'success');
+  showToast(cb.checked ? t('automation_enabled_msg') : t('automation_disabled_msg'), 'success');
 }
 
 // ── Guardar dates + switch (upsert per objective_id) — llegeix de l'esborrany ──
 export async function saveCalendari() {
   const objId = getActiveObjectiveId();
-  if (!objId || !calDraft) { showToast(currentLang === 'es' ? 'No hay temática activa' : 'No hi ha temàtica activa', 'error'); return; }
+  if (!objId || !calDraft) { showToast(t('no_active_objective_short'), 'error'); return; }
 
   const uStart = calDraft.uploadStart || null;
   const uEnd   = calDraft.uploadEnd   || null;
@@ -286,22 +279,18 @@ export async function saveCalendari() {
   const vEnd   = calDraft.votingEnd   || null;
   const auto   = !!(document.getElementById('cal-automation') && document.getElementById('cal-automation').checked);
 
-  const isES = currentLang === 'es';
-
   // Validacions (només si les dues dates del parell hi són)
   if (uStart && uEnd && uStart > uEnd) {
-    showToast(isES ? 'La subida no puede cerrar antes de abrir' : 'La pujada no pot tancar abans d\'obrir', 'error'); return;
+    showToast(t('upload_close_before_open'), 'error'); return;
   }
   if (vStart && vEnd && vStart > vEnd) {
-    showToast(isES ? 'La votación no puede cerrar antes de abrir' : 'La votació no pot tancar abans d\'obrir', 'error'); return;
+    showToast(t('voting_close_before_open'), 'error'); return;
   }
   // Marge d'1 dia entre tancar subida i obrir votació
   if (uEnd && vStart) {
     const diffDays = (new Date(vStart) - new Date(uEnd)) / 86400000;
     if (diffDays < 1) {
-      showToast(isES
-        ? 'La votación debe abrir al menos 1 día después de cerrar la subida'
-        : 'La votació ha d\'obrir com a mínim 1 dia després de tancar la pujada', 'error');
+      showToast(t('voting_min_gap'), 'error');
       return;
     }
   }
@@ -322,7 +311,7 @@ export async function saveCalendari() {
 
     if (error) {
       console.error('saveCalendari error', error);
-      showToast(isES ? '❌ Error al guardar el calendario' : '❌ Error en desar el calendari', 'error');
+      showToast(t('calendar_save_error'), 'error');
       return;
     }
 
@@ -331,7 +320,7 @@ export async function saveCalendari() {
     renderCalendariCard();
     // Refrescar les dates a les targetes de Temàtiques (via window per evitar import circular)
     if (typeof window.renderObjectivesList === 'function') window.renderObjectivesList();
-    showToast(isES ? '✅ Calendario guardado' : '✅ Calendari desat', 'success');
+    showToast(t('calendar_saved'), 'success');
   } finally {
     if (saveBtn) saveBtn.classList.remove('on');
   }
@@ -344,14 +333,13 @@ export function getCalendariDatesHtml(objectiveId) {
   const cal = (state.reptesCalendari || []).find(c => c.objectiveId === objectiveId);
   if (!cal || !(cal.uploadStart || cal.uploadEnd || cal.votingStart || cal.votingEnd)) return '';
 
-  const isES = currentLang === 'es';
   // 'YYYY-MM-DD' → 'DD-MM-YY' (només per mostrar; internament tot segueix en ISO)
   const fmt = d => d ? `${d.slice(8, 10)}-${d.slice(5, 7)}-${d.slice(2, 4)}` : '—';
   const range = (a, b) => (a || b) ? `${fmt(a)} → ${fmt(b)}` : '—';
 
   return `<div class="obj-dates">
-    <span title="${isES ? 'Subida' : 'Pujada'}">📤 ${range(cal.uploadStart, cal.uploadEnd)}</span>
-    <span title="${isES ? 'Votación' : 'Votació'}">🗳️ ${range(cal.votingStart, cal.votingEnd)}</span>
+    <span title="${t('cal_upload_label')}">📤 ${range(cal.uploadStart, cal.uploadEnd)}</span>
+    <span title="${t('cal_voting_label')}">🗳️ ${range(cal.votingStart, cal.votingEnd)}</span>
   </div>`;
 }
 

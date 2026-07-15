@@ -25,7 +25,7 @@
   --gold:        #f5a623;
   --radius:      16px;
   --radius-sm:   10px;
-  --font-display:'Bebas Neue', sans-serif;
+  --font-display:'Barlow Condensed', sans-serif;
   --font-cond:   'Barlow Condensed', sans-serif;
   --font-body:   'Barlow', sans-serif;
   --font-mono:   'JetBrains Mono', monospace;
@@ -77,7 +77,6 @@ body::before {
   font-family: var(--font-cond);
   font-size: 13px;
   letter-spacing: 2px;
-  text-transform: uppercase;
   color: var(--text-muted);
   margin-bottom: 8px;
   font-weight: 600;
@@ -259,7 +258,6 @@ body::before {
   padding: 3px 10px;
   font-size: 11px;
   letter-spacing: 1.5px;
-  text-transform: uppercase;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -383,6 +381,7 @@ body::before {
 
 .card-title {
   font-family: var(--font-display);
+  font-weight: 700;
   font-size: 22px;
   letter-spacing: 2px;
   color: var(--text);
@@ -446,6 +445,7 @@ body::before {
 
 .stat-card .stat-value {
   font-family: var(--font-display);
+  font-weight: 700;
   font-size: 42px;
   letter-spacing: 2px;
   color: var(--accent2);
@@ -455,7 +455,6 @@ body::before {
 .stat-card .stat-label {
   font-size: 11px;
   letter-spacing: 1.5px;
-  text-transform: uppercase;
   color: var(--text-muted);
   margin-top: 6px;
   font-weight: 600;
@@ -707,6 +706,7 @@ body::before {
 
 .rank-num {
   font-family: var(--font-display);
+  font-weight: 700;
   font-size: 30px;
   letter-spacing: 1px;
   min-width: 40px;
@@ -730,7 +730,7 @@ body::before {
 .rank-info { flex: 1; min-width: 0; }
 .rank-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rank-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.rank-score { font-family: var(--font-display); font-size: 28px; color: var(--accent2); letter-spacing: 1px; }
+.rank-score { font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--accent2); letter-spacing: 1px; }
 
 /* Rànquing detallat per repte: fila fina amb les 3 notes per criteri */
 .rank-criteria {
@@ -834,7 +834,6 @@ body::before {
   text-align: left;
   font-size: 11px;
   letter-spacing: 2px;
-  text-transform: uppercase;
   color: var(--text-muted);
   padding: 10px 12px;
   border-bottom: 1px solid var(--border);
@@ -901,6 +900,7 @@ body::before {
 
 .modal h2 {
   font-family: var(--font-display);
+  font-weight: 700;
   font-size: 26px;
   letter-spacing: 2px;
   margin-bottom: 20px;
@@ -957,9 +957,9 @@ body::before {
 
 .section-title {
   font-family: var(--font-display);
+  font-weight: 700;
   font-size: 14px;
   letter-spacing: 3px;
-  text-transform: uppercase;
   color: var(--text-muted);
   margin-bottom: 14px;
 }
@@ -1093,7 +1093,6 @@ body::before {
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.2s;

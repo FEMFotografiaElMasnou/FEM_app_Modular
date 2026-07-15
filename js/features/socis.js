@@ -3,7 +3,7 @@
 // ═══════════════════════════════════
 import { state } from '../core/state.js';
 import { sb } from '../core/config.js';
-import { currentLang, t } from '../core/i18n.js';
+import { t } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
 import { openModal, closeModal, confirmAction } from '../ui/modals.js';
 import { updateUser, loadAllData, hasUserVoted, getActiveAllPhotos } from '../core/data.js';
@@ -91,7 +91,7 @@ export async function doResetMemberPassword(userId) {
 export function renderMembersTable() {
   const tbody = document.getElementById('members-tbody');
   if (state.users.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">${currentLang==="es"?"No hay socios.":"No hi ha socis."}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">${t('no_members')}</td></tr>`;
     return;
   }
   // Build a Set of userIds that have uploaded a photo to the ACTIVE objective
@@ -108,7 +108,7 @@ export function renderMembersTable() {
           <span
             style="cursor:pointer;border-bottom:1px dashed var(--border);padding-bottom:1px;"
             onclick="inlineEditName('${u.id}', this)"
-            title="${currentLang==='es'?'Haz clic para editar el nombre':'Clica per editar el nom'}"
+            title="${t('edit_name_tooltip')}"
           >${u.name}</span>
         </td>
         <td style="font-family:var(--font-mono);font-size:12px;">${u.email || u.username}</td>
@@ -117,13 +117,13 @@ export function renderMembersTable() {
             class="badge ${u.role==='admin'?'badge-red':'badge-yellow'}"
             style="cursor:pointer;user-select:none;"
             onclick="toggleRole('${u.id}')"
-            title="${currentLang==='es'?'Haz clic para cambiar el rol':'Clica per canviar rol'}"
-          >${u.role==='admin'?'Admin':(currentLang==='es'?'Socio':'Soci')}</span>
+            title="${t('edit_role_tooltip')}"
+          >${u.role==='admin'?'Admin':t('member_role_name')}</span>
         </td>
         <td>${uploaded?'<span class="badge badge-green">✓ Sí</span>':'<span class="badge badge-gray">No</span>'}</td>
         <td>${voted?'<span class="badge badge-green">✓ Sí</span>':'<span class="badge badge-gray">No</span>'}</td>
         <td style="display:flex;gap:6px;align-items:center;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="resetMemberPassword('${u.id}')" title="${currentLang==='es'?'Resetear contraseña':'Resetejar contrasenya'}" style="padding:4px 10px;font-size:13px;">🔄 ${t('member_reset_pwd')}</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="resetMemberPassword('${u.id}')" title="${t('reset_pwd_tooltip')}" style="padding:4px 10px;font-size:13px;">🔄 ${t('member_reset_pwd')}</button>
           <button type="button" class="btn btn-danger btn-sm" onclick="deleteMember('${u.id}')">${t("delete_btn")}</button>
         </td>
       </tr>
@@ -135,13 +135,13 @@ export function openMemberModal(id) {
   document.getElementById('member-edit-id').value = id || '';
   if (id) {
     const u = state.users.find(u => u.id === id);
-    document.getElementById('member-modal-title').textContent = 'EDITAR SOCI';
+    document.getElementById('member-modal-title').textContent = t('edit_member_title');
     document.getElementById('member-name').value     = u.name;
     document.getElementById('member-username').value = u.email || u.username;
     document.getElementById('member-password').value = u.password;
     document.getElementById('member-role').value     = u.role;
   } else {
-    document.getElementById('member-modal-title').textContent = 'NOU SOCI';
+    document.getElementById('member-modal-title').textContent = t('new_member_btn');
     ['member-name','member-username','member-password'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('member-role').value = 'participant';
   }
@@ -211,3 +211,6 @@ window.resetMemberPassword = resetMemberPassword;
 window.deleteMember = deleteMember;
 window.openMemberModal = openMemberModal;
 window.saveMember = saveMember;
+// Exposada perquè applyTranslations() (i18n.js) repinti la taula de socis en
+// canviar d'idioma (el seu contingut es genera dinàmicament amb t()).
+window._refreshMembersTable = renderMembersTable;

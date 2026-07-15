@@ -2,7 +2,7 @@
 // PANTALLA PARTICIPANT — paneles, dashboard, visibilidad de botones y mosaico
 // ═══════════════════════════════════
 import { state, actingAsAdmin } from '../core/state.js';
-import { currentLang, t, applyTranslations } from '../core/i18n.js';
+import { t, applyTranslations } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
 import { renderVotingGrid, updateVoteButtonsState } from '../features/votacio.js';
 import { renderRanking, renderResultatsRepte } from '../features/ranking.js';
@@ -37,7 +37,7 @@ export function showParticipantMain() {
 export function showParticipantVoting() {
   // Allow viewing published photos even if voting is not open yet
   if (state.publishedPhotos.length === 0) {
-    showToast(currentLang === 'es' ? 'No hay fotos publicadas aún 📷' : 'Encara no hi ha fotos publicades 📷', 'info');
+    showToast(t('no_photos_published_toast'), 'info');
     return;
   }
   _hideAllParticipantPanels();
@@ -145,15 +145,15 @@ export function refreshParticipantDashboard() {
   const roleBadge = document.getElementById('participant-role-badge');
   if (roleBadge && state.currentUser && !state.adminViewingAsParticipant) {
     roleBadge.textContent = state.currentUser.role === 'admin'
-      ? 'Admin'
-      : (currentLang === 'es' ? 'Socio' : 'Soci');
+      ? t('admin_role_name')
+      : t('member_role_name');
   }
 
   const obj = state.currentObjective;
   document.getElementById('participant-objective-name').textContent = obj ? obj.title : '—';
   document.getElementById('participant-objective-desc').textContent = obj
     ? (obj.description || '')
-    : (currentLang === 'es' ? 'Sin temática activa' : 'Cap temàtica activa');
+    : t('no_active_objective_short');
 
   // (La barra PROGRÉS VOTACIONS s'ha mogut al dashboard d'admin, v0.1.21:
   //  els socis ja no la veuen.)

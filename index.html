@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FEM Fotografia El Masnou</title>
 <link rel="icon" type="image/png" href="img/favicon.png">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- CSS modular -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/login.css">
@@ -19,7 +19,7 @@
 <body>
 
 <!-- Segell TEST — indicador global, visible només en mode test (BD de proves) -->
-<div id="test-stamp" aria-hidden="true">TEST</div>
+<div id="test-stamp" aria-hidden="true">Test</div>
 
 <!-- ══════════════════════════════════
      AVISO file:// — script NORMAL (no module): se ejecuta aunque los módulos
@@ -58,16 +58,16 @@
       </div>
     </div>
     <div class="login-card">
-      <h2 data-i18n="login_title" style="text-align:center;">ACCÉS</h2>
+      <h2 data-i18n="login_title" style="text-align:center;">Accés</h2>
       <!-- TEST MODE indicator — only visible when _dbMode === 'test' -->
       <div id="login-test-banner" style="display:none;background:rgba(255,59,48,0.1);border:1px solid rgba(255,59,48,0.35);border-radius:8px;padding:8px 12px;margin-bottom:14px;text-align:center;font-size:12px;font-weight:700;color:#ff3b30;letter-spacing:0.06em;">
-        🔴 MODE TEST — Base de dades de proves
+        <span data-i18n="test_mode_banner">🔴 MODE TEST — Base de dades de proves</span>
       </div>
       <!-- Setup banner (shown only if DB is empty) -->
       <div id="setup-banner" style="display:none;background:rgba(232,197,71,0.08);border:1px solid rgba(232,197,71,0.3);border-radius:10px;padding:14px;margin-bottom:18px;">
-        <div style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:8px;">⚙️ Primera configuració</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">No s'han trobat usuaris a la base de dades. Inicialitza per crear l'administrador per defecte.</div>
-        <button type="button" class="btn btn-primary btn-sm btn-full" onclick="initializeDB()" id="btn-init">Inicialitzar Base de Dades</button>
+        <div style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:8px;" data-i18n="setup_banner_title">⚙️ Primera configuració</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;" data-i18n="setup_banner_msg">No s'han trobat usuaris a la base de dades. Inicialitza per crear l'administrador per defecte.</div>
+        <button type="button" class="btn btn-primary btn-sm btn-full" onclick="initializeDB()" id="btn-init" data-i18n="init_db_btn">Inicialitzar Base de Dades</button>
       </div>
       <!-- Tab toggle -->
       <div style="display:flex;gap:4px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:20px;">
@@ -79,20 +79,20 @@
       <div id="form-login">
         <div class="form-group">
           <label data-i18n="username_label">Usuari / Email</label>
-          <input type="text" id="login-user" placeholder="El teu email o nom d'usuari" autocomplete="off">
+          <input type="text" id="login-user" data-i18n-placeholder="login_user_placeholder" placeholder="El teu email o nom d'usuari" autocomplete="off">
         </div>
         <div class="form-group">
           <label data-i18n="password_label">Contrasenya</label>
           <input type="password" id="login-pass" placeholder="••••••••">
         </div>
-        <button type="button" class="btn btn-primary" onclick="handleLogin()" id="login-btn" style="width:100%;" data-i18n="enter_btn">ENTRAR</button>
+        <button type="button" class="btn btn-primary" onclick="handleLogin()" id="login-btn" style="width:100%;" data-i18n="enter_btn">Entrar</button>
       </div>
 
       <!-- REGISTER FORM -->
       <div id="form-register" style="display:none;">
         <div class="form-group">
           <label data-i18n="fullname_label">Nom Complet</label>
-          <input type="text" id="reg-name" placeholder="El teu nom i cognoms">
+          <input type="text" id="reg-name" data-i18n-placeholder="reg_name_placeholder" placeholder="El teu nom i cognoms">
         </div>
         <div class="form-group">
           <label data-i18n="email_label">Email</label>
@@ -100,19 +100,19 @@
         </div>
         <div class="form-group">
           <label data-i18n="password_label">Contrasenya</label>
-          <input type="password" id="reg-pass" placeholder="Mínim 6 caràcters">
+          <input type="password" id="reg-pass" data-i18n-placeholder="reg_pass_placeholder" placeholder="Mínim 6 caràcters">
         </div>
         <div class="form-group">
           <label data-i18n="confirm_pass_label">Confirma la Contrasenya</label>
-          <input type="password" id="reg-pass2" placeholder="Repeteix la contrasenya">
+          <input type="password" id="reg-pass2" data-i18n-placeholder="new_pwd_repeat" placeholder="Repeteix la contrasenya">
         </div>
-        <button type="button" class="btn btn-primary" onclick="handleRegister()" id="register-btn" style="width:100%;" data-i18n="create_account_btn">CREAR COMPTE</button>
+        <button type="button" class="btn btn-primary" onclick="handleRegister()" id="register-btn" style="width:100%;" data-i18n="create_account_btn">Crear compte</button>
         <p style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:12px;line-height:1.6;">
           El teu compte es crearà com a Soci. Podràs participar al concurs quan l'administrador activi la pujada de fotos.
         </p>
       </div>
-      <div id="login-status" style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:10px;display:none;">Carregant...</div>
-      <div class="error-msg" id="login-error">Usuari o contrasenya incorrectes.</div>
+      <div id="login-status" style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:10px;display:none;" data-i18n="loading">Carregant...</div>
+      <div class="error-msg" id="login-error" data-i18n="login_invalid">Usuari o contrasenya incorrectes.</div>
     </div>
   </div>
 </div>
@@ -127,21 +127,21 @@
       <span class="topbar-logo-text">FEM Fotografia El Masnou</span>
     </div>
     <div class="topbar-right">
-      <div class="role-badge admin admin-toggle" onclick="toggleAdminParticipantView()" title="Veure com a participant">Admin ⇄</div>
-      <div id="btn-db-mode" class="role-badge db-mode-btn" onclick="toggleDbMode()" title="Canviar base de dades (Normal / Test)">NORMAL</div>
-      <div class="user-badge">Benvingut, <span id="admin-username"></span></div>
+      <div class="role-badge admin admin-toggle" onclick="toggleAdminParticipantView()" data-i18n-title="view_as_participant" title="Veure com a participant">Admin ⇄</div>
+      <div id="btn-db-mode" class="role-badge db-mode-btn" onclick="toggleDbMode()" data-i18n-title="toggle_db_mode_tooltip" title="Canviar base de dades (Normal / Test)">Normal</div>
+      <div class="user-badge"><span data-i18n="welcome_label">Benvingut,</span> <span id="admin-username"></span></div>
       <div class="lang-switcher">
         <button type="button" class="lang-btn lang-btn-ca" onclick="setLang('ca')">CA</button>
         <button type="button" class="lang-btn lang-btn-es" onclick="setLang('es')">ES</button>
       </div>
       <button type="button" class="btn btn-secondary btn-sm" id="btn-admin-logout" onclick="logout()" data-i18n="logout">Sortir</button>
-      <button type="button" class="btn-logout-x" id="btn-admin-logout-x" onclick="logout()" title="Sortir">✕</button>
+      <button type="button" class="btn-logout-x" id="btn-admin-logout-x" onclick="logout()" data-i18n-title="logout" title="Sortir">✕</button>
     </div>
   </div>
 
   <div class="admin-shell">
     <aside class="admin-sidebar">
-      <div class="sidebar-title">Menú</div>
+      <div class="sidebar-title" data-i18n="menu_label">Menú</div>
       <button type="button" class="sidebar-item active" onclick="adminNav('dashboard')">
         <span class="sidebar-icon">🎛️</span><span class="sidebar-label" data-i18n="dashboard">Panel de Control</span>
       </button>
@@ -149,7 +149,7 @@
         <span class="sidebar-icon">📷</span><span class="sidebar-label" data-i18n="photos">Fotos</span>
       </button>
       <button type="button" class="sidebar-item" onclick="adminNav('objectives')">
-        <span class="sidebar-icon">🎯</span><span class="sidebar-label" data-i18n="objectives">Temàtiques</span>
+        <span class="sidebar-icon">🎯</span><span class="sidebar-label" data-i18n="objectives">Reptes</span>
       </button>
       <button type="button" class="sidebar-item" onclick="adminNav('members')">
         <span class="sidebar-icon">👥</span><span class="sidebar-label" data-i18n="members">Socis</span>
@@ -162,7 +162,7 @@
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'photos')" data-i18n="photos">Fotos</button>
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'voting')" data-i18n="voting">Votació</button>
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'ranking')" data-i18n="ranking">Ranking</button>
-      <button type="button" class="tab-btn" onclick="switchTab('admin', 'objectives')" data-i18n="objectives">Temàtiques</button>
+      <button type="button" class="tab-btn" onclick="switchTab('admin', 'objectives')" data-i18n="objectives">Reptes</button>
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'members')" data-i18n="members">Socis</button>
     </div>
 
@@ -181,7 +181,7 @@
       <div class="card">
         <div class="card-header">
           <div>
-            <div class="card-title" data-i18n="voting_progress">PROGRÉS VOTACIONS</div>
+            <div class="card-title" data-i18n="voting_progress">Progrés de votacions</div>
           </div>
         </div>
         <div class="progress-wrap">
@@ -196,7 +196,7 @@
       <div class="card card-fit">
         <div class="card-header">
           <div>
-            <div class="card-title">CONTROLS</div>
+            <div class="card-title" data-i18n="controls_title">Controls</div>
             <div class="card-subtitle" data-i18n="contest_management">Gestió del concurs</div>
           </div>
         </div>
@@ -228,7 +228,7 @@
       <div class="card only-mobile">
         <div class="card-header">
           <div>
-            <div class="card-title">VISTA I BASE DE DADES</div>
+            <div class="card-title" data-i18n="view_db_title">Vista i base de dades</div>
             <div class="card-subtitle" data-i18n="view_db_subtitle">Alterna vista i base de dades</div>
           </div>
         </div>
@@ -236,7 +236,7 @@
           <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAdminParticipantView()">
             👤 <span data-i18n="view_as_participant">Veure com a participant</span>
           </button>
-          <button type="button" class="btn btn-secondary btn-sm db-mode-btn" id="btn-db-mode-card" onclick="toggleDbMode()" title="Canviar base de dades (Normal / Test)">NORMAL</button>
+          <button type="button" class="btn btn-secondary btn-sm db-mode-btn" id="btn-db-mode-card" onclick="toggleDbMode()" data-i18n-title="toggle_db_mode_tooltip" title="Canviar base de dades (Normal / Test)">Normal</button>
         </div>
       </div>
 
@@ -244,11 +244,11 @@
       <div class="card card-fit" id="calendari-card">
         <div class="card-header">
           <div>
-            <div class="card-title">CALENDARI</div>
-            <div class="card-subtitle">Programació i històric dels reptes</div>
+            <div class="card-title" data-i18n="calendar_title">Calendari</div>
+            <div class="card-subtitle" data-i18n="calendar_subtitle">Programació i històric dels reptes</div>
           </div>
         </div>
-        <div id="calendari-no-obj" class="hidden" style="color:var(--text-muted);">No hi ha temàtica activa: només consulta de l'històric.</div>
+        <div id="calendari-no-obj" class="hidden" style="color:var(--text-muted);" data-i18n="calendar_no_obj_msg">No hi ha repte actiu: només consulta de l'històric.</div>
         <div id="calendari-form" style="display:flex;flex-direction:column;gap:14px;">
           <!-- Navegació de mes -->
           <div class="cal-month-nav">
@@ -271,14 +271,14 @@
               <span class="pb-icon">
                 <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2L4.5 13.5H11l-1 8.5L19.5 10H12.5z"></path></svg>
               </span>
-              <span class="pb-label">Automatització</span>
+              <span class="pb-label" data-i18n="automation_label">Automatització</span>
             </button>
             <button type="button" class="plastic-btn" id="pbtn-cal-save" aria-label="Desar calendari"
                     onclick="saveCalendari()">
               <span class="pb-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
               </span>
-              <span class="pb-label">Desar calendari</span>
+              <span class="pb-label" data-i18n="save_calendar_btn">Desar calendari</span>
             </button>
           </div>
         </div>
@@ -296,18 +296,18 @@
       <div class="card">
         <div class="card-header">
           <div>
-            <div class="card-title">GESTIÓ DE FOTOS</div>
+            <div class="card-title" data-i18n="manage_photos">Gestió de fotos</div>
             <div class="card-subtitle" data-i18n="photos_subtitle">Fotos rebudes dels participants</div>
             <div class="card-subtitle" id="admin-gallery-count" style="margin-top:2px;color:var(--accent);font-weight:600;"></div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadAllPhotos()" id="btn-download-all">⬇ Descarregar Totes</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadAllPhotos()" id="btn-download-all" data-i18n="download_all_btn">⬇ Descarregar Totes</button>
             <button type="button" class="btn btn-danger btn-sm hidden" id="btn-delete-selected" onclick="deleteSelectedPhotos()" data-i18n="delete_selected">Eliminar Seleccionades</button>
             <button type="button" class="btn btn-primary btn-sm" onclick="publishSelectedPhotos()" id="btn-publish" data-i18n="publish_btn">Publicar Fotos</button>
           </div>
         </div>
         <div id="admin-gallery" class="gallery-grid">
-          <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📷</div><p>No s'han rebut fotos encara.</p></div>
+          <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📷</div><p data-i18n="no_photos">No s'han rebut fotos encara.</p></div>
         </div>
       </div>
     </div>
@@ -316,11 +316,11 @@
     <div id="admin-tab-voting" class="tab-content">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">INTERFÍCIE DE VOTACIÓ</div>
-          <div class="card-subtitle">Vista idèntica a la dels participants</div>
+          <div class="card-title" data-i18n="voting_interface_title">Interfície de votació</div>
+          <div class="card-subtitle" data-i18n="voting_interface_subtitle">Vista idèntica a la dels participants</div>
         </div>
         <div id="admin-voting-grid" class="voting-grid">
-          <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🗳️</div><p>No hi ha fotos publicades per votar.</p></div>
+          <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🗳️</div><p data-i18n="no_photos_to_vote">No hi ha fotos publicades per votar.</p></div>
         </div>
         <div style="margin-top:20px;">
           <button type="button" class="btn btn-primary" onclick="saveAdminVotes()" id="btn-save-admin-votes" data-i18n="save_votes_btn">Enviar Vots</button>
@@ -331,7 +331,7 @@
       <div class="card">
         <div class="card-header">
           <div>
-            <div class="card-title" data-i18n="my_photo">LA MEVA FOTO</div>
+            <div class="card-title" data-i18n="my_photo">La meva foto</div>
             <div class="card-subtitle" id="admin-upload-status-label">Puja la teva foto per participar</div>
           </div>
         </div>
@@ -339,8 +339,8 @@
           <div class="upload-zone" id="admin-upload-zone" ondragover="dragOver(event,'admin')" ondragleave="dragLeave('admin')" ondrop="dropFile(event,'admin')">
             <input type="file" accept="image/*" id="admin-file-input" onchange="handleFileSelect(event,'admin')">
             <div class="upload-icon">📸</div>
-            <h3>Selecciona o arrossega la teva foto</h3>
-            <p>JPG, PNG, WEBP · Es comprimirà automàticament abans de pujar</p>
+            <h3 data-i18n="upload_zone_title">Selecciona o arrossega la teva foto</h3>
+            <p data-i18n="admin_upload_zone_subtitle">JPG, PNG, WEBP · Es comprimirà automàticament abans de pujar</p>
           </div>
         </div>
         <div id="admin-upload-preview-section" class="hidden" style="margin-top:16px;">
@@ -353,7 +353,7 @@
         </div>
         <div id="admin-upload-done-section" class="hidden" style="margin-top:16px;text-align:center;">
           <div style="font-size:48px;">✅</div>
-          <p style="margin:12px 0;font-weight:600;">Foto pujada correctament</p>
+          <p style="margin:12px 0;font-weight:600;" data-i18n="photo_uploaded_static">Foto pujada correctament</p>
           <div id="admin-my-photo-preview" style="max-width:300px;margin:16px auto;border-radius:12px;overflow:hidden;"></div>
           <button type="button" class="btn btn-danger btn-sm" onclick="deleteMyPhoto()" data-i18n="delete_photo_btn">🗑 Eliminar i Tornar a Pujar</button>
         </div>
@@ -363,25 +363,25 @@
     <!-- TAB: RANKING -->
     <div id="admin-tab-ranking" class="tab-content">
       <div class="tab-nav" style="margin-bottom:20px;">
-        <button type="button" class="tab-btn active" onclick="switchTab('rank', 'current')" data-i18n="current_ranking">Temàtica Actual</button>
+        <button type="button" class="tab-btn active" onclick="switchTab('rank', 'current')" data-i18n="current_ranking">Repte Actual</button>
         <button type="button" class="tab-btn" onclick="switchTab('rank', 'general')" data-i18n="general_ranking">Ranking General</button>
       </div>
       <div id="rank-tab-current" class="tab-content active">
         <div class="card">
-          <div class="card-title" style="margin-bottom:16px;">RANKING — TEMÀTICA ACTUAL</div>
+          <div class="card-title" style="margin-bottom:16px;" data-i18n="ranking_current_title">Ranking — Repte Actual</div>
           <div id="ranking-current-list" class="ranking-list">
-            <div class="empty-state"><div class="empty-icon">🏆</div><p>Sense dades de votació encara.</p></div>
+            <div class="empty-state"><div class="empty-icon">🏆</div><p data-i18n="no_data_voting">Sense dades de votació encara.</p></div>
           </div>
         </div>
       </div>
       <div id="rank-tab-general" class="tab-content">
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <div class="card-title" style="margin-bottom:0;">RANKING GENERAL</div>
+            <div class="card-title" style="margin-bottom:0;" data-i18n="general_ranking">Ranking General</div>
 
           </div>
           <div id="ranking-general-list" class="ranking-list">
-            <div class="empty-state"><div class="empty-icon">🏅</div><p>Sense dades generals.</p></div>
+            <div class="empty-state"><div class="empty-icon">🏅</div><p data-i18n="no_data_voting">Sense dades generals.</p></div>
           </div>
         </div>
       </div>
@@ -391,11 +391,11 @@
     <div id="admin-tab-objectives" class="tab-content">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">GESTIÓ DE TEMÀTIQUES</div>
-          <button type="button" class="btn btn-primary btn-sm" onclick="openObjectiveModal()" data-i18n="new_objective_btn">+ Nou Objectiu</button>
+          <div class="card-title" data-i18n="objectives_title">Gestió de reptes</div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="openObjectiveModal()" data-i18n="new_objective_btn">+ Nou Repte</button>
         </div>
         <div id="objectives-list">
-          <div class="empty-state"><div class="empty-icon">🎯</div><p>No hi ha temàtiques creades.</p></div>
+          <div class="empty-state"><div class="empty-icon">🎯</div><p data-i18n="no_objectives">No hi ha temàtiques creades.</p></div>
         </div>
       </div>
     </div>
@@ -404,7 +404,7 @@
     <div id="admin-tab-members" class="tab-content">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">GESTIÓ DE SOCIS</div>
+          <div class="card-title" data-i18n="members_title">Gestió de socis</div>
           <button type="button" class="btn btn-primary btn-sm" onclick="openMemberModal()" data-i18n="new_member_btn">+ Nou Soci</button>
         </div>
         <div style="overflow-x:auto;">
@@ -413,7 +413,7 @@
               <tr>
                 <th>#</th>
                 <th data-i18n="member_name">Nom</th>
-                <th>Usuari</th>
+                <th data-i18n="table_username_header">Usuari</th>
                 <th data-i18n="member_role">Rol</th>
                 <th data-i18n="member_uploaded">Foto pujada</th>
                 <th data-i18n="member_voted_h">Ha Votat</th>
@@ -421,7 +421,7 @@
               </tr>
             </thead>
             <tbody id="members-tbody">
-              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Carregant...</td></tr>
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);" data-i18n="loading">Carregant...</td></tr>
             </tbody>
           </table>
         </div>
@@ -442,13 +442,13 @@
     </div>
     <div class="topbar-right">
       <div class="role-badge" id="participant-role-badge"></div>
-      <div class="user-badge">Hola, <span id="participant-username"></span></div>
+      <div class="user-badge"><span data-i18n="hello_label">Hola,</span> <span id="participant-username"></span></div>
       <div class="lang-switcher">
         <button type="button" class="lang-btn lang-btn-ca" onclick="setLang('ca')">CA</button>
         <button type="button" class="lang-btn lang-btn-es" onclick="setLang('es')">ES</button>
       </div>
       <button type="button" class="btn btn-secondary btn-sm" id="btn-participant-logout" onclick="logout()" data-i18n="logout">Sortir</button>
-      <button type="button" class="btn-logout-x" id="btn-participant-logout-x" onclick="logout()" title="Sortir">✕</button>
+      <button type="button" class="btn-logout-x" id="btn-participant-logout-x" onclick="logout()" data-i18n-title="logout" title="Sortir">✕</button>
     </div>
   </div>
 
@@ -473,14 +473,14 @@
           <!-- Capçalera del repte — sense subdivisions, només nom + text informatiu
                (les dates ja hi surten dins el propi text; no cal repetir-les). -->
           <div class="objective-header">
-            <div class="objective-title">Repte: <span id="participant-objective-name">—</span></div>
+            <div class="objective-title"><span data-i18n="home_repte_label">Repte:</span> <span id="participant-objective-name">—</span></div>
             <div id="participant-objective-desc" class="objective-desc"></div>
           </div>
 
           <!-- La meva foto d'aquest repte -->
           <div class="objective-photo-section">
             <div class="objective-photo-header" id="objective-photo-header">
-              <div class="card-title objective-photo-title" id="card-my-photo-title" data-i18n="my_photo">LA MEVA FOTO</div>
+              <div class="card-title objective-photo-title" id="card-my-photo-title" data-i18n="my_photo">La meva foto</div>
               <!-- Amagat (no eliminat): el JS hi escriu l'estat de la pujada; el text
                    actual ("Foto pujada (pendent)") confonia perquè la foto ja es veu.
                    Es manté a l'DOM perquè el JS no peti; cal decidir amb participant.js
@@ -494,8 +494,8 @@
                 <div class="upload-zone" id="upload-zone" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFile(event)">
                   <input type="file" accept="image/*" id="file-input" onchange="handleFileSelect(event)">
                   <div class="upload-icon">📸</div>
-                  <h3>Selecciona o arrossega la teva foto</h3>
-                  <p>JPG, PNG, WEBP · Sense límit de mida</p>
+                  <h3 data-i18n="upload_zone_title">Selecciona o arrossega la teva foto</h3>
+                  <p data-i18n="participant_upload_zone_subtitle">JPG, PNG, WEBP · Sense límit de mida</p>
                 </div>
                 <div id="upload-closed-msg" class="hidden">
                   <div class="empty-state"><div class="empty-icon">🔒</div>
@@ -525,7 +525,7 @@
                   <input type="text" id="caption-edit-input" maxlength="300" class="caption-input" data-i18n-placeholder="caption_label" placeholder="Títol / descripció (opcional)">
                 </div>
                 <div style="margin-top:16px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-                  <button type="button" class="btn btn-secondary btn-sm hidden" id="btn-save-caption" onclick="saveCaptionEdit()">💾 Desar canvis</button>
+                  <button type="button" class="btn btn-secondary btn-sm hidden" id="btn-save-caption" onclick="saveCaptionEdit()" data-i18n="save_changes_btn">💾 Desar canvis</button>
                   <button type="button" class="btn btn-danger btn-sm" onclick="deleteMyPhoto()" data-i18n="delete_photo_btn">🗑 Eliminar i Tornar a Pujar</button>
                 </div>
               </div>
@@ -553,7 +553,7 @@
         <div class="nav-card photo-gallery-tile hero-gallery-tile" id="nav-card-gallery" onclick="showParticipantGallery()">
           <div class="gallery-tile-carousel" id="gallery-tile-carousel" aria-hidden="true"></div>
           <div class="nav-icon">📷</div>
-          <div class="nav-title" data-i18n="nav_gallery">GALERIA</div>
+          <div class="nav-title" data-i18n="nav_gallery">Galeria</div>
           <div class="nav-sub" data-i18n="nav_gallery_sub">Fotos dels reptes finalitzats</div>
         </div>
       </div>
@@ -562,12 +562,12 @@
       <div class="section-grid">
         <div class="nav-card" id="nav-card-resultats" onclick="openEmbedded('resultat')">
           <div class="nav-icon">🏅</div>
-          <div class="nav-title" data-i18n="nav_resultats">RESULTAT REPTE</div>
+          <div class="nav-title" data-i18n="nav_resultats">Resultat Repte</div>
           <div class="nav-sub" data-i18n="nav_resultats_sub">Resultats dels reptes finalitzats</div>
         </div>
         <div class="nav-card" id="nav-card-classificacio" onclick="openEmbedded('classificacio')">
           <div class="nav-icon">🏆</div>
-          <div class="nav-title" data-i18n="nav_classificacio">CLASSIFICACIÓ GENERAL</div>
+          <div class="nav-title" data-i18n="nav_classificacio">Classificació General</div>
           <div class="nav-sub" data-i18n="nav_classificacio_sub">Classificació acumulada</div>
         </div>
       </div>
@@ -576,13 +576,13 @@
     <!-- Panel Votació -->
     <div id="participant-panel-voting" class="hidden">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()">← Tornar</button>
-        <h2 style="font-family:var(--font-display);font-size:24px;letter-spacing:2px;">VOTACIÓ DE FOTOS</h2>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()" data-i18n="embedded_back">← Tornar</button>
+        <h2 style="font-family:var(--font-display);font-weight:700;font-size:24px;letter-spacing:2px;" data-i18n="voting_screen_title">Votació de fotos</h2>
       </div>
       <div class="card">
-        <div class="card-subtitle" style="margin-bottom:16px;">Puntua cada foto de l'1 al 5. No pots votar la teva pròpia foto.</div>
+        <div class="card-subtitle" style="margin-bottom:16px;" data-i18n="voting_screen_subtitle">Puntua cada foto de l'1 al 5. No pots votar la teva pròpia foto.</div>
         <div id="participant-voting-grid" class="voting-grid">
-          <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🗳️</div><p>No hi ha fotos publicades.</p></div>
+          <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🗳️</div><p data-i18n="no_photos_published">No hi ha fotos publicades.</p></div>
         </div>
         <div style="margin-top:20px;">
           <button type="button" class="btn btn-primary" onclick="saveParticipantVotes()" id="btn-save-participant-votes" data-i18n="save_votes_btn">Enviar Vots</button>
@@ -593,24 +593,24 @@
     <!-- Panel Ranking -->
     <div id="participant-panel-ranking" class="hidden">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()">← Tornar</button>
-        <h2 style="font-family:var(--font-display);font-size:24px;letter-spacing:2px;">RANKING</h2>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()" data-i18n="embedded_back">← Tornar</button>
+        <h2 style="font-family:var(--font-display);font-weight:700;font-size:24px;letter-spacing:2px;" data-i18n="ranking_screen_title">Ranking</h2>
       </div>
       <div class="tab-nav">
-        <button type="button" class="tab-btn active" onclick="switchTab('p-rank', 'current')" data-i18n="current_ranking">Temàtica Actual</button>
-        <button type="button" class="tab-btn" onclick="switchTab('p-rank', 'general')">General</button>
+        <button type="button" class="tab-btn active" onclick="switchTab('p-rank', 'current')" data-i18n="current_ranking">Repte Actual</button>
+        <button type="button" class="tab-btn" onclick="switchTab('p-rank', 'general')" data-i18n="general_tab">General</button>
       </div>
       <div id="p-rank-tab-current" class="tab-content active">
         <div class="card">
           <div id="p-ranking-current-list" class="ranking-list">
-            <div class="empty-state"><div class="empty-icon">🏆</div><p>Sense dades.</p></div>
+            <div class="empty-state"><div class="empty-icon">🏆</div><p data-i18n="no_data_voting">Sense dades.</p></div>
           </div>
         </div>
       </div>
       <div id="p-rank-tab-general" class="tab-content">
         <div class="card">
           <div id="p-ranking-general-list" class="ranking-list">
-            <div class="empty-state"><div class="empty-icon">🏅</div><p>Sense dades.</p></div>
+            <div class="empty-state"><div class="empty-icon">🏅</div><p data-i18n="no_participations">Sense dades.</p></div>
           </div>
         </div>
       </div>
@@ -619,8 +619,8 @@
     <!-- Panel Galeria — fotos dels reptes finalitzats -->
     <div id="participant-panel-gallery" class="hidden">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()">← Tornar</button>
-        <h2 style="font-family:var(--font-display);font-size:24px;letter-spacing:2px;" data-i18n="gallery_title">GALERIA</h2>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()" data-i18n="embedded_back">← Tornar</button>
+        <h2 style="font-family:var(--font-display);font-weight:700;font-size:24px;letter-spacing:2px;" data-i18n="gallery_title">Galeria</h2>
       </div>
       <div class="card">
         <div class="gallery-filters">
@@ -647,7 +647,7 @@
         <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()">
           <span data-i18n="embedded_back">← Tornar</span>
         </button>
-        <h2 style="font-family:var(--font-display);font-size:24px;letter-spacing:2px;" data-i18n="nav_resultats">RESULTAT REPTE</h2>
+        <h2 style="font-family:var(--font-display);font-weight:700;font-size:24px;letter-spacing:2px;" data-i18n="nav_resultats">Resultat Repte</h2>
       </div>
       <div class="card">
         <label class="gallery-filter" style="margin-bottom:16px;">
@@ -680,15 +680,15 @@
 <!-- Objective Modal -->
 <div class="modal-overlay" id="modal-objective">
   <div class="modal">
-    <h2 id="obj-modal-title">NOVA TEMÀTICA</h2>
+    <h2 id="obj-modal-title">Nou Repte</h2>
     <input type="hidden" id="obj-edit-id">
     <div class="form-group">
-      <label>Títol</label>
-      <input type="text" id="obj-title" placeholder="Ex: Paisatges Urbans">
+      <label data-i18n="obj_title_label">Títol</label>
+      <input type="text" id="obj-title" data-i18n-placeholder="obj_title_placeholder" placeholder="Ex: Paisatges Urbans">
     </div>
     <div class="form-group">
-      <label>Descripció</label>
-      <textarea id="obj-desc" rows="3" placeholder="Ex: Fotos urbanístiques de la ciutat..." style="resize:vertical;"></textarea>
+      <label data-i18n="obj_desc_label">Descripció</label>
+      <textarea id="obj-desc" rows="3" data-i18n-placeholder="obj_desc_placeholder" placeholder="Ex: Fotos urbanístiques de la ciutat..." style="resize:vertical;"></textarea>
     </div>
     <!-- status is managed automatically, hidden field -->
     <input type="hidden" id="obj-status" value="active">
@@ -702,25 +702,25 @@
 <!-- Member Modal -->
 <div class="modal-overlay" id="modal-member">
   <div class="modal">
-    <h2 id="member-modal-title">NOU SOCI</h2>
+    <h2 id="member-modal-title">Nou Soci</h2>
     <input type="hidden" id="member-edit-id">
     <div class="form-group">
-      <label>Nom Complet</label>
-      <input type="text" id="member-name" placeholder="Ex: Joan Garcia">
+      <label data-i18n="fullname_label">Nom Complet</label>
+      <input type="text" id="member-name" data-i18n-placeholder="member_name_placeholder" placeholder="Ex: Joan Garcia">
     </div>
     <div class="form-group">
-      <label>Nom d'Usuari</label>
-      <input type="text" id="member-username" placeholder="Ex: joan.garcia">
+      <label data-i18n="username_field_label">Nom d'Usuari</label>
+      <input type="text" id="member-username" data-i18n-placeholder="member_username_placeholder" placeholder="Ex: joan.garcia">
     </div>
     <div class="form-group">
-      <label>Contrasenya</label>
+      <label data-i18n="password_label">Contrasenya</label>
       <input type="password" id="member-password" placeholder="••••••••">
     </div>
     <div class="form-group">
-      <label>Rol</label>
+      <label data-i18n="member_role">Rol</label>
       <select id="member-role">
-        <option value="participant">Participant/Soci</option>
-        <option value="admin">Administrador</option>
+        <option value="participant" data-i18n="member_role_option">Participant/Soci</option>
+        <option value="admin" data-i18n="admin_role_option">Administrador</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -745,7 +745,7 @@
 <!-- Forced new-password modal (after admin reset) -->
 <div class="modal-overlay" id="modal-new-password">
   <div class="modal">
-    <h2 data-i18n="new_pwd_modal_title">CREA UNA NOVA CONTRASENYA</h2>
+    <h2 data-i18n="new_pwd_modal_title">Crea una nova contrasenya</h2>
     <p data-i18n="new_pwd_modal_msg" style="color:var(--text-muted);font-size:15px;line-height:1.6;margin-bottom:16px;">
       L'administrador ha resetejat la teva contrasenya. Introdueix-ne una de nova per continuar.
     </p>
@@ -819,12 +819,11 @@
       FEM
     </div>
   </div>
-  <div id="global-loader-text" style="
+  <div id="global-loader-text" data-i18n="connecting" style="
     font-family:var(--font-body);
     font-size:14px;
     color:var(--text-muted);
     letter-spacing:1px;
-    text-transform:uppercase;
   ">Connectant...</div>
 </div>
 

@@ -2,7 +2,7 @@
 // RANKING — cálculo client-side y render
 // ═══════════════════════════════════
 import { state, actingAsAdmin } from '../core/state.js';
-import { currentLang, t } from '../core/i18n.js';
+import { t } from '../core/i18n.js';
 import { getActivePublishedPhotos, getDisplayName } from '../core/data.js';
 
 // ── Taula de punts per posició al rànquing global ───────────────
@@ -127,7 +127,7 @@ export function renderResultatsRepte(objId, listId) {
   if (!el) return;
   const ranked = computeRankingForObjective(objId);
   if (ranked.length === 0) {
-    const msg = currentLang === 'es' ? 'Sin datos de votación.' : 'Sense dades de votació.';
+    const msg = t('no_data_voting');
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏆</div><p>${msg}</p></div>`;
     return;
   }
@@ -163,7 +163,7 @@ export function computeGeneralRanking() {
     .map(([userId, data]) => {
       const user = state.users.find(u => u.id === userId);
       return {
-        user: user || { name: 'Desconegut', id: userId },
+        user: user || { name: t('unknown_user'), id: userId },
         participations: data.participations || 0,
         totalScore: data.totalScore || 0,
       };
@@ -181,10 +181,9 @@ export function renderRanking(currentListId, generalListId) {
   const currentEl = document.getElementById(currentListId);
   if (currentEl) {
     if (!isAdmin && !state.settings.namesRevealed) {
-      const lockMsg = currentLang === 'es' ? 'Disponible cuando se cierren las votaciones.' : 'Disponible quan es tanquin les votacions.';
-      currentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🔒</div><p>${lockMsg}</p></div>`;
+      currentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🔒</div><p>${t('ranking_locked_msg')}</p></div>`;
     } else if (ranked.length === 0) {
-      currentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🏆</div><p>Sense dades de votació.</p></div>`;
+      currentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🏆</div><p>${t('no_data_voting')}</p></div>`;
     } else {
       currentEl.innerHTML = ranked.map(({ photo, score }, idx) => `
         <div class="rank-item">
@@ -192,7 +191,7 @@ export function renderRanking(currentListId, generalListId) {
           <img class="rank-thumb" src="${photo.url}" alt="">
           <div class="rank-info">
             <div class="rank-name">${getDisplayName(photo.userId)}</div>
-            <div class="rank-meta">${formatScore(score)} punts</div>
+            <div class="rank-meta">${formatScore(score)} ${t('points_label')}</div>
           </div>
           <div class="rank-score">${formatScore(score)}</div>
         </div>
@@ -206,21 +205,18 @@ export function renderRanking(currentListId, generalListId) {
   if (generalEl) {
     // Si no es admin y el ranking está oculto, mostrar mensaje
     if (!isAdmin && state.settings.rankingHidden) {
-      const hiddenMsg = currentLang === 'es'
-        ? 'El Ranking General está oculto temporalmente.'
-        : 'El Ranking General està amagat temporalment.';
-      generalEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🔒</div><p>${hiddenMsg}</p></div>`;
+      generalEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🔒</div><p>${t('general_ranking_hidden_msg')}</p></div>`;
     } else {
       const active = general.filter(g => g.participations > 0);
       if (active.length === 0) {
-        generalEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🏅</div><p>Sense participacions.</p></div>`;
+        generalEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🏅</div><p>${t('no_participations')}</p></div>`;
       } else {
         generalEl.innerHTML = active.map(({ user, participations, totalScore }, idx) => `
           <div class="rank-item">
             <div class="rank-num ${rankNums[idx]||''}">${idx+1}</div>
             <div class="rank-info">
               <div class="rank-name">${user.name}</div>
-              <div class="rank-meta">${participations} participació(ns)</div>
+              <div class="rank-meta">${participations} ${t('participations')}</div>
             </div>
             <div class="rank-score">${Math.trunc(totalScore)}</div>
           </div>

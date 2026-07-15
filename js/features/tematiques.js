@@ -2,7 +2,7 @@
 // TEMÀTIQUES — lista, finalización y CRUD (sin DELETE desde UI)
 // ═══════════════════════════════════
 import { state } from '../core/state.js';
-import { currentLang, t, applyTranslations } from '../core/i18n.js';
+import { t, applyTranslations } from '../core/i18n.js';
 import { showToast, showLoader, hideLoader } from '../ui/toast.js';
 import { confirmAction, openModal, closeModal } from '../ui/modals.js';
 import { saveObjectives, saveSettings } from '../core/data.js';
@@ -15,7 +15,7 @@ import { getCalendariDatesHtml } from './calendari.js';
 export function renderObjectivesList() {
   const el = document.getElementById('objectives-list');
   if (state.objectives.length === 0) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><p>No hi ha temàtiques. Crea'n una per començar.</p></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><p>${t('no_objectives')}</p></div>`;
     return;
   }
   el.innerHTML = state.objectives.map(obj => {
@@ -53,7 +53,7 @@ export async function finalizeObjective(id) {
     t('confirm_finalize_title'),
     t('confirm_finalize_msg'),
     async () => {
-      showLoader(currentLang === 'es' ? 'Finalizando temática...' : 'Finalitzant temàtica...');
+      showLoader(t('finalizing_objective'));
       const obj = state.objectives.find(o => o.id === id);
       if (!obj) { hideLoader(); return; }
 
@@ -108,12 +108,12 @@ export function openObjectiveModal(id) {
   document.getElementById('obj-edit-id').value = id || '';
   if (id) {
     const obj = state.objectives.find(o => o.id === id);
-    document.getElementById('obj-modal-title').textContent = 'EDITAR TEMÀTICA';
+    document.getElementById('obj-modal-title').textContent = t('edit_objective_title');
     document.getElementById('obj-title').value  = obj.title;
     document.getElementById('obj-desc').value   = obj.description;
     document.getElementById('obj-status').value = obj.status;
   } else {
-    document.getElementById('obj-modal-title').textContent = 'NOVA TEMÀTICA';
+    document.getElementById('obj-modal-title').textContent = t('new_objective_btn');
     document.getElementById('obj-title').value  = '';
     document.getElementById('obj-desc').value   = '';
     document.getElementById('obj-status').value = 'active';

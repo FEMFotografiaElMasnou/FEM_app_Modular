@@ -3,7 +3,7 @@
 // ═══════════════════════════════════
 import { state, actingAsAdmin } from '../core/state.js';
 import { sb, CLOUDINARY_PRESET, CLOUDINARY_URL, _dbMode } from '../core/config.js';
-import { currentLang, t } from '../core/i18n.js';
+import { t } from '../core/i18n.js';
 import { showToast, showLoader, hideLoader } from '../ui/toast.js';
 import { confirmAction } from '../ui/modals.js';
 import { getActiveAllPhotos, getParticipantNumber, loadAllData } from '../core/data.js';
@@ -53,13 +53,12 @@ export function renderAdminGallery() {
     const total     = allPhotos.length;
     const published = allPhotos.filter(p => p.published).length;
     const pending   = total - published;
-    countEl.textContent = currentLang === 'es'
-      ? `Total: ${total} · Publicadas: ${published} · Pendientes: ${pending}`
-      : `Total: ${total} · Publicades: ${published} · Pendents: ${pending}`;
+    countEl.textContent = t('photo_stats')
+      .replace('{total}', total).replace('{published}', published).replace('{pending}', pending);
   }
 
   if (allPhotos.length === 0) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📷</div><p>No s'han rebut fotos encara.</p></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📷</div><p>${t('no_photos')}</p></div>`;
     return;
   }
 
@@ -72,10 +71,10 @@ export function renderAdminGallery() {
     return `
       <div class="gallery-item ${isSelected ? 'selected' : ''}" onclick="toggleSelectPhoto('${photo.id}')" data-id="${photo.id}">
         <div class="gallery-thumb">
-          <img src="${photo.url}" alt="Photo" loading="lazy" ondblclick="event.stopPropagation(); openFullscreen('${photo.url}', '${fname}')" title="Clic: seleccionar · Doble clic: ampliar" style="cursor:pointer;">
+          <img src="${photo.url}" alt="Photo" loading="lazy" ondblclick="event.stopPropagation(); openFullscreen('${photo.url}', '${fname}')" title="${t('tooltip_select_zoom')}" style="cursor:pointer;">
           <div class="gallery-actions">
-            <button type="button" class="gallery-act-btn" onclick="event.stopPropagation(); openFullscreen('${photo.url}', '${fname}')" title="Ampliar">🔍</button>
-            <button type="button" class="gallery-act-btn" onclick="event.stopPropagation(); downloadPhoto('${photo.url}', '${fname}')" title="Descarregar">⬇</button>
+            <button type="button" class="gallery-act-btn" onclick="event.stopPropagation(); openFullscreen('${photo.url}', '${fname}')" title="${t('tooltip_zoom')}">🔍</button>
+            <button type="button" class="gallery-act-btn" onclick="event.stopPropagation(); downloadPhoto('${photo.url}', '${fname}')" title="${t('tooltip_download')}">⬇</button>
           </div>
           <div class="check-overlay">✓</div>
           <div class="participant-num">
@@ -104,7 +103,7 @@ export function toggleSelectPhoto(photoId) {
 
 export async function deleteSelectedPhotos() {
   if (state.selectedPhotos.size === 0) { showToast(t('select_photo'), 'error'); return; }
-  confirmAction('Eliminar Fotos', `Vols eliminar ${state.selectedPhotos.size} foto(s)?`, async () => {
+  confirmAction(t('confirm_delete_photos_title'), t('confirm_delete_photos_msg').replace('{count}', state.selectedPhotos.size), async () => {
     const ids = [...state.selectedPhotos];
     // Delete votes referencing these photos first (FK)
     await sb.from('votes').delete().in('photo_id', ids);
@@ -123,7 +122,7 @@ export async function publishSelectedPhotos() {
   const btn = document.getElementById('btn-publish');
   const origText = btn ? btn.textContent : '';
   if (btn) { btn.innerHTML = '<span class="loader"></span>'; btn.disabled = true; }
-  showLoader(currentLang === 'es' ? 'Publicando fotos...' : 'Publicant fotos...');
+  showLoader(t('publishing_photos_loader'));
 
   const toPublish = state.selectedPhotos.size > 0
     ? state.photos.filter(p => state.selectedPhotos.has(p.id))
@@ -145,18 +144,21 @@ export async function publishSelectedPhotos() {
 
   await loadAllData();
   hideLoader();
-  if (btn) { btn.innerHTML = origText || (currentLang === 'es' ? 'Publicar Fotos' : 'Publicar Fotos'); btn.disabled = false; }
+  if (btn) { btn.innerHTML = origText || t('publish_btn'); btn.disabled = false; }
 
   renderAdminGallery();
   renderAdminVotingGrid();
   refreshAdminDashboard();
-  showToast(toPublish.length + ' foto(s) publicada(s) ✅', 'success');
+  showToast(t('photos_published_count').replace('{count}', toPublish.length), 'success');
 }
 
 // ═══════════════════════════════════
 // UPLOAD SECTION (función común)
 // ═══════════════════════════════════
 export function updateUploadSection() {
+  // Guard: cridada també des d'applyTranslations() en canviar d'idioma, que pot
+  // dispararse abans del login (encara sense state.currentUser).
+  if (!state.currentUser) return;
   // Solo cuenta como "ya subida" si pertenece a la temática activa
   const myPhoto    = getActiveAllPhotos().find(p => p.userId === state.currentUser.id);
   const uploadSect = document.getElementById('upload-section');
@@ -182,9 +184,7 @@ export function updateUploadSection() {
       voteSection.classList.remove('hidden');
       const objTitle = state.currentObjective ? state.currentObjective.title : '—';
       if (voteTitleEl) {
-        voteTitleEl.textContent = currentLang === 'es'
-          ? `Votar el reto: ${objTitle}`
-          : `Votar el repte: ${objTitle}`;
+        voteTitleEl.textContent = t('vote_objective_title').replace('{title}', objTitle);
       }
       if (voteSubEl) {
         // Data fi de votació real: ve de reptes_calendari.voting_end (fila del
@@ -193,7 +193,7 @@ export function updateUploadSection() {
         const cal = getActiveCalendar();
         const endDate = cal ? _formatDateEs(cal.votingEnd) : '';
         voteSubEl.textContent = endDate
-          ? (currentLang === 'es' ? `Votaciones abiertas hasta el ${endDate}` : `Votacions obertes fins el ${endDate}`)
+          ? t('voting_open_until').replace('{date}', endDate)
           : t('nav_vote_sub');
       }
       renderVoteMosaic('vote-mosaic-grid', 6);
@@ -230,15 +230,15 @@ export function updateUploadSection() {
   } else if ((!state.settings.uploads_enabled || state.settings.voting_enabled) && !actingAsAdmin()) {
     uploadSect.classList.remove('hidden');
     if (uploadZone) uploadZone.classList.add('hidden');
-    if (closedMsg) { closedMsg.classList.remove('hidden'); closedText.textContent = currentLang === 'es' ? 'La subida de fotos está cerrada.' : 'La pujada de fotos està tancada.'; }
-    if (labelEl) labelEl.textContent = currentLang === 'es' ? 'Subida cerrada' : 'Pujada tancada';
+    if (closedMsg) { closedMsg.classList.remove('hidden'); closedText.textContent = t('upload_closed_msg'); }
+    if (labelEl) labelEl.textContent = t('upload_closed_label');
     doneSect.classList.add('hidden');
   } else {
     uploadSect.classList.remove('hidden');
     if (uploadZone) uploadZone.classList.remove('hidden');
     if (closedMsg) closedMsg.classList.add('hidden');
     doneSect.classList.add('hidden');
-    if (labelEl) labelEl.textContent = t('nav_upload_sub') || (currentLang === 'es' ? 'Sube tu foto al concurso' : 'Puja la teva foto per participar');
+    if (labelEl) labelEl.textContent = t('nav_upload_sub');
   }
 }
 
@@ -374,10 +374,10 @@ export async function uploadPhoto() {
   const ctx = state.pendingCtx || '';
   const pfx = ctx ? ctx + '-' : '';
   const btn = document.getElementById('btn-' + (ctx ? ctx + '-' : '') + 'upload-confirm') || document.getElementById('btn-upload-confirm');
-  if (!btn) { showToast('Error: botó no trobat', 'error'); return; }
+  if (!btn) { showToast(t('button_not_found'), 'error'); return; }
 
   const origBtnText = btn.textContent;
-  btn.innerHTML = '<span class="loader"></span> Comprimint...';
+  btn.innerHTML = '<span class="loader"></span> ' + t('compressing');
   btn.disabled  = true;
   showLoader(t('compressing'));
 
@@ -393,7 +393,7 @@ export async function uploadPhoto() {
     const fileToUpload = await compressImage(state.pendingFile);
 
     showLoader(t('uploading'));
-    btn.innerHTML = '<span class="loader"></span> Pujant...';
+    btn.innerHTML = '<span class="loader"></span> ' + t('uploading');
 
     // Validate preset is configured
     if (!CLOUDINARY_PRESET || CLOUDINARY_PRESET === 'YOUR_PRESET') {
@@ -453,12 +453,7 @@ export async function uploadPhoto() {
 
     if (!saveOk) {
       // Photo is in Cloudinary but NOT in Supabase - warn user
-      showToast(
-        currentLang === 'es'
-          ? '⚠️ Foto subida a la nube, pero no se pudo guardar el registro. Contacta al administrador.'
-          : "⚠️ Foto pujada al núvol, però no s'ha pogut desar el registre. Contacta l'administrador.",
-        'error'
-      );
+      showToast(t('upload_save_warning'), 'error');
       btn.innerHTML = origBtnText;
       btn.disabled  = false;
       return;
@@ -482,13 +477,13 @@ export async function uploadPhoto() {
     console.error('Upload error:', err);
 
     // Show specific error message
-    let msg = 'Error en pujar la foto.';
+    let msg = t('upload_error_generic');
     if (err.message.includes('Invalid Upload Preset') || err.message.includes('preset')) {
-      msg = 'Error: Upload Preset de Cloudinary no vàlid. Comprova la configuració.';
+      msg = t('upload_error_preset');
     } else if (err.message.includes('File size') || err.message.includes('too large')) {
-      msg = 'Error: La foto és massa gran fins i tot després de comprimir.';
+      msg = t('upload_error_size');
     } else if (err.message.includes('401') || err.message.includes('403')) {
-      msg = 'Error: Sense permisos per pujar a Cloudinary. Comprova el preset.';
+      msg = t('upload_error_permission');
     } else {
       msg = 'Error: ' + err.message;
     }
@@ -535,7 +530,7 @@ export async function saveCaptionEdit() {
   const btn   = document.getElementById('btn-save-caption');
 
   if (btn) btn.disabled = true;
-  showLoader(currentLang === 'es' ? 'Guardando...' : 'Desant...');
+  showLoader(t('saving_generic'));
 
   const { error } = await sb.from('photo_submissions')
     .update({ caption: newCaption })
@@ -547,7 +542,7 @@ export async function saveCaptionEdit() {
 
   if (error) {
     console.error('Caption update error:', error);
-    showToast(currentLang === 'es' ? 'Error al guardar el título.' : 'Error en desar el títol.', 'error');
+    showToast(t('caption_save_error'), 'error');
     return;
   }
 
@@ -558,7 +553,7 @@ export async function saveCaptionEdit() {
     refreshParticipantDashboard();
   }
   if (btn) btn.classList.add('hidden');
-  showToast(currentLang === 'es' ? '¡Título guardado! ✅' : 'Títol desat! ✅', 'success');
+  showToast(t('caption_saved'), 'success');
 }
 
 // Exponer en window las funciones usadas desde onclick del HTML
@@ -573,3 +568,7 @@ window.cancelPreview = cancelPreview;
 window.uploadPhoto = uploadPhoto;
 window.deleteMyPhoto = deleteMyPhoto;
 window.saveCaptionEdit = saveCaptionEdit;
+// Exposades perquè applyTranslations() (i18n.js) repinti aquestes seccions en
+// canviar d'idioma (contingut multi-estat generat dinàmicament amb t()).
+window._refreshAdminGallery = renderAdminGallery;
+window._refreshUploadSection = updateUploadSection;

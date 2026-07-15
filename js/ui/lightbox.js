@@ -2,7 +2,7 @@
 // FULLSCREEN IMAGE VIEWER + ZOOM + DESCARGAS
 // ═══════════════════════════════════
 import { state, actingAsAdmin } from '../core/state.js';
-import { currentLang, t } from '../core/i18n.js';
+import { t } from '../core/i18n.js';
 import { showToast, showLoader, hideLoader } from './toast.js';
 import { getActiveAllPhotos, getParticipantNumber } from '../core/data.js';
 
@@ -144,7 +144,7 @@ export function downloadCurrentFullscreen() {
 
 export async function downloadPhoto(url, fileName) {
   try {
-    showToast(currentLang === 'es' ? 'Descargando...' : 'Descarregant...', 'info');
+    showToast(t('downloading'), 'info');
     const res  = await fetch(url);
     const blob = await res.blob();
     const a    = document.createElement('a');
@@ -165,16 +165,14 @@ export async function downloadAllPhotos() {
   // Solo descargar fotos de la temática activa
   const allPhotos = getActiveAllPhotos();
   if (allPhotos.length === 0) {
-    showToast(currentLang === 'es' ? 'No hay fotos para descargar' : 'No hi ha fotos per descarregar', 'error');
+    showToast(t('no_photos_download'), 'error');
     return;
   }
 
   const btn = document.getElementById('btn-download-all');
   const origText = btn ? btn.innerHTML : '';
   if (btn) { btn.innerHTML = '<span class="loader"></span>'; btn.disabled = true; }
-  showLoader(currentLang === 'es'
-    ? `Preparando ZIP con ${allPhotos.length} foto(s)...`
-    : `Preparant ZIP amb ${allPhotos.length} foto(s)...`);
+  showLoader(t('preparing_zip').replace('{count}', allPhotos.length));
 
   try {
     const zip = new JSZip();
@@ -220,12 +218,10 @@ export async function downloadAllPhotos() {
       URL.revokeObjectURL(url);
     }, 1000);
 
-    showToast(currentLang === 'es'
-      ? `${allPhotos.length} foto(s) descargadas en ZIP ✅`
-      : `${allPhotos.length} foto(s) descarregades en ZIP ✅`, 'success');
+    showToast(t('zip_downloaded').replace('{count}', allPhotos.length), 'success');
   } catch (err) {
     console.error('ZIP download error:', err);
-    showToast(currentLang === 'es' ? '❌ Error al crear el ZIP' : '❌ Error en crear el ZIP', 'error');
+    showToast(t('zip_error'), 'error');
   }
 
   hideLoader();
