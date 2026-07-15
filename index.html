@@ -440,15 +440,16 @@
             <div class="card-title" data-i18n="texts_title">Gestió de textos</div>
             <div class="card-subtitle" data-i18n="texts_subtitle">Edita els textos de l'aplicació (CA / ES)</div>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <span id="texts-count" style="font-size:12px;color:var(--text-muted);white-space:nowrap;"></span>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-save-texts" onclick="saveAllTexts()" data-i18n="save_all_texts_btn">Desar tots els canvis</button>
-            <button type="button" class="btn btn-primary btn-sm" id="btn-save-texts-both" onclick="saveAllTextsToBoth()" data-i18n="save_all_texts_both_btn">Replica a les dues bases</button>
-          </div>
         </div>
-        <div class="card-subtitle" style="margin-top:-6px;margin-bottom:10px;" data-i18n="texts_save_hint">"Desar tots els canvis" només escriu a la base activa ara mateix (mira el botó Normal/Test de dalt). "Replica a les dues bases" escriu a Normal i Test alhora.</div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <input type="text" id="texts-search" oninput="filterTexts(this.value)" data-i18n-placeholder="texts_search_placeholder" placeholder="Cerca per clau o text...">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;flex:1 1 240px;min-width:180px;max-width:420px;">
+            <input type="text" id="texts-search" oninput="filterTexts(this.value)" data-i18n-placeholder="texts_search_placeholder" placeholder="Cerca per clau o text..." style="max-width:300px;width:100%;background:rgba(4,9,30,0.6);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0 16px;height:var(--tap);color:var(--text);font-family:var(--font-body);font-size:15px;outline:none;">
+            <span id="texts-count" style="font-size:12px;color:var(--text-muted);white-space:nowrap;"></span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:nowrap;flex-shrink:0;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-save-texts" onclick="saveAllTexts()" data-i18n="save_all_texts_btn" style="width:auto;flex-shrink:0;white-space:nowrap;">Desar canvis a la base activa</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-save-texts-both" onclick="saveAllTextsToBoth()" data-i18n="save_all_texts_both_btn" style="width:auto;flex-shrink:0;white-space:nowrap;">Desar canvis a les dues bases</button>
+          </div>
         </div>
         <div id="texts-table-head" style="display:flex;gap:12px;padding:0 10px 8px;font-size:11px;color:var(--text-muted);font-weight:600;">
           <div style="width:200px;flex-shrink:0;" data-i18n="texts_col_key">Clau</div>

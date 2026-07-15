@@ -316,15 +316,14 @@ export const TRANSLATIONS = {
     texts_nav_label: 'Textos',
     texts_title: 'Gestió de textos',
     texts_subtitle: "Edita els textos de l'aplicació (CA / ES)",
-    save_all_texts_btn: 'Desar tots els canvis',
+    save_all_texts_btn: 'Desar canvis a la base activa',
     texts_search_placeholder: 'Cerca per clau o text...',
     texts_col_key: 'Clau',
     no_texts_found: 'Cap text coincideix amb la cerca.',
     texts_save_error: '❌ Error en desar els textos',
     texts_saved: '✅ Textos desats',
-    save_all_texts_both_btn: 'Replica a les dues bases',
+    save_all_texts_both_btn: 'Desar canvis a les dues bases',
     texts_saved_both: '✅ Textos desats a Normal i Test',
-    texts_save_hint: '"Desar tots els canvis" només escriu a la base activa ara mateix (mira el botó Normal/Test de dalt). "Replica a les dues bases" escriu a Normal i Test alhora.',
   },
   es: {
     // Foto: título/descripción opcional del autor
@@ -636,15 +635,14 @@ export const TRANSLATIONS = {
     texts_nav_label: 'Textos',
     texts_title: 'Gestión de textos',
     texts_subtitle: 'Edita los textos de la aplicación (CA / ES)',
-    save_all_texts_btn: 'Guardar todos los cambios',
+    save_all_texts_btn: 'Guardar cambios en la base activa',
     texts_search_placeholder: 'Busca por clave o texto...',
     texts_col_key: 'Clave',
     no_texts_found: 'Ningún texto coincide con la búsqueda.',
     texts_save_error: '❌ Error al guardar los textos',
     texts_saved: '✅ Textos guardados',
-    save_all_texts_both_btn: 'Replicar en las dos bases',
+    save_all_texts_both_btn: 'Guardar cambios en las dos bases',
     texts_saved_both: '✅ Textos guardados en Normal y Test',
-    texts_save_hint: '"Guardar todos los cambios" solo escribe en la base activa ahora mismo (mira el botón Normal/Test de arriba). "Replicar en las dos bases" escribe en Normal y Test a la vez.',
   }
 };
 

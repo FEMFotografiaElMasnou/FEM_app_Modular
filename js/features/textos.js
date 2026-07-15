@@ -35,8 +35,10 @@ export function renderTextsList() {
         (TRANSLATIONS.es[k] || '').toLowerCase().includes(term))
     : all;
 
+  // El comptador només aporta informació quan hi ha un filtre actiu; sense
+  // cerca, mostrar "336/336" és soroll que no diu res nou.
   const countEl = document.getElementById('texts-count');
-  if (countEl) countEl.textContent = `${keys.length} / ${all.length}`;
+  if (countEl) countEl.textContent = term ? `${keys.length} / ${all.length}` : '';
 
   if (keys.length === 0) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>${t('no_texts_found')}</p></div>`;
