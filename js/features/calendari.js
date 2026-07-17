@@ -33,10 +33,32 @@ export function getActiveCalendar(objectiveId) {
   return (state.reptesCalendari || []).find(c => c.objectiveId === objId) || null;
 }
 
+// 'YYYY-MM-DD' del dia D'AVUI EN HORA LOCAL del navegador (NO en UTC).
+// BUG corregit 2026-07-18: abans es feia servir new Date().toISOString(),
+// que dona la data en UTC — entre les 00:00 i les ~02:00 hora local (CEST,
+// UTC+2), la data en UTC encara és "ahir", de manera que una fase que ja
+// hauria d'haver-se tancat/obert per calendari es quedava amb l'estat d'ahir
+// fins que la data UTC també avançava. Els socis del club llegeixen les
+// dates en hora local (Europa/Madrid), no en UTC, així que "avui" es calcula
+// ara amb getFullYear()/getMonth()/getDate() (hora local del navegador).
+// Nota: el cron de Supabase (fem_apply_calendar(), 1 cop al dia) encara
+// avalua current_date amb el fus horari de la base de dades (normalment
+// UTC) — pot quedar unes hores desfasat respecte d'aquest càlcul en viu just
+// al voltant de la mitjanit, però com que aquest càlcul en viu ja repinta i
+// desa l'estat correcte cada cop que s'obre/refresca la pantalla d'admin,
+// en la pràctica queda corregit de seguida.
+function todayLocalISO() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 // Què dirien les dates avui per a un repte, si la fase estigués en mode
 // 'calendari' (independentment del mode que tingui realment triat).
 function computeWantFromDates(cal) {
-  const today = new Date().toISOString().slice(0, 10);   // 'YYYY-MM-DD' (UTC, coincideix amb current_date del cron)
+  const today = todayLocalISO();
   const inRange = (start, end) => !!(start && end && today >= start && today <= end);
   return {
     wantUpload: inRange(cal.uploadStart, cal.uploadEnd),

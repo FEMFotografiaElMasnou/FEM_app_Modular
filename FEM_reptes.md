@@ -201,6 +201,10 @@ i és la base de les fases 2/3 de sota.
    `syncPlasticButtons`/`plasticPress` RETIRATS (ja no hi ha botons de
    plàstic globals). SQL a aplicar (pendent que ho facis tu a Supabase,
    Normal i Test): `sql/reptes_calendari_fase4.sql`.
+   **Bug de fus horari (v0.1.38/v0.1.39)**: "avui" es calculava en UTC en
+   lloc d'hora local — corregit al navegador (v0.1.38, `calendari.js`) i
+   consolidat al cron de Supabase (v0.1.39, `sql/reptes_calendari_tz_fix.sql`,
+   pendent que ho apliquis a Normal i Test).
 6. **Costat participant** (`index.html` hero-grid, `fotos.js`
    `updateUploadSection()`): repetir la parella `card-objective-photo` ↔
    `vote-mosaic-section` un cop per repte actiu; `showParticipantVoting()` rebent

@@ -8,6 +8,47 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.39] — 2026-07-18 — Fix de fus horari, consolidat al cron de Supabase
+
+> Petició (Pablo): després del fix de v0.1.38 al navegador, demana la
+> "solució consolidada" — que el cron (la tasca automàtica diària de
+> Supabase que aplica el calendari fins i tot si ningú obre l'app) faci
+> servir el mateix "avui" (hora de Madrid), no la data en UTC de la base de
+> dades.
+
+### Afegit
+- **`sql/reptes_calendari_tz_fix.sql`**: reescriu `fem_apply_calendar()`
+  perquè calculi "avui" amb `(now() at time zone 'Europe/Madrid')::date` en
+  lloc de `current_date` (que depenia del fus horari de la base de dades,
+  normalment UTC). No cal tocar la programació del cron (`cron.schedule`,
+  cada dia a les 00:05 UTC ≈ 01:05-02:05 Madrid) — només la data que la
+  funció fa servir per decidir cada fase.
+
+### Pendent (tu)
+- Aplicar `sql/reptes_calendari_tz_fix.sql` a Supabase (Normal i Test).
+
+---
+
+## [0.1.38] — 2026-07-18 — Bug: "avui" es calculava en UTC, no en hora local
+
+> Reportat (Pablo): 18/07 amb fi de pujada 17/07 per calendari, i el
+> desplegable de Pujada es mostrava en verd (obert) — i el de Votació
+> (18/07-22/07) en vermell (tancat), quan havia de ser al revés.
+
+### Arreglat
+- **`js/features/calendari.js`** (`computeWantFromDates()`): "avui" es
+  calculava amb `new Date().toISOString().slice(0,10)`, que dona la data en
+  **UTC**. Entre les 00:00 i les ~02:00 hora local (CEST, UTC+2), la data en
+  UTC encara és "ahir": una fase que ja hauria de tancar/obrir per calendari
+  es quedava amb l'estat d'ahir. Nova funció `todayLocalISO()`: calcula
+  "avui" amb `getFullYear()/getMonth()/getDate()` (hora LOCAL del navegador),
+  que és com els socis llegeixen les dates.
+- **Consolidat a v0.1.39** (SQL): el mateix problema, però al cron de
+  Supabase (que aplica el calendari 1 cop al dia encara que ningú obri
+  l'app), es corregeix a `sql/reptes_calendari_tz_fix.sql`.
+
+---
+
 ## [0.1.37] — 2026-07-18 — Reptes finalitzats: mateixos camps, visibles i bloquejats
 
 > Petició (Pablo): en finalitzar un repte, els seus camps (desplegables de
