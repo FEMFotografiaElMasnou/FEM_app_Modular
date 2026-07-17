@@ -8,6 +8,9 @@ export const TRANSLATIONS = {
     caption_placeholder: 'Què vols transmetre amb la teva foto? (opcional)',
     // Nav
     logo_subtitle: 'Sistema de votació',
+    // dashboard/view_db_title/view_db_subtitle: NO S'USEN des de 2026-07-18
+    // (pestanya "Panell de Control" retirada, petició Pablo — vegeu
+    // FEM_reptes.md/CHANGELOG.md). Es deixen per si calgués recuperar-ne el text.
     dashboard: 'Panel de Control', photos: 'Fotos', voting: 'Votació',
     ranking: 'Ranking', objectives: 'Reptes', members: 'Socis',
     logout: 'Sortir', welcome: 'Benvingut',

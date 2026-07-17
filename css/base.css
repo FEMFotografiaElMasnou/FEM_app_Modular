@@ -1068,6 +1068,19 @@ body::before {
     letter-spacing: 0;
     flex-shrink: 0;
   }
+  /* Admin en mòbil (2026-07-18, petició Pablo): en retirar la pestanya
+     "Panell de Control" (que tenia una card "Vista i base de dades" només
+     per a mòbil), "Veure com a participant" i el canvi de BD Normal/Test
+     passen a viure SEMPRE a la barra superior, també en mòbil — mateix
+     patró compacte que el toggle de tornada de la línia de dalt. */
+  #screen-admin .role-badge.admin-toggle,
+  #screen-admin .role-badge.db-mode-btn {
+    display: inline-flex;
+    font-size: 10px;
+    padding: 2px 6px;
+    letter-spacing: 0;
+    flex-shrink: 0;
+  }
 
   /* Toast: above bottom nav */
   #toast { bottom: 76px; }

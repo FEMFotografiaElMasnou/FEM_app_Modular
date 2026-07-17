@@ -9,39 +9,23 @@
 // ═══════════════════════════════════
 import { state } from '../core/state.js';
 import { t } from '../core/i18n.js';
-import { getActivePublishedPhotos, getActiveAllPhotos, getActiveVotes } from '../core/data.js';
+import { getActiveAllPhotos } from '../core/data.js';
 import { updateVoteButtonsState } from '../features/votacio.js';
 import { switchTab } from '../core/router.js';
 
 // ═══════════════════════════════════
 // ADMIN DASHBOARD
 // ═══════════════════════════════════
+// Nota (2026-07-18, retirada de la pestanya "Panell de Control", petició
+// Pablo): aquesta funció ja NO omple cap estadística global (abans escrivia
+// als placeholders ocults #stat-photos/#stat-votes-done/#stat-votes-total i
+// #current-objective-info, retirats junts amb la pestanya) — es queda només
+// amb la secció de "La meva foto" de l'admin (viu a la pestanya Votació) i
+// la sincronització dels botons de vot.
 export function refreshAdminDashboard() {
   // Guard: cridada també des d'applyTranslations() en canviar d'idioma, que pot
   // dispararse abans del login (encara sense state.currentUser).
   if (!state.currentUser) return;
-  // ── Filtrado por temática activa (no mezclar temáticas pasadas)
-  const activePublished = getActivePublishedPhotos();
-  const activeAll       = getActiveAllPhotos();
-  const activeVotes     = getActiveVotes();
-
-  // Progreso GLOBAL: cuántas fotos tienen todos sus votos completos
-  const totalPhotos = activePublished.length;
-  const totalVoters = totalPhotos; // Cada participante con foto puede votar
-  const requiredVotesPerPhoto = totalVoters - 1; // Todos votan menos el dueño
-
-  // Contar cuántas fotos tienen todos sus votos
-  let fullyVotedPhotos = 0;
-  for (const photo of activePublished) {
-    const votesForPhoto = activeVotes.filter(v => v.photoId === photo.id).length;
-    if (votesForPhoto >= requiredVotesPerPhoto) {
-      fullyVotedPhotos++;
-    }
-  }
-
-  document.getElementById('stat-photos').textContent        = activeAll.length;
-  document.getElementById('stat-votes-done').textContent    = fullyVotedPhotos;
-  document.getElementById('stat-votes-total').textContent   = totalPhotos;
 
   // Admin own photo upload section (solo foto de la temática activa)
   const adminPhoto = getActiveAllPhotos().find(p => p.userId === state.currentUser.id);
@@ -69,17 +53,6 @@ export function refreshAdminDashboard() {
     }
   }
 
-  // Current objective info (placeholder ocult des de la iteració 2 — es deixa
-  // sense tocar, no forma part de l'abast d'aquesta fase)
-  const objEl = document.getElementById('current-objective-info');
-  if (state.currentObjective) {
-    objEl.innerHTML = `
-      <div style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;color:var(--accent);">${state.currentObjective.title}</div>
-      <div style="font-size:14px;color:var(--text-muted);margin-top:8px;">${state.currentObjective.description}</div>
-    `;
-  } else {
-    objEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><p>${t('no_active_objective_short')}.</p></div>`;
-  }
   updateVoteButtonsState();
 }
 

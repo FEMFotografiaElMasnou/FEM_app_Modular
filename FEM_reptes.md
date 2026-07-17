@@ -216,3 +216,11 @@ i és la base de les fases 2/3 de sota.
 
 Ordre: 0 fet → 1 fet → 2 fet → 3 fet → 4 fet → 5 fet → (6 a decidir quan) → 7.
 Cada fase és una tasca a part (una a la vegada, com marca "Flujo de trabajo").
+
+### Polit final (fora de numeració, 2026-07-18)
+Un cop la Fase 4/5 va deixar el Panell de Control buit de contingut propi
+(les seves 3 cards es van moure a cada targeta de repte), Pablo va demanar
+retirar directament la pestanya sencera ("no té sentit"): **FET (v0.1.41)**.
+"Fotos" passa a ser la pestanya activa per defecte per a l'admin; "Veure com
+a participant"/canviar BD Normal-Test (abans una card només-mòbil dins del
+Panell de Control) viuen ara sempre a la barra superior, també en mòbil.

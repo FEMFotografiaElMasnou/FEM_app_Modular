@@ -60,6 +60,13 @@ export function showParticipantScreen() {
   showScreen('participant');
   applyTranslations();
   document.getElementById('participant-username').textContent = state.currentUser.name;
+  // BUG corregit 2026-07-18: applyAllActiveCalendars() només es cridava des
+  // de showAdminScreen()/_refreshUI() (branca admin) — un soci que entrés
+  // sense que cap admin hagués obert el Panell de Control aquell dia es
+  // quedava amb l'estat que hi hagués a la BD des de l'últim cop (persistit
+  // per un admin o pel cron diari), no amb el que tocaria AVUI. Es recalcula
+  // també aquí perquè cada soci vegi sempre l'estat correcte del SEU repte.
+  applyAllActiveCalendars();
 
   const isAdminViewing = state.currentUser.role === 'admin' && state.adminViewingAsParticipant;
   const roleBadge  = document.getElementById('participant-role-badge');
@@ -217,6 +224,9 @@ function _refreshUI() {
     renderRanking('ranking-current-list', 'ranking-general-list');
     renderMembersTable();
   } else {
+    // Mateix fix que a showParticipantScreen(): recalcular abans de repintar,
+    // no dependre només de l'últim valor persistit (per un admin o pel cron).
+    applyAllActiveCalendars();
     refreshParticipantDashboard();
     applyTranslations();
     if (!window._hasUnsavedVotes) {

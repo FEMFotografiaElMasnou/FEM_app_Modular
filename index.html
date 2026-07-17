@@ -142,10 +142,11 @@
   <div class="admin-shell">
     <aside class="admin-sidebar">
       <div class="sidebar-title" data-i18n="menu_label">Menú</div>
-      <button type="button" class="sidebar-item active" onclick="adminNav('dashboard')">
-        <span class="sidebar-icon">🎛️</span><span class="sidebar-label" data-i18n="dashboard">Panel de Control</span>
-      </button>
-      <button type="button" class="sidebar-item" onclick="adminNav('photos')">
+      <!-- "Panell de Control" retirat (2026-07-18, petició Pablo: "no té sentit"):
+           des de la Fase 4/5 ja no hi quedava res propi (Votacions rebudes,
+           Controls i Calendari es van moure a cada targeta de repte). "Fotos"
+           passa a ser la pestanya activa per defecte. -->
+      <button type="button" class="sidebar-item active" onclick="adminNav('photos')">
         <span class="sidebar-icon">📷</span><span class="sidebar-label" data-i18n="photos">Fotos</span>
       </button>
       <button type="button" class="sidebar-item" onclick="adminNav('objectives')">
@@ -161,8 +162,7 @@
   <div class="main-content">
     <!-- Tab Nav (ocult: navegació moguda al sidebar) -->
     <div class="tab-nav" id="admin-top-tabs" style="display:none;">
-      <button type="button" class="tab-btn active" onclick="switchTab('admin', 'dashboard')" data-i18n="dashboard">Dashboard</button>
-      <button type="button" class="tab-btn" onclick="switchTab('admin', 'photos')" data-i18n="photos">Fotos</button>
+      <button type="button" class="tab-btn active" onclick="switchTab('admin', 'photos')" data-i18n="photos">Fotos</button>
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'voting')" data-i18n="voting">Votació</button>
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'ranking')" data-i18n="ranking">Ranking</button>
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'objectives')" data-i18n="objectives">Reptes</button>
@@ -170,49 +170,18 @@
       <button type="button" class="tab-btn" onclick="switchTab('admin', 'texts')" data-i18n="texts_nav_label">Textos</button>
     </div>
 
-    <!-- TAB: DASHBOARD -->
-    <div id="admin-tab-dashboard" class="tab-content active">
+    <!-- TAB: DASHBOARD — retirada (2026-07-18, petició Pablo). Ja no
+         quedava cap informació pròpia (Votacions rebudes/Controls/Calendari
+         es van moure a cada targeta de repte a la Fase 4/5); la targeta
+         "Vista i base de dades" que hi havia (només visible en mòbil) ara
+         viu directament a la barra superior, sempre visible per a l'admin
+         (vegeu #screen-admin .role-badge a base.css). Placeholders ocults
+         (stat-photos/stat-votes-done/stat-votes-total/current-objective-info)
+         retirats també, ja no els llegeix cap JS (refreshAdminDashboard()). -->
 
-      <!-- ═══ Iteració 2: caixes ocultes (placeholders) perquè el JS no peti ═══ -->
-      <!-- admin-progress-label eliminat (v0.1.28): pertanyia a la barra de progrés
-           retirada; ja no el llegeix cap JS. -->
-      <div style="display:none;" id="dashboard-placeholders">
-        <span id="stat-photos">—</span>
-        <span id="stat-votes-done">0</span>
-        <span id="stat-votes-total">0</span>
-      </div>
-
-      <!-- FASE 4/5 (pla multi-repte, FEM_reptes.md — FET, 2026-07-17): les
-           cards "Votacions rebudes", "Controls" (masters Pujada/Votació) i
-           "Calendari" queden RETIRADES del Panell de Control (punt 1 del pla,
-           ara efectiu). Cada repte gestiona ara aquesta informació i aquests
-           controls a la seva pròpia targeta, a l'apartat Reptes
-           (tematiques.js: renderObjectivesList) — necessari perquè amb
-           multi-repte ja no té sentit un únic recompte/master globals. -->
-
-      <!-- Vista i base de dades — només en mòbil (a l'escriptori ja hi ha els badges a la topbar) -->
-      <div class="card only-mobile">
-        <div class="card-header">
-          <div>
-            <div class="card-title" data-i18n="view_db_title">Vista i base de dades</div>
-            <div class="card-subtitle" data-i18n="view_db_subtitle">Alterna vista i base de dades</div>
-          </div>
-        </div>
-        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAdminParticipantView()">
-            👤 <span data-i18n="view_as_participant">Veure com a participant</span>
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm db-mode-btn" id="btn-db-mode-card" onclick="toggleDbMode()" data-i18n-title="toggle_db_mode_tooltip" title="Canviar base de dades (Normal / Test)">Normal</button>
-        </div>
-      </div>
-
-      <!-- ═══ Iteració 2: temàtica actual oculta (placeholder) ═══ -->
-      <div style="display:none;" id="current-objective-info"></div>
-
-    </div>
-
-    <!-- TAB: FOTOS -->
-    <div id="admin-tab-photos" class="tab-content">
+    <!-- TAB: FOTOS (pestanya activa per defecte des de la retirada del
+         Panell de Control, 2026-07-18) -->
+    <div id="admin-tab-photos" class="tab-content active">
       <div class="card">
         <div class="card-header">
           <div>

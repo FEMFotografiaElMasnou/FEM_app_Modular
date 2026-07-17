@@ -8,6 +8,59 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.41] — 2026-07-18 — Retirada la pestanya "Panell de Control"
+
+> Petició (Pablo): "el botó Panell de Control no té sentit, es pot eliminar".
+> Des de la Fase 4/5 ja no hi quedava res propi seu (Votacions rebudes,
+> Controls i Calendari es van moure a cada targeta de repte).
+
+### Retirat
+- **`index.html`**: pestanya "Panell de Control" (sidebar + tab-nav mòbil) i
+  tot el seu contingut: la card "Vista i base de dades" (només mòbil) i els
+  placeholders ocults `#stat-photos`/`#stat-votes-done`/`#stat-votes-total`/
+  `#current-objective-info`. "Fotos" passa a ser la pestanya activa per
+  defecte en entrar com a admin.
+- **`js/screens/admin.js`** (`refreshAdminDashboard()`): treu el càlcul de
+  fotos/vots que només omplia els placeholders retirats, i el bloc que
+  escrivia a `#current-objective-info` (ja no existeix al DOM).
+
+### Canviat
+- **`css/base.css`**: la funcionalitat de la card mòbil retirada ("Veure com
+  a participant" / canviar BD Normal-Test) passa a viure SEMPRE a la barra
+  superior de l'admin (decisió Pablo: "Tot això hauria d'estar a la barra
+  superior quan usuari és administrador") — `#screen-admin .role-badge.
+  admin-toggle`/`.db-mode-btn` ja no es amaguen en mòbil (mateix patró
+  compacte que ja tenia el toggle de tornada a l'admin des de la vista de
+  participant).
+- **`i18n.js`**: `dashboard`/`view_db_title`/`view_db_subtitle` marcades
+  com a no usades als comentaris — no s'esborren (mateix criteri d'altres
+  claus obsoletes del projecte).
+
+### Sense SQL
+
+---
+
+## [0.1.40] — 2026-07-18 — Els socis també recalculen l'estat del calendari en entrar
+
+> Reportat (Pablo): un soci sense foto encara veia la pujada oberta quan ja
+> hauria d'estar tancada per calendari (mentre que un soci amb foto ja
+> pujada la veia correctament bloquejada). Sembla relacionat amb caché del
+> navegador, però revisant el codi hi havia un forat real darrere.
+
+### Arreglat
+- **`js/core/router.js`**: `applyAllActiveCalendars()` (recalcula si avui
+  toca obrir/tancar cada fase de cada repte actiu) només es cridava des del
+  costat ADMIN (`showAdminScreen()` i la branca `actingAsAdmin()` de
+  `_refreshUI()`). Un soci normal mai la disparava — es quedava amb l'últim
+  valor persistit a la BD (per un admin que hagués obert el Panell de
+  Control aquell dia, o pel cron de Supabase un cop al dia); si cap de les
+  dues coses havia passat encara, veia l'estat d'ahir. Ara es crida també a
+  `showParticipantScreen()` i a la branca de soci de `_refreshUI()`, perquè
+  cada soci recalculi el seu propi estat en entrar i en cada auto-refresc,
+  igual que ja feia l'admin.
+
+---
+
 ## [0.1.39] — 2026-07-18 — Fix de fus horari, consolidat al cron de Supabase
 
 > Petició (Pablo): després del fix de v0.1.38 al navegador, demana la
