@@ -218,6 +218,11 @@ export const TRANSLATIONS = {
     finalizing_objective: 'Finalitzant repte...',
     create_objective_first: '🔒 Crea un repte primer',
     no_active_objective_short: 'No hi ha repte actiu',
+    // automation_save_error/automation_enabled_msg/automation_disabled_msg/
+    // cal_mode_hint/cal_choose_mode_first/managed_by_calendar_msg: obsoletes
+    // des de la Fase 4/5 (FEM_reptes.md) — pertanyien al vell automation_enabled
+    // i a la graella visual de mes, retirats. Es deixen per si calgués
+    // recuperar-ne el redactat (mateix criteri que voting_progress/members_voted).
     automation_save_error: "❌ Error en desar l'automatització",
     automation_enabled_msg: '⚡ Automatització activada: el calendari mana',
     automation_disabled_msg: 'Automatització desactivada: toggles manuals',
@@ -227,6 +232,18 @@ export const TRANSLATIONS = {
     calendar_saved: '✅ Calendari desat',
     cal_upload_label: 'Pujada',
     cal_voting_label: 'Votació',
+    // Fase 4/5: desplegables de mode (calendari/obert/tancat) i comptadors/
+    // etiquetes de data de cada targeta de repte (tematiques.js)
+    mode_option_calendari: 'Calendari',
+    mode_option_obert: 'Obert',
+    mode_option_tancat: 'Tancat',
+    phase_control_label: 'Control',
+    photos_uploaded_count: '{n} fotos pujades',
+    votes_received_count: '{n} vots rebuts',
+    date_upload_start_label: 'Inici pujada',
+    date_upload_end_label: 'Fi pujada',
+    date_voting_start_label: 'Inici votació',
+    date_voting_end_label: 'Fi votació',
     no_photos_to_vote: 'No hi ha fotos publicades per votar.',
     already_voted_locked_msg: 'Ja has enviat la teva votació. La pantalla queda bloquejada.',
     voting_not_open_msg: 'Votacions no obertes — pots veure les fotos però encara no pots votar',
@@ -291,6 +308,10 @@ export const TRANSLATIONS = {
     welcome_label: 'Benvingut,',
     hello_label: 'Hola,',
     menu_label: 'Menú',
+    // controls_title/calendar_title/calendar_subtitle/calendar_no_obj_msg/
+    // automation_label/save_calendar_btn/uploads_toggle/voting_toggle:
+    // obsoletes des de la Fase 4/5 (cards "Controls"/"Calendari" retirades
+    // del Panell de Control) — es deixen per si calgués recuperar-ne el text.
     controls_title: 'Controls',
     view_db_title: 'Vista i base de dades',
     calendar_title: 'Calendari',
@@ -545,6 +566,8 @@ export const TRANSLATIONS = {
     finalizing_objective: 'Finalizando reto...',
     create_objective_first: '🔒 Crea un reto primero',
     no_active_objective_short: 'No hay reto activo',
+    // Ver nota en el bloque 'ca': claves obsoletas desde la Fase 4/5, se
+    // conservan por si hiciera falta recuperar el redactado.
     automation_save_error: '❌ Error al guardar la automatización',
     automation_enabled_msg: '⚡ Automatización activada: el calendario manda',
     automation_disabled_msg: 'Automatización desactivada: toggles manuales',
@@ -554,6 +577,18 @@ export const TRANSLATIONS = {
     calendar_saved: '✅ Calendario guardado',
     cal_upload_label: 'Subida',
     cal_voting_label: 'Votación',
+    // Fase 4/5: desplegables de modo (calendario/abierto/cerrado) y
+    // contadores/etiquetas de fecha de cada tarjeta de reto (tematiques.js)
+    mode_option_calendari: 'Calendario',
+    mode_option_obert: 'Abierto',
+    mode_option_tancat: 'Cerrado',
+    phase_control_label: 'Control',
+    photos_uploaded_count: '{n} fotos subidas',
+    votes_received_count: '{n} votos recibidos',
+    date_upload_start_label: 'Inicio subida',
+    date_upload_end_label: 'Fin subida',
+    date_voting_start_label: 'Inicio votación',
+    date_voting_end_label: 'Fin votación',
     no_photos_to_vote: 'No hay fotos publicadas para votar.',
     already_voted_locked_msg: 'Ya enviaste tu votación. La pantalla queda bloqueada.',
     voting_not_open_msg: 'Votaciones no abiertas — puedes ver las fotos pero aún no puedes votar',

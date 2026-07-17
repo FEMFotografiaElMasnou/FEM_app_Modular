@@ -61,146 +61,104 @@
   .sidebar-item .sidebar-label { font-size: 13px; }
 }
 
-/* ── PLASTIC BUTTONS (iteració 3) ── */
-.plastic-cb { display: none; }
 /* Modificador reutilitzable: card que s'ajusta al contingut */
 .card.card-fit { width: fit-content; max-width: 100%; }
-.plastic-btn-row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
-/* ── Iteració 6: només el cercle retroil·luminat (sense píndola exterior) ── */
-.plastic-btn {
-  position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-  padding: 0; border: 0; background: transparent;
-  cursor: pointer;
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: rgba(232,240,255,0.55);
-  transition: color 0.25s ease;
+
+/* ── TARGETA DE REPTE (Fase 4/5, pla multi-repte — FET, 2026-07-17;
+   compactada 2026-07-18 a petició de Pablo: massa espai vertical) ──
+   Substitueix els botons de plàstic globals (Pujada/Votació) i la card
+   "Calendari" (graella de mes): cada repte actiu/no finalitzat gestiona ara
+   dins la seva pròpia targeta, a la llista de #objectives-list:
+   · Fila 1: nom/descripció + badge d'estat + botons Editar/Finalitzar.
+   · Fila 2: dues "capses" fines, una per fase (Pujada / Votació). Dins de
+     cada capsa: 1a línia "Pujada - n fotos pujades" en un sol text; 2a línia
+     el desplegable de mode (etiquetat "Control") i les seves 2 dates
+     (<input type="date"> natius), tots tres amb el MATEIX aspecte de camp
+     (alçada/vora/colors) — només distingeix el desplegable el color del text
+     segons el mode. Vegeu tematiques.js/calendari.js. */
+.objective-card {
+  background: rgba(17,34,96,0.5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
-.plastic-btn .pb-icon {
-  flex-shrink: 0;
-  width: 64px; height: 64px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(232,240,255,0.60);
-  background: radial-gradient(circle at 38% 32%, rgba(255,255,255,0.22), rgba(80,130,255,0.04) 70%);
-  border: 1px solid rgba(255,255,255,0.22);
-  box-shadow:
-    inset 0 1px 2px rgba(255,255,255,0.45),
-    inset 0 -2px 4px rgba(0,0,0,0.35),
-    0 4px 14px rgba(0,0,0,0.35);
-  transition: all 0.3s ease;
+/* Repte FINALITZAT (revisat 2026-07-18): mateixa targeta, mateixos camps
+   (desplegables + dates) — es veuen tots, però amb `disabled` (no s'amaguen,
+   mateix criteri que "Eliminar i Tornar a Pujar" quan la pujada és tancada). */
+.objective-card-locked { opacity: 0.7; }
+.obj-date-field select:disabled,
+.obj-date-field input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
-.plastic-btn .pb-icon svg {
-  width: 28px; height: 28px;
-  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.45));
-  transition: all 0.3s ease;
+.obj-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.obj-row-main .obj-info { flex: 1; min-width: 160px; }
+.obj-row-main .obj-title { font-weight: 600; font-size: 15px; }
+.obj-row-main .obj-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* Fila 2: les 2 capses de fase, una al costat de l'altra (es col·lapsen en
+   columna en pantalles estretes gràcies a flex-wrap + min-width) */
+.obj-row-phases { align-items: stretch; }
+.obj-phase-box {
+  flex: 1 1 260px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(4,9,30,0.35);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 8px 12px;
 }
-.plastic-btn .pb-label {
-  font-size: 14px;
+/* 1a línia: "Pujada - 12 fotos pujades", un sol text compacte */
+.obj-phase-box-header {
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 1.2px;
-  text-align: center;
-  max-width: 110px;
-  line-height: 1.25;
+  color: var(--text-muted);
 }
-.plastic-btn:hover { color: rgba(232,240,255,0.90); }
-.plastic-btn:hover .pb-icon { border-color: rgba(255,255,255,0.40); }
+/* 2a línia: desplegable de mode + les 2 dates, tots tres amb el mateix
+   aspecte de camp (veure regla combinada més avall) */
+.obj-phase-controls { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.obj-phase-controls .obj-date-field { flex: 1 1 100px; min-width: 100px; }
 
-/* ON — el cercle s'encén */
-.plastic-btn.on { color: #ffffff; }
-.plastic-btn.on .pb-icon {
-  color: #ffffff;
-  border-color: rgba(205,228,255,0.95);
-  background: radial-gradient(circle at 40% 35%, #ffffff 0%, var(--accent2) 45%, var(--accent) 92%);
-  box-shadow:
-    inset 0 1px 3px rgba(255,255,255,0.85),
-    0 0 18px var(--accent-glow),
-    0 0 32px rgba(123,179,255,0.6),
-    0 0 56px rgba(79,143,255,0.35);
+.obj-date-field {
+  display: flex; flex-direction: column; gap: 3px;
+  font-size: 11px; color: var(--text-muted);
 }
-.plastic-btn.on .pb-icon svg { filter: drop-shadow(0 0 7px rgba(255,255,255,0.95)); }
+/* Camp comú (data i desplegable de mode): mateixa alçada/vora/colors */
+.obj-date-field input[type="date"],
+.obj-date-field select.obj-mode-select {
+  background: rgba(4,9,30,0.5);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  height: 34px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color-scheme: dark;
+  width: 100%;
+}
+.obj-date-field input[type="date"] { color: var(--text); }
 
-/* "GESTIONAT PEL CALENDARI" — informatiu, NO bloqueja (Fase 2, v0.1.28: el
-   clic manual sempre funciona i guanya al calendari). Vora discontínua com a
-   pista visual; es manté `cursor:pointer` (heretat de .plastic-btn) perquè
-   no sembli inhabilitat. */
-.plastic-btn.locked { opacity: 0.85; }
-.plastic-btn.locked .pb-icon { border-style: dashed; }
-
-/* ── CALENDARI VISUAL (rejilla de mes) ── */
-.cal-month-nav { display: flex; align-items: center; gap: 10px; }
-.cal-nav-btn {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: rgba(17,34,96,0.6); border: 1px solid var(--border2);
-  color: var(--text-muted); font-size: 16px; line-height: 1;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: color 0.2s, border-color 0.2s;
+/* Desplegable de mode: el color del TEXT indica l'estat EFECTIU d'avui
+   (verd = obert, vermell = tancat) — decisió revisada 2026-07-18: amb mode
+   'Calendari' el color ja no és neutre, segueix si avui cau dins del rang de
+   dates o no (amb 'Obert'/'Tancat' el color sempre coincideix amb el mode,
+   perquè és un estat forçat). `effective` el calcula tematiques.js a partir
+   de `obj.uploads_enabled`/`voting_enabled`, ja recalculats per
+   applyPhaseModes/applyAllActiveCalendars. De moment només color de text
+   (decisió presa: "de moment sortirem amb el canvi de color del text"; un
+   tractament més visual amb icones/badges es podria explorar més endavant). */
+.obj-mode-select {
+  font-weight: 600;
+  cursor: pointer;
 }
-.cal-nav-btn:hover { color: var(--accent2); border-color: var(--accent); }
-.cal-month-title {
-  font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 1.5px;
-  min-width: 150px; text-align: center;
-}
-.cal-mode-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.cal-chip {
-  border-radius: 999px; padding: 6px 14px; font-size: 12px;
-  background: rgba(17,34,96,0.5); border: 1px solid var(--border2);
-  color: var(--text-muted); cursor: pointer; transition: all 0.2s;
-}
-.cal-chip:hover { color: var(--text); border-color: var(--accent); }
-.cal-chip-up.active {
-  color: #fff; border-color: var(--accent2);
-  background: rgba(75,142,245,0.35); box-shadow: 0 0 12px var(--accent-glow);
-}
-.cal-chip-vote.active {
-  color: #fff; border-color: rgba(56,214,255,0.9);
-  background: rgba(56,214,255,0.25); box-shadow: 0 0 12px rgba(56,214,255,0.35);
-}
-.cal-grid {
-  display: grid; grid-template-columns: repeat(7, 40px); gap: 2px;
-  max-width: 100%;
-}
-.cal-dow {
-  text-align: center; font-size: 10px; color: var(--text-muted);
-  letter-spacing: 1px; padding-bottom: 4px;
-}
-.cal-day {
-  position: relative; height: 40px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; color: var(--text); user-select: none;
-}
-.cal-day.empty { visibility: hidden; }
-.cal-day.clickable { cursor: pointer; }
-.cal-day.clickable:hover { outline: 1px solid var(--accent2); }
-/* Franja de PUJADA — blau dels toggles encesos, translúcid (els números es veuen) */
-.cal-day.cal-up {
-  background: linear-gradient(180deg, rgba(75,142,245,0.55), rgba(75,142,245,0.30));
-  border-radius: 0;
-}
-/* Franja de VOTACIÓ — un altre blau (cian) per distingir */
-.cal-day.cal-vote {
-  background: linear-gradient(180deg, rgba(56,214,255,0.38), rgba(56,214,255,0.18));
-  border-radius: 0;
-}
-/* Extrems de franja arrodonits */
-.cal-day.r-start { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
-.cal-day.r-end   { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
-.cal-day.cal-today .cal-num {
-  outline: 1.5px solid var(--accent2); border-radius: 50%;
-  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
-}
-/* Nom del repte (acabat) sobre la franja */
-.cal-day .cal-name {
-  position: absolute; bottom: 1px; left: 2px; right: 2px;
-  font-size: 7px; line-height: 1.1; color: rgba(255,255,255,0.85);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  text-align: left; pointer-events: none;
-}
-/* Mòbil: cel·les una mica més petites perquè hi càpiga la setmana */
-@media (max-width: 640px) {
-  .cal-grid { grid-template-columns: repeat(7, minmax(34px, 1fr)); }
-  .cal-day { height: 36px; }
-}
+.obj-mode-select.eff-open   { color: var(--success); }
+.obj-mode-select.eff-closed { color: var(--danger); }
 
 /* ── TABS (admin, desktop) ── */
 .tab-nav {

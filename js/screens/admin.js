@@ -1,13 +1,16 @@
 // ═══════════════════════════════════
-// PANTALLA ADMIN — dashboard, controles (toggles), tabs y nav lateral
+// PANTALLA ADMIN — dashboard i tabs / nav lateral
+// FASE 4/5 (pla multi-repte, FEM_reptes.md — FET, 2026-07-17): els vells
+// masters "Pujada"/"Votació" (botons de plàstic globals, un sol repte) i la
+// card "Calendari" del Panell de Control queden RETIRATS d'aquí (punt 1 del
+// pla, ara efectiu). Cada repte gestiona ara la seva pujada/votació amb els
+// 2 desplegables de mode i les 4 dates de la seva pròpia targeta, a
+// tematiques.js (setPhaseMode/updateCalendarDate, a calendari.js).
 // ═══════════════════════════════════
 import { state } from '../core/state.js';
 import { t } from '../core/i18n.js';
-import { showToast } from '../ui/toast.js';
-import { getActivePublishedPhotos, getActiveAllPhotos, getActiveVotes, getVotingProgress, saveSettings, saveObjectives } from '../core/data.js';
+import { getActivePublishedPhotos, getActiveAllPhotos, getActiveVotes } from '../core/data.js';
 import { updateVoteButtonsState } from '../features/votacio.js';
-import { renderRanking } from '../features/ranking.js';
-import { renderCalendariCard, isCalendarAutomationActive, disableAutomationForActiveObjective } from '../features/calendari.js';
 import { switchTab } from '../core/router.js';
 
 // ═══════════════════════════════════
@@ -40,15 +43,6 @@ export function refreshAdminDashboard() {
   document.getElementById('stat-votes-done').textContent    = fullyVotedPhotos;
   document.getElementById('stat-votes-total').textContent   = totalPhotos;
 
-  // VOTACIONS REBUDES (simplificat, v0.1.28 — abans barra "Progrés de votacions"
-  // amb n/m i %). getVotingProgress() encara calcula { voted, total, pct } perquè
-  // `voted` (vots definitius rebuts) és tot el que necessitem aquí; `total`/`pct`
-  // no s'usen enlloc més ara mateix (es descarten a propòsit, no és un oblit).
-  // Pla multi-repte: FEM_reptes.md, Fase 1 (aquesta targeta és transitòria — a la
-  // Fase 4 aquest recompte es mourà dins de cada targeta de repte).
-  const votingProgress = getVotingProgress();
-  document.getElementById('admin-votes-received').textContent = votingProgress.voted;
-
   // Admin own photo upload section (solo foto de la temática activa)
   const adminPhoto = getActiveAllPhotos().find(p => p.userId === state.currentUser.id);
   const adminUploadSect = document.getElementById('admin-upload-section');
@@ -75,7 +69,8 @@ export function refreshAdminDashboard() {
     }
   }
 
-  // Current objective info
+  // Current objective info (placeholder ocult des de la iteració 2 — es deixa
+  // sense tocar, no forma part de l'abast d'aquesta fase)
   const objEl = document.getElementById('current-objective-info');
   if (state.currentObjective) {
     objEl.innerHTML = `
@@ -85,72 +80,11 @@ export function refreshAdminDashboard() {
   } else {
     objEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><p>${t('no_active_objective_short')}.</p></div>`;
   }
-  // Calendari del repte: omplir dates/switch (l'històric de dates viu a Temàtiques)
-  renderCalendariCard();
   updateVoteButtonsState();
 }
 
 // ═══════════════════════════════════
-// ADMIN CONTROLS (toggles)
-// ═══════════════════════════════════
-// FASE 2 (pla multi-repte, FEM_reptes.md): els masters ja NO escriuen a
-// app_settings (saveSettings) sinó al repte actiu (state.currentObjective.
-// uploads_enabled/voting_enabled, persistit amb saveObjectives()). Es manté
-// també state.settings.* actualitzat (mirall) perquè la resta de pantalles
-// (participant.js, votacio.js, fotos.js) el segueixen llegint sense canvis.
-export async function toggleUpload() {
-  // Block upload activation if no active objective/temàtica
-  if (document.getElementById('toggle-upload').checked && !state.currentObjective) {
-    document.getElementById('toggle-upload').checked = false;
-    showToast(t('create_objective_first'), 'error');
-    return;
-  }
-  const checked = document.getElementById('toggle-upload').checked;
-  state.settings.uploads_enabled = checked;
-  if (state.currentObjective) state.currentObjective.uploads_enabled = checked;
-  await saveObjectives();
-  await saveSettings();
-  showToast(state.settings.uploads_enabled ? t('upload_enabled_msg') : t('upload_disabled_msg'), 'info');
-}
-
-export async function toggleVotingOpen() {
-  // Block voting if no published photos
-  if (document.getElementById('toggle-voting').checked && state.publishedPhotos.length === 0) {
-    document.getElementById('toggle-voting').checked = false;
-    showToast(t('publish_photos_first'), 'error');
-    return;
-  }
-  const checked = document.getElementById('toggle-voting').checked;
-  state.settings.voting_enabled = checked;
-  if (state.currentObjective) state.currentObjective.voting_enabled = checked;
-  if (state.settings.voting_enabled) {
-    // Al abrir votación: cerrar subidas automáticamente
-    state.settings.uploads_enabled = false;
-    if (state.currentObjective) state.currentObjective.uploads_enabled = false;
-    document.getElementById('toggle-upload').checked = false;
-  } else {
-    // Al cerrar votación: revelar nombres y ranking (antes lo hacía el botón "Tancar Votacions")
-    revealNamesAndRanking();
-  }
-  await saveObjectives();
-  await saveSettings();
-  showToast(state.settings.voting_enabled ? t('voting_opened_msg') : t('voting_closed_ranking_msg'), 'success');
-  refreshAdminDashboard();
-}
-
-// Revela nombres y ranking de la temática activa.
-// Reutilizable: lo llama el toggle al cerrar la votación y el calendario automatizado.
-// Fase 2: també marca names_revealed al repte actiu (qui la crida ja persisteix
-// amb saveObjectives() després).
-export function revealNamesAndRanking() {
-  state.settings.namesRevealed = true;
-  if (state.currentObjective) state.currentObjective.names_revealed = true;
-  renderRanking('ranking-current-list', 'ranking-general-list');
-  renderRanking('p-ranking-current-list', 'p-ranking-general-list');
-}
-
-// ═══════════════════════════════════
-// TABS / SIDEBAR / PLASTIC BUTTONS
+// TABS / SIDEBAR
 // ═══════════════════════════════════
 // Sidebar admin: reutilitza switchTab i sincronitza l'item actiu (iteració 1)
 export function adminNav(tab) {
@@ -164,43 +98,6 @@ export function adminNav(tab) {
   if (tab === 'texts' && typeof window.renderTextsList === 'function') window.renderTextsList();
 }
 
-// Iteració 3: botons de plàstic com a pell dels checkboxes
-// FASE 2 (pla multi-repte, FEM_reptes.md — decisió Pablo 2026-07-17): el
-// calendari ja NO bloqueja els botons. `.locked` és només informatiu (indica
-// "ara mateix ho porta el calendari"), no impedeix el clic.
-export function syncPlasticButtons() {
-  var managedByCalendar = isCalendarAutomationActive();
-  [['pbtn-upload','toggle-upload'], ['pbtn-voting','toggle-voting']].forEach(function (pair) {
-    var btn = document.getElementById(pair[0]);
-    var cb  = document.getElementById(pair[1]);
-    if (btn && cb) {
-      btn.classList.toggle('on', cb.checked);
-      btn.classList.toggle('locked', managedByCalendar);
-    }
-  });
-}
-export function plasticPress(btnId, cbId, fnName) {
-  // FASE 2: un clic manual sobre pujada/votació SEMPRE es permet. Si el
-  // calendari estava gestionant aquest repte, el clic guanya de forma
-  // PERMANENT: es desactiva l'automatització (com si l'admin l'hagués apagat
-  // ell mateix) i després s'aplica el canvi manual. Per tornar a deixar-ho
-  // en mans del calendari cal reactivar l'automatització des de la card
-  // "Calendari" — llavors es torna a aplicar l'estat que toqui avui.
-  if ((cbId === 'toggle-upload' || cbId === 'toggle-voting') && isCalendarAutomationActive()) {
-    disableAutomationForActiveObjective();   // async, fire-and-forget (persisteix en segon pla)
-  }
-  var cb = document.getElementById(cbId);
-  if (!cb) return;
-  cb.checked = !cb.checked;
-  var fn = window[fnName];
-  if (typeof fn === 'function') fn();   // pot rebutjar el canvi (sense temàtica / sense fotos)
-  syncPlasticButtons();                 // reflecteix l'estat real
-}
-
-// Exponer en window: las llamadas desde onclick + las invocadas por nombre (plasticPress)
+// Exponer en window: las llamadas desde onclick
 window.refreshAdminDashboard = refreshAdminDashboard;
-window.toggleUpload = toggleUpload;
-window.toggleVotingOpen = toggleVotingOpen;
 window.adminNav = adminNav;
-window.syncPlasticButtons = syncPlasticButtons;
-window.plasticPress = plasticPress;

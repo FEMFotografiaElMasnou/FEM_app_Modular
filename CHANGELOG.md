@@ -8,6 +8,206 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.37] — 2026-07-18 — Reptes finalitzats: mateixos camps, visibles i bloquejats
+
+> Petició (Pablo): en finalitzar un repte, els seus camps (desplegables de
+> mode i dates) haurien de quedar visibles però bloquejats — no substituïts
+> per un resum de text a part. Comprovat: NO era així (els reptes finalitzats
+> encara mostraven la targeta antiga `.objective-item`, de només lectura,
+> sense els desplegables ni els camps de data). Corregit.
+
+### Canviat
+- **`js/features/tematiques.js`** (`renderObjectivesList()`): s'elimina la
+  branca separada per a reptes FINALITZATS — ara TOTS els reptes (actius i
+  finalitzats) es pinten amb la mateixa targeta `.objective-card` (2
+  desplegables de mode + 4 dates). Als finalitzats (`locked = isFinished`),
+  el `<select>` i els `<input type="date">` porten l'atribut `disabled`:
+  es veuen (amb el seu valor real) però no es poden tocar, mateix criteri
+  que "Eliminar i Tornar a Pujar"/peu de foto quan la pujada és tancada.
+- **`css/admin.css`**: `.objective-card-locked` (opacitat reduïda a tota la
+  targeta) + `.obj-date-field select:disabled/input:disabled` (opacitat +
+  cursor not-allowed).
+- **`js/features/calendari.js`**: `getCalendariDatesHtml()` ja no s'usa
+  enlloc (substituïda per la targeta completa disabled) — es deixa la funció
+  per si calgués un resum de només lectura en un altre lloc, amb comentari
+  actualitzat.
+- **`css/base.css`**: `.objective-item` i derivades (marc antic del resum de
+  només lectura) marcades com a no usades als comentaris — no s'esborren.
+
+---
+
+## [0.1.36] — 2026-07-18 — Desplegable de mode: color segons l'estat efectiu (no el mode)
+
+> Petició (Pablo): amb mode "Calendari" el desplegable es quedava en color
+> neutre — es demana que també es pinti en verd/vermell segons si avui cau
+> dins ("obert") o fora ("tancat") del rang de dates, no només amb els modes
+> forçats "Obert"/"Tancat". Revisa la decisió #5 del pla (`FEM_reptes.md`):
+> el color passa d'indicar el MODE triat a indicar l'ESTAT EFECTIU d'avui.
+
+### Canviat
+- **`js/features/tematiques.js`** (`renderObjectivesList()`): el desplegable
+  de mode ja no pinta segons `mode` (`mode-calendari/obert/tancat`) sinó
+  segons l'estat efectiu d'avui (`obj.uploads_enabled`/`voting_enabled`,
+  recalculats per `applyPhaseModes`): `eff-open` (verd) si avui està obert,
+  `eff-closed` (vermell) si està tancat — amb "Obert"/"Tancat" sempre
+  coincideix (és forçat); amb "Calendari" depèn de si avui cau dins del rang.
+  Es repinta sol en canviar el mode o una data (`setPhaseMode`/
+  `updateCalendarDate` ja disparen `renderObjectivesList()`).
+- **`css/admin.css`**: `.obj-mode-select.mode-calendari/obert/tancat`
+  substituïdes per `.obj-mode-select.eff-open` (verd) / `.eff-closed`
+  (vermell).
+
+---
+
+## [0.1.35] — 2026-07-18 — Targeta de repte: compactar capses (menys espai vertical)
+
+> Petició (Pablo): la capsa de cada fase (v0.1.34) encara feia massa espai
+> vertical (etiqueta+desplegable a sobre, comptador a sota, dates a sota).
+
+### Canviat
+- **`js/features/tematiques.js`** (`renderObjectivesList()`): cada capsa de
+  fase passa a 2 línies: 1a "Pujada - 12 fotos pujades" (etiqueta i
+  comptador fosos en un sol text); 2a el desplegable de mode (etiquetat
+  "Control", com les dates) i les seves 2 dates, en una sola fila.
+- **`css/admin.css`**: `.obj-mode-select` es dibuixa ara amb el mateix
+  `.obj-date-field` (etiqueta a sobre + camp a sota) i comparteix regla amb
+  `input[type="date"]` (mateixa alçada, vora, colors de fons) — només
+  distingeix el color del TEXT segons el mode. `.obj-phase-label`/
+  `.obj-phase-count`/`.obj-phase-dates` (v0.1.34) substituïdes per
+  `.obj-phase-box-header` (1 línia) i `.obj-phase-controls` (1 fila).
+- **`i18n.js`**: `phase_control_label: 'Control'` (CA+ES), etiqueta del
+  desplegable de mode.
+
+---
+
+## [0.1.34] — 2026-07-18 — Targeta de repte: agrupar cada fase en una capsa
+
+> Petició (Pablo): a la Fila 2 de la targeta de repte (v0.1.33), les 4 dates
+> quedaven totes juntes en una sola fila, sense relació visual amb el seu
+> desplegable de mode corresponent, a la Fila 1. Es demana agrupar tot el que
+> fa referència a una mateixa fase (Pujada / Votació): etiqueta, desplegable
+> de mode, comptador i les seves 2 dates, en una única capsa fina.
+
+### Canviat
+- **`js/features/tematiques.js`** (`renderObjectivesList()`): la targeta de
+  repte actiu/no finalitzat passa de "Fila 1: info + 2 desplegables + estat/
+  botons · Fila 2: 4 dates soltes" a "Fila 1: info + estat/botons · Fila 2:
+  2 capses (Pujada / Votació), cadascuna amb desplegable + comptador + les
+  seves 2 dates". Cap canvi de comportament (`setPhaseMode`/
+  `updateCalendarDate` es criden exactament igual); només reorganització
+  visual.
+- **`css/admin.css`**: `.obj-phase-box`/`.obj-phase-box-header`/
+  `.obj-phase-dates` (capsa amb vora i fons subtil); `.obj-phase`/
+  `.obj-row-dates` (de la v0.1.33, ja no s'usen) substituïdes per aquestes.
+
+---
+
+## [0.1.33] — 2026-07-18 — Fase 4/5 del pla multi-repte: targeta de repte amb desplegables de mode
+
+> Pla complet a `FEM_reptes.md`. Fase 4/5 fetes juntes en un sol pas (el
+> Pablo: "si no hi ha manera d'anar validant cada fase, no sé si té sentit
+> fer-lo per parts" — la Fase 3 tampoc tenia canvi visible per separat).
+> Substitueix el vell `automation_enabled` (un ON/OFF per repte, botons de
+> plàstic globals i graella de mes al Panell de Control) per 2 desplegables
+> independents PER REPTE — un per Pujada, un per Votació — amb 3 estats:
+> Calendari / Obert / Tancat. Cada targeta de repte a l'apartat Reptes ara
+> gestiona ella mateixa la seva pujada i votació.
+
+### Afegit
+- **`sql/reptes_calendari_fase4.sql`**: columnes `upload_mode`/`voting_mode`
+  (`'calendari' | 'obert' | 'tancat'`) a `reptes_calendari`, amb backfill des
+  de l'antic `automation_enabled` + l'estat booleà que ja tenia cada repte.
+  `fem_apply_calendar()` reescrita: aplica cada fase segons el SEU propi mode,
+  recorrent tots els reptes actius (no només l'"actiu" global).
+- **`js/features/calendari.js`**: `setPhaseMode(objectiveId, phase, mode)`
+  (canvia el mode d'una fase i el persisteix), `updateCalendarDate(objectiveId,
+  field, value)` (edita una data individual, amb les mateixes validacions que
+  abans tenia "Desar calendari"), `applyPhaseModes(objectiveId)` (recalcula
+  l'estat efectiu segons mode+dates, revela noms igual que abans feia
+  "Tancar Votacions"), `applyAllActiveCalendars()` (aplica els 3 anteriors a
+  TOTS els reptes actius alhora, cridada des de `router.js`).
+- **`js/features/tematiques.js`** (`renderObjectivesList()`): reptes
+  actius/no finalitzats mostren ara una targeta de 2 files: nom/descripció +
+  2 desplegables de mode amb comptador (fotos pujades / vots rebuts) + estat
+  + Editar/Finalitzar a la 1a fila, i les 4 dates com a `<input type="date">`
+  natius a la 2a. Els reptes FINALITZATS mantenen el resum de només lectura
+  d'abans.
+- **`css/admin.css`**: `.objective-card`/`.obj-row`/`.obj-phase`/
+  `.obj-mode-select`/`.obj-date-field` — el desplegable de mode canvia només
+  el COLOR DEL TEXT segons el mode triat (neutre=calendari, verd=obert,
+  vermell=tancat); decisió presa: "de moment sortirem amb el canvi de color
+  del text".
+- **`i18n.js`**: `mode_option_calendari/obert/tancat`, `photos_uploaded_count`,
+  `votes_received_count`, `date_upload_start/end_label`,
+  `date_voting_start/end_label` (CA+ES).
+
+### Retirat
+- **Punt 1 del pla, ara efectiu**: les cards "Controls" (masters Pujada/
+  Votació) i "Calendari" (graella de mes) desapareixen del Panell de Control
+  — substituïdes per les targetes de repte. La card "Votacions rebudes"
+  (transitòria des de v0.1.28) també es retira: el comptador viu ara a cada
+  targeta.
+- **`js/screens/admin.js`**: `toggleUpload`, `toggleVotingOpen`,
+  `revealNamesAndRanking`, `syncPlasticButtons`, `plasticPress` eliminats
+  (substituïts per `setPhaseMode`/`applyPhaseModes` a calendari.js).
+- **`js/features/calendari.js`**: graella visual de mes i tot el que en
+  depenia (`renderCalendariCard`, `renderCalMonth`, `calNavMonth`, `calSetMode`,
+  `calDayClick`, `toggleCalAutomation`, `saveCalendari`,
+  `isCalendarAutomationActive`, `applyCalendarAutomation` (antiga, per repte
+  amb un únic automation_enabled), `disableAutomationForActiveObjective`).
+- **`js/core/router.js`**: referències als checkboxes globals
+  `#toggle-upload`/`#toggle-voting` i a `syncPlasticButtons()`.
+- Claus i18n de la graella/masters globals es DEIXEN al diccionari (marcades
+  com a obsoletes als comentaris), mateix criteri que `voting_progress` a
+  v0.1.28 — no s'esborren claus sense revisar-ho.
+
+### Regles de negoci preservades
+- Un clic manual sempre guanya al calendari (mode 'obert'/'tancat' força
+  l'estat, independentment de la data) i queda així de forma PERMANENT fins
+  que algú el torni a posar en 'calendari' (decisió Pablo, Fase 2).
+- Forçar la Votació a 'obert' tanca automàticament la Pujada d'aquell repte
+  (mateixa regla que abans tenia `toggleVotingOpen`).
+- Tancar la votació (per qualsevol via: manual o calendari) revela noms i
+  ranking, igual que abans feia "Tancar Votacions".
+
+### Pendent (properes fases, FEM_reptes.md)
+- Fase 6: costat participant — repetir el bloc pujada/mosaic de votació per
+  cada repte actiu (avui només mostra el primer, `state.currentObjective`).
+- Fase 7: verificació manual amb 2 reptes actius simultanis.
+
+---
+
+## [0.1.33] — 2026-07-18 — Fase 4/5 del pla multi-repte: targeta de repte amb desplegables de mode
+
+---
+
+## [0.1.32] — 2026-07-18 — Fase 3 del pla multi-repte: nucli JS amb `objectiveId` explícit
+
+> Pla complet a `FEM_reptes.md`. Fase 3: preparar el nucli JS perquè pugui
+> operar sobre un repte concret (no només "l'actiu" global), pas previ
+> necessari per poder pintar més d'una targeta de repte a la Fase 4. Canvi
+> purament additiu: totes les crides existents segueixen funcionant igual.
+
+### Canviat
+- **`js/core/data.js`**: `getActivePublishedPhotos()`, `getActiveAllPhotos()`,
+  `getActiveVotes()`, `getVotingProgress()` accepten ara un `objectiveId`
+  opcional; sense argument, cauen a `getActiveObjectiveId()` com sempre.
+- **`js/features/calendari.js`**: `getActiveCalendar()`,
+  `isCalendarAutomationActive()`, `applyCalendarAutomation()`,
+  `toggleCalAutomation()`, `saveCalendari()`, `disableAutomationForActiveObjective()`
+  ídem. `applyCalendarAutomation(objectiveId)` actualitza sempre el repte
+  concret que rep, però només actualitza el mirall global `state.settings`
+  quan `objectiveId === getActiveObjectiveId()` — evita que aplicar
+  automatització a un futur repte "secundari" (Fase 4) trepitgi l'estat del
+  repte que la UI d'avui mostra.
+
+### No canviat (a propòsit)
+- `state.currentObjective` continua sent singular. Cap crida existent
+  (`admin.js`, `fotos.js`, `votacio.js`, `participant.js`, `router.js`...)
+  passa cap argument nou — es comporten exactament igual que abans.
+
+---
+
 ## [0.1.31] — 2026-07-18 — Pantalla de votació: fusionar les 2 línies d'estat en una
 
 > Petició (Pablo): la línia "Total votacions rebudes: n" quedava perduda

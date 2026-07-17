@@ -182,54 +182,13 @@
         <span id="stat-votes-total">0</span>
       </div>
 
-      <!-- VOTACIONS REBUDES: simplificat (v0.1.28) — abans "Progrés de votacions" amb
-           barra n/m i %. Es treu perquè el "total" (getVotingProgress().total) no és
-           fix: creix cada cop que vota algú que no ha pujat foto, així que la barra i
-           el % no representaven res estable. N'hi ha prou amb el recompte de vots
-           definitius rebuts. Vegeu pla multi-repte a FEM_reptes.md (Fase 1).
-           NOTA (transitori): aquesta card és GLOBAL i pressuposa un sol repte actiu
-           (state.currentObjective). Quan la Fase 4 del pla porti aquesta informació
-           dins de cada targeta de repte a l'apartat Reptes, aquesta card del
-           Panell de Control desapareixerà del tot (no té sentit global). -->
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title" data-i18n="votes_received_title">Votacions rebudes</div>
-          </div>
-        </div>
-        <div class="votes-received-count" id="admin-votes-received">—</div>
-      </div>
-
-      <div class="card card-fit">
-        <div class="card-header">
-          <div>
-            <div class="card-title" data-i18n="controls_title">Controls</div>
-            <div class="card-subtitle" data-i18n="contest_management">Gestió del concurs</div>
-          </div>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- ═══ Iteració 3: botons de plàstic retroil·luminat (substitueixen els toggles) ═══ -->
-          <input type="checkbox" id="toggle-upload" class="plastic-cb">
-          <input type="checkbox" id="toggle-voting" class="plastic-cb">
-          <div class="plastic-btn-row">
-            <button type="button" class="plastic-btn" id="pbtn-upload" aria-label="Pujada de fotos"
-                    onclick="plasticPress('pbtn-upload','toggle-upload','toggleUpload')">
-              <span class="pb-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg>
-              </span>
-              <span class="pb-label" data-i18n="uploads_toggle">Pujada de fotos</span>
-            </button>
-            <button type="button" class="plastic-btn" id="pbtn-voting" aria-label="Votacions obertes"
-                    onclick="plasticPress('pbtn-voting','toggle-voting','toggleVotingOpen')">
-              <span class="pb-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.58 1.1 6.47L12 17.9l-5.8 3.05 1.1-6.47-4.7-4.58 6.5-.95z"></path></svg>
-              </span>
-              <span class="pb-label" data-i18n="voting_toggle">Votacions obertes</span>
-            </button>
-          </div>
-          <!-- (iteració 4a) switches eliminats: revelar noms, ocultar ranking, forçar ocultació -->
-        </div>
-      </div>
+      <!-- FASE 4/5 (pla multi-repte, FEM_reptes.md — FET, 2026-07-17): les
+           cards "Votacions rebudes", "Controls" (masters Pujada/Votació) i
+           "Calendari" queden RETIRADES del Panell de Control (punt 1 del pla,
+           ara efectiu). Cada repte gestiona ara aquesta informació i aquests
+           controls a la seva pròpia targeta, a l'apartat Reptes
+           (tematiques.js: renderObjectivesList) — necessari perquè amb
+           multi-repte ja no té sentit un únic recompte/master globals. -->
 
       <!-- Vista i base de dades — només en mòbil (a l'escriptori ja hi ha els badges a la topbar) -->
       <div class="card only-mobile">
@@ -246,52 +205,6 @@
           <button type="button" class="btn btn-secondary btn-sm db-mode-btn" id="btn-db-mode-card" onclick="toggleDbMode()" data-i18n-title="toggle_db_mode_tooltip" title="Canviar base de dades (Normal / Test)">Normal</button>
         </div>
       </div>
-
-      <!-- Calendari del repte (programació automàtica via pg_cron a Supabase) -->
-      <div class="card card-fit" id="calendari-card">
-        <div class="card-header">
-          <div>
-            <div class="card-title" data-i18n="calendar_title">Calendari</div>
-            <div class="card-subtitle" data-i18n="calendar_subtitle">Programació i històric dels reptes</div>
-          </div>
-        </div>
-        <div id="calendari-no-obj" class="hidden" style="color:var(--text-muted);" data-i18n="calendar_no_obj_msg">No hi ha repte actiu: només consulta de l'històric.</div>
-        <div id="calendari-form" style="display:flex;flex-direction:column;gap:14px;">
-          <!-- Navegació de mes -->
-          <div class="cal-month-nav">
-            <button type="button" class="cal-nav-btn" onclick="calNavMonth(-1)" aria-label="Mes anterior">‹</button>
-            <div class="cal-month-title" id="cal-month-title"></div>
-            <button type="button" class="cal-nav-btn" onclick="calNavMonth(1)" aria-label="Mes següent">›</button>
-          </div>
-          <!-- Chips: què estàs marcant (1r clic = obre, 2n clic = tanca) -->
-          <div class="cal-mode-row" id="cal-mode-row">
-            <button type="button" class="cal-chip cal-chip-up" id="cal-mode-upload" onclick="calSetMode('upload')">📤 <span data-i18n="cal_mark_upload">Marcar pujada</span></button>
-            <button type="button" class="cal-chip cal-chip-vote" id="cal-mode-voting" onclick="calSetMode('voting')">🗳️ <span data-i18n="cal_mark_voting">Marcar votació</span></button>
-          </div>
-          <!-- Rejilla del mes (la pinta calendari.js) -->
-          <div class="cal-grid" id="cal-grid"></div>
-          <!-- Botons de plàstic (mateix estil que Pujada/Votació) -->
-          <input type="checkbox" id="cal-automation" class="plastic-cb">
-          <div class="plastic-btn-row" id="cal-actions-row">
-            <button type="button" class="plastic-btn" id="pbtn-cal-automation" aria-label="Automatització"
-                    onclick="toggleCalAutomation()">
-              <span class="pb-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2L4.5 13.5H11l-1 8.5L19.5 10H12.5z"></path></svg>
-              </span>
-              <span class="pb-label" data-i18n="automation_label">Automatització</span>
-            </button>
-            <button type="button" class="plastic-btn" id="pbtn-cal-save" aria-label="Desar calendari"
-                    onclick="saveCalendari()">
-              <span class="pb-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-              </span>
-              <span class="pb-label" data-i18n="save_calendar_btn">Desar calendari</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- (L'històric de dates dels reptes es mostra ara a cada targeta de Temàtiques) -->
 
       <!-- ═══ Iteració 2: temàtica actual oculta (placeholder) ═══ -->
       <div style="display:none;" id="current-objective-info"></div>

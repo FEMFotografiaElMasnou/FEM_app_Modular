@@ -113,11 +113,13 @@ i és la base de les fases 2/3 de sota.
    `automation_enabled` (un sol switch per repte, Fase 2) queda **substituït**
    per aquests dos camps independents (`upload_mode`/`voting_mode`), un per
    fase — ja no té sentit un únic interruptor que taps totes dues finestres
-   alhora. Color del desplegable: `Calendari` en el color neutre del text,
-   `Obert` en verd, `Tancat` en vermell — indica el MODE triat, no si avui
-   està realment obert (per això hi ha el comptador de fotos/vots al costat).
-   Pendent de valorar més endavant una manera més visual de mostrar l'estat
-   (icones, badges...); de moment surt amb el canvi de color del text.
+   alhora. Color del desplegable — **REVISAT 2026-07-18 (v0.1.36)**: ja no
+   indica el MODE triat sinó l'ESTAT EFECTIU d'avui — verd si avui està
+   obert, vermell si està tancat. Amb `Obert`/`Tancat` sempre coincideix (és
+   forçat); amb `Calendari` depèn de si avui cau dins del rang de dates (així
+   `Calendari` ja no queda sempre en color neutre). Pendent de valorar més
+   endavant una manera més visual de mostrar l'estat (icones, badges...); de
+   moment surt amb el canvi de color del text.
    Implicació tècnica per la Fase 4/5: `upload_mode`/`voting_mode` (valors
    `calendari`/`obert`/`tancat`) aniran a `reptes_calendari` (substituint
    `automation_enabled`); `objectives.uploads_enabled`/`voting_enabled`
@@ -132,10 +134,12 @@ i és la base de les fases 2/3 de sota.
 
 ### Fases
 0. ~~Simplificar "Progrés de votacions" → "Votacions rebudes: n"~~ **FET (v0.1.28)**,
-   dins del Panell de Control. Transitori: quan es faci la Fase 4, aquesta
-   informació es mourà dins de cada targeta de repte i la card global desapareixerà.
-1. Deixar els botons "Controls" i "Calendari" on són (sense tocar) fins que les
-   fases de sota estiguin fetes.
+   dins del Panell de Control. Transitori: es va moure dins de cada targeta de
+   repte a la Fase 4/5 i la card global es va retirar (veure punt 1).
+1. ~~Deixar els botons "Controls" i "Calendari" on són fins que les fases de
+   sota estiguin fetes~~ **FET (v0.1.33): ara es fa efectiu.** Les cards
+   "Controls", "Calendari" i "Votacions rebudes" es retiren del Panell de
+   Control — cada repte ho gestiona a la seva pròpia targeta (Fase 4/5).
 2. ~~**BD (Supabase, Normal i Test)** + masters per repte~~ **FET (v0.1.29)**.
    Descoberta clau abans de fer-ho: `objectives.uploads_enabled`/`voting_enabled`
    ja existien a la BD però eren lletra morta (ningú els llegia) — la feina real
@@ -155,34 +159,56 @@ i és la base de les fases 2/3 de sota.
    **Avís vigent**: crear un 2n repte actiu ja no peta, però la UI encara
    només gestiona el primer que troba — no crear-ne un de veritat fins la
    Fase 4/6.
-3. **Nucli JS (llista de reptes actius)** — `getActiveObjectiveId()`,
-   `getActivePublishedPhotos()`, `getActiveVotes()`, `getVotingProgress()`
-   (`core/data.js`) i `getActiveCalendar()`/`applyCalendarAutomation()`/
-   `toggleCalAutomation()`/`saveCalendari()` (`features/calendari.js`) passen a
-   acceptar un `objectiveId` explícit en lloc de mirar sempre l'únic repte
-   "actiu" global (`state.currentObjective`, que continua sent singular i
-   agafant només el primer actiu que troba).
-4. **UI admin — targeta de repte** (`tematiques.js` `renderObjectivesList()` +
-   `admin.css`): disseny de 2 files (Fila 1: nom/descripció + masters
-   pujada/votació amb comptador + estat; Fila 2: 4 dates amb `<input type="date">`
-   + icona). Aquí es retiren del Panell de Control les cards "Controls" i
-   "Calendari" (es fa efectiu el punt 1). Els masters de la Fila 1 ja NO són
-   els botons de plàstic actuals: són **dos desplegables** (Pujada / Votació),
-   3 estats cada un (`Calendari`/`Obert`/`Tancat`) — decisió revisada del punt 5
-   de dalt.
-5. **Migrar `automation_enabled` → `upload_mode`/`voting_mode`** (SQL:
-   `reptes_calendari`, substitueix la columna única per dues amb 3 valors;
-   `admin.js`/`calendari.js`: `isCalendarAutomationActive()`/`syncPlasticButtons()`/
-   `plasticPress()`/`disableAutomationForActiveObjective()` de la Fase 2 es
-   reescriuen per als dos desplegables per fase, un per targeta de repte
-   (avui n'hi ha un de sol per a tota la pantalla).
+3. ~~**Nucli JS — funcions amb `objectiveId` explícit**~~ **FET (v0.1.32)**.
+   `getActivePublishedPhotos()`, `getActiveAllPhotos()`, `getActiveVotes()`,
+   `getVotingProgress()` (`core/data.js`) i `getActiveCalendar()`/
+   `isCalendarAutomationActive()`/`applyCalendarAutomation()`/
+   `toggleCalAutomation()`/`saveCalendari()`/`disableAutomationForActiveObjective()`
+   (`features/calendari.js`) accepten ara un `objectiveId` explícit opcional;
+   sense argument es comporten exactament igual que abans (cap crida
+   existent s'ha hagut de tocar — canvi purament additiu). `applyCalendarAutomation()`
+   actualitza sempre l'objecte concret que se li passi, però només trepitja
+   el mirall global (`state.settings`) quan aquest objectiveId coincideix amb
+   `getActiveObjectiveId()` — evita que un futur repte "secundari" (Fase 4)
+   corrompi l'estat de l'únic repte que la UI d'avui sap mostrar.
+   `state.currentObjective` continua sent singular (agafa el primer actiu que
+   troba) — això és feina de la Fase 4 (repintar una targeta per repte).
+4. ~~**UI admin — targeta de repte** (`tematiques.js` `renderObjectivesList()` +
+   `admin.css`)~~ **FET (v0.1.33), juntament amb la Fase 5** (el Pablo: "si no
+   hi ha manera d'anar validant cada fase, no sé si té sentit fer-lo per
+   parts" — es van fer en un sol pas). Disseny de 2 files: Fila 1
+   nom/descripció + 2 desplegables de mode (Pujada/Votació) amb comptador
+   (fotos pujades / vots rebuts) + estat + Editar/Finalitzar; Fila 2, les 4
+   dates com a `<input type="date">` natius. Reptes FINALITZATS — **REVISAT
+   2026-07-18 (v0.1.37)**: ja NO tenen un resum de només lectura a part;
+   mostren la MATEIXA targeta que un repte actiu (mateixos desplegables i
+   dates, amb el seu valor real), però amb tot `disabled` — visible, no
+   editable, mateix criteri que "Eliminar i Tornar a Pujar" quan la pujada
+   és tancada.
+5. ~~**Migrar `automation_enabled` → `upload_mode`/`voting_mode`**~~ **FET
+   (v0.1.33)**. `sql/reptes_calendari_fase4.sql`: columnes `upload_mode`/
+   `voting_mode` (`calendari`/`obert`/`tancat`) a `reptes_calendari`, amb
+   backfill des de l'antic `automation_enabled`; `fem_apply_calendar()`
+   reescrita perquè apliqui cada fase segons el seu propi mode, per a tots
+   els reptes actius. A `calendari.js`: `isCalendarAutomationActive()`/
+   `applyCalendarAutomation()`/`toggleCalAutomation()`/
+   `disableAutomationForActiveObjective()`/graella visual de mes (Fase 2/3)
+   RETIRATS, substituïts per `setPhaseMode(objectiveId, phase, mode)`,
+   `updateCalendarDate(objectiveId, field, value)`, `applyPhaseModes(objectiveId)`
+   i `applyAllActiveCalendars()` (aplica totes les fases de tots els reptes
+   actius, cridada des de `router.js` en obrir la pantalla i a l'auto-refresh).
+   A `admin.js`: `toggleUpload`/`toggleVotingOpen`/`revealNamesAndRanking`/
+   `syncPlasticButtons`/`plasticPress` RETIRATS (ja no hi ha botons de
+   plàstic globals). SQL a aplicar (pendent que ho facis tu a Supabase,
+   Normal i Test): `sql/reptes_calendari_fase4.sql`.
 6. **Costat participant** (`index.html` hero-grid, `fotos.js`
    `updateUploadSection()`): repetir la parella `card-objective-photo` ↔
    `vote-mosaic-section` un cop per repte actiu; `showParticipantVoting()` rebent
-   `objectiveId`. Depèn de 3. Candidata a tractar-se com a tasca separada un cop
-   tancat l'admin.
+   `objectiveId`. Depèn de 3 (ja fet). Candidata a tractar-se com a tasca
+   separada un cop tancat l'admin. **Pendent.**
 7. Verificació manual (2 reptes actius simultanis, calendaris independents,
    galeria/ranking sense barrejar-se) + actualitzar aquest changelog i el SQL.
+   **Pendent.**
 
-Ordre: 0 fet → 1 (sense acció) → 2 fet → 3 → 4 → 5 → (6 a decidir quan) → 7.
+Ordre: 0 fet → 1 fet → 2 fet → 3 fet → 4 fet → 5 fet → (6 a decidir quan) → 7.
 Cada fase és una tasca a part (una a la vegada, com marca "Flujo de trabajo").

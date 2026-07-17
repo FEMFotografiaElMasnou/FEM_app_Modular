@@ -185,16 +185,20 @@ export async function loadAllData() {
   state.settings.namesRevealed   = state.currentObjective ? !!state.currentObjective.names_revealed  : false;
 
   // ── Calendari de reptes (taula nova; si encara no existeix, no trenca la resta)
+  // FASE 4/5 (pla multi-repte): upload_mode/voting_mode substitueixen
+  // l'antic automation_enabled (vegeu sql/reptes_calendari_fase4.sql i
+  // calendari.js). No es llegeix més automation_enabled.
   const calRes = await sb.from('reptes_calendari')
-    .select('id,objective_id,upload_start,upload_end,voting_start,voting_end,automation_enabled');
+    .select('id,objective_id,upload_start,upload_end,voting_start,voting_end,upload_mode,voting_mode');
   state.reptesCalendari = calRes.error ? [] : (calRes.data || []).map(c => ({
-    id:                String(c.id || ''),
-    objectiveId:       String(c.objective_id || ''),
-    uploadStart:       c.upload_start || '',
-    uploadEnd:         c.upload_end || '',
-    votingStart:       c.voting_start || '',
-    votingEnd:         c.voting_end || '',
-    automationEnabled: !!c.automation_enabled,
+    id:          String(c.id || ''),
+    objectiveId: String(c.objective_id || ''),
+    uploadStart: c.upload_start || '',
+    uploadEnd:   c.upload_end || '',
+    votingStart: c.voting_start || '',
+    votingEnd:   c.voting_end || '',
+    uploadMode:  c.upload_mode || 'calendari',
+    votingMode:  c.voting_mode || 'calendari',
   }));
 }
 
@@ -294,41 +298,43 @@ export async function saveSettings() {
 }
 
 // ── Filtrado por temática activa ─────────────────────────────────
-// PLA MULTI-REPTE (FEM_reptes.md dins de FEM_app_Modular/, Fase 3 — encara NO
-// implementat): aquesta funció i getActivePublishedPhotos/getActiveAllPhotos/
-// getActiveVotes/getVotingProgress de sota filtren totes per l'ÚNIC repte
-// "actiu" global (state.currentObjective). La Fase 3 les adaptarà perquè puguin
-// rebre un objectiveId explícit (per poder pintar cada targeta de repte del
-// dashboard de forma independent, un cop desbloquejat el multi-actiu a la Fase 2).
+// FASE 3 (pla multi-repte, FEM_reptes.md — FET): aquesta funció i
+// getActivePublishedPhotos/getActiveAllPhotos/getActiveVotes/getVotingProgress
+// de sota accepten ara un `objectiveId` explícit opcional. Si no se'n passa
+// cap, mantenen el comportament d'abans (l'ÚNIC repte "actiu" global,
+// state.currentObjective) — cap crida existent (admin.js, fotos.js,
+// votacio.js, participant.js...) s'ha hagut de tocar. Això prepara el terreny
+// perquè la Fase 4 pugui cridar-les amb l'id concret de cada targeta de
+// repte quan n'hi hagi diverses alhora, sense trencar res d'avui.
 export function getActiveObjectiveId() {
   return state.currentObjective ? state.currentObjective.id : null;
 }
-export function getActivePublishedPhotos() {
-  const objId = getActiveObjectiveId();
+export function getActivePublishedPhotos(objectiveId) {
+  const objId = objectiveId || getActiveObjectiveId();
   if (!objId) return [];
   return state.publishedPhotos.filter(p => p.objectiveId === objId);
 }
-export function getActiveAllPhotos() {
+export function getActiveAllPhotos(objectiveId) {
   // Publicadas + no publicadas, ambas filtradas por temática activa
-  const objId = getActiveObjectiveId();
+  const objId = objectiveId || getActiveObjectiveId();
   if (!objId) return [];
   return [...state.photos, ...state.publishedPhotos].filter(p => p.objectiveId === objId);
 }
-export function getActiveVotes() {
-  const objId = getActiveObjectiveId();
+export function getActiveVotes(objectiveId) {
+  const objId = objectiveId || getActiveObjectiveId();
   if (!objId) return [];
   return state.votes.filter(v => v.objectiveId === objId);
 }
 
-// Progreso de votación por VOTANTES (temática activa)
+// Progreso de votación por VOTANTES (temática, per defecte l'activa)
 //   voted = socios que han enviado su votación definitiva (es_esborrany === false)
 //   total = participantes (subieron foto) ∪ socios que enviaron definitiva
-export function getVotingProgress() {
-  const objId = getActiveObjectiveId();
+export function getVotingProgress(objectiveId) {
+  const objId = objectiveId || getActiveObjectiveId();
   if (!objId) return { voted: 0, total: 0, pct: 0 };
 
-  // Participantes: los que subieron foto a la temática activa
-  const uploaderIds = new Set(getActiveAllPhotos().map(p => p.userId));
+  // Participantes: los que subieron foto a esta temática
+  const uploaderIds = new Set(getActiveAllPhotos(objId).map(p => p.userId));
 
   // Votantes que enviaron definitiva (clave `${userId}__${objId}`, es_esborrany === false)
   const submitterIds = new Set(

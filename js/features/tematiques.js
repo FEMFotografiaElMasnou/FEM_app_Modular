@@ -5,13 +5,23 @@ import { state } from '../core/state.js';
 import { t, applyTranslations } from '../core/i18n.js';
 import { showToast, showLoader, hideLoader } from '../ui/toast.js';
 import { confirmAction, openModal, closeModal } from '../ui/modals.js';
-import { saveObjectives, saveSettings } from '../core/data.js';
+import { saveObjectives, saveSettings, getActiveAllPhotos, getVotingProgress } from '../core/data.js';
 import { getPhotoScore, assignPositionPoints, renderRanking } from './ranking.js';
 import { renderAdminGallery } from './fotos.js';
 import { updateVoteButtonsState } from './votacio.js';
 import { refreshAdminDashboard } from '../screens/admin.js';
-import { getCalendariDatesHtml } from './calendari.js';
+import { getActiveCalendar } from './calendari.js';
 
+// FASE 4/5 (pla multi-repte, FEM_reptes.md — FET, 2026-07-17): cada targeta
+// de repte gestiona ara ella mateixa la seva pujada i votació, amb 2
+// desplegables de mode (calendari/obert/tancat, un per fase) i 4 camps de
+// data natius (<input type="date">). Substitueix els vells masters globals
+// (botons de plàstic al Panell de Control) i la card "Calendari" global —
+// ambdues retirades (punt 1 del pla, ara efectiu).
+// Reptes FINALITZATS (revisat 2026-07-18): mateixa targeta i mateixos camps
+// que un repte actiu — es veuen tots (desplegables i dates), però `disabled`
+// (mateix criteri que "Eliminar i Tornar a Pujar"/peu de foto quan la pujada
+// és tancada: visible, no amagat, però no es pot tocar).
 export function renderObjectivesList() {
   const el = document.getElementById('objectives-list');
   if (state.objectives.length === 0) {
@@ -32,16 +42,77 @@ export function renderObjectivesList() {
     const editBtn = !isFinished
       ? `<button type="button" class="btn btn-secondary btn-sm" onclick="openObjectiveModal('${obj.id}')">${t("edit_btn")}</button>`
       : '';
+
+    const cal = getActiveCalendar(obj.id) || {};
+    const uploadMode = cal.uploadMode || 'calendari';
+    const votingMode = cal.votingMode || 'calendari';
+    const photosCount = getActiveAllPhotos(obj.id).length;
+    const votesCount  = getVotingProgress(obj.id).voted;
+    // Estat EFECTIU d'avui (ja recalculat per applyPhaseModes/
+    // applyAllActiveCalendars en carregar la pantalla i en cada canvi): amb
+    // mode 'obert'/'tancat' sempre coincideix amb el mode; amb 'calendari'
+    // depèn de si avui cau dins del rang de dates. El color del desplegable
+    // segueix aquest booleà EFECTIU (no el mode triat) — decisió revisada
+    // 2026-07-18: "quan es selecciona Calendari, el text també es mostri en
+    // vermell o en verd segons si avui està dins (verd) o fora (vermell)".
+    const uploadEffective = !!obj.uploads_enabled;
+    const votingEffective = !!obj.voting_enabled;
+    const locked = isFinished;   // repte finalitzat: camps visibles però disabled
+
+    // El desplegable de mode es dibuixa amb l'etiqueta "Control" i el mateix
+    // aspecte (alçada/vora/mida) que els camps de data del costat.
+    const modeField = (phase, value, effective) => `
+      <label class="obj-date-field">
+        <span>${t('phase_control_label')}</span>
+        <select class="obj-mode-select ${effective ? 'eff-open' : 'eff-closed'}" ${locked ? 'disabled' : ''}
+                onchange="setPhaseMode('${obj.id}','${phase}',this.value);">
+          <option value="calendari" ${value === 'calendari' ? 'selected' : ''}>${t('mode_option_calendari')}</option>
+          <option value="obert" ${value === 'obert' ? 'selected' : ''}>${t('mode_option_obert')}</option>
+          <option value="tancat" ${value === 'tancat' ? 'selected' : ''}>${t('mode_option_tancat')}</option>
+        </select>
+      </label>`;
+
+    const dateField = (label, field, value) => `
+      <label class="obj-date-field">
+        <span>${label}</span>
+        <input type="date" value="${value || ''}" ${locked ? 'disabled' : ''} onchange="updateCalendarDate('${obj.id}','${field}',this.value)">
+      </label>`;
+
+    // Cada fase (Pujada / Votació) agrupada en una única capsa fina:
+    // 1a línia "Etiqueta - n fotos/vots" en un sol text; 2a línia el
+    // desplegable de mode (etiquetat "Control") i les seves 2 dates, tots
+    // tres amb el mateix aspecte de camp.
+    const phaseBox = (phase, label, mode, effective, count, startField, startLabel, startVal, endField, endLabel, endVal) => `
+      <div class="obj-phase-box">
+        <div class="obj-phase-box-header">${label} - ${count}</div>
+        <div class="obj-phase-controls">
+          ${modeField(phase, mode, effective)}
+          ${dateField(startLabel, startField, startVal)}
+          ${dateField(endLabel,   endField,   endVal)}
+        </div>
+      </div>`;
+
     return `
-    <div class="objective-item">
-      <div class="obj-info">
-        <div class="obj-title">${obj.title}</div>
-        <div class="obj-desc">${obj.description || ''}</div>
-        ${getCalendariDatesHtml(obj.id)}
+    <div class="objective-card${locked ? ' objective-card-locked' : ''}">
+      <div class="obj-row obj-row-main">
+        <div class="obj-info">
+          <div class="obj-title">${obj.title}</div>
+          <div class="obj-desc">${obj.description || ''}</div>
+        </div>
+        ${statusBadge}
+        ${editBtn}
+        ${finalizeBtn}
       </div>
-      ${statusBadge}
-      ${editBtn}
-      ${finalizeBtn}
+      <div class="obj-row obj-row-phases">
+        ${phaseBox('upload', t('cal_upload_label'), uploadMode, uploadEffective,
+                    t('photos_uploaded_count').replace('{n}', photosCount),
+                    'uploadStart', t('date_upload_start_label'), cal.uploadStart,
+                    'uploadEnd',   t('date_upload_end_label'),   cal.uploadEnd)}
+        ${phaseBox('voting', t('cal_voting_label'), votingMode, votingEffective,
+                    t('votes_received_count').replace('{n}', votesCount),
+                    'votingStart', t('date_voting_start_label'), cal.votingStart,
+                    'votingEnd',   t('date_voting_end_label'),   cal.votingEnd)}
+      </div>
     </div>`;
   }).join('');
   // Re-apply translations to newly rendered elements
@@ -88,8 +159,10 @@ export async function finalizeObjective(id) {
       state.settings.voting_enabled  = false;
       state.settings.namesRevealed   = false;
       await saveSettings(); // Esto también guarda el generalRanking
-      document.getElementById('toggle-upload').checked = false;
-      document.getElementById('toggle-voting').checked = false;
+      // FASE 4/5: els vells checkboxes globals #toggle-upload/#toggle-voting
+      // ja no existeixen (retirats amb la card "Controls" del Panell de
+      // Control) — l'estat es reflecteix ara als desplegables de cada
+      // targeta de repte, repintats per renderObjectivesList() més avall.
 
       // 4. Limpiar estado local (els registres es conserven a Supabase per historial)
       state.photos = [];
@@ -139,13 +212,15 @@ export async function saveObjective() {
   // un bloqueig ("objective_already_active"/"objective_not_finished") que
   // limitava l'app a un sol repte actiu a la vegada; es retira a propòsit.
   //
-  // AVÍS (encara vigent): crear un 2n repte actiu ja no peta ni es bloqueja,
-  // però la UI d'avui (Panell de Control, Calendari, masters) encara només
-  // sap mostrar/gestionar UN repte — el que trobi primer
-  // `state.objectives.find(o => o.status === 'active')` (línia de sota i a
-  // data.js). El 2n repte actiu quedaria "actiu" a la BD però sense manera
-  // de gestionar-ne el calendari/masters ni de rebre fotos fins la Fase 4/6.
-  // No crear un 2n repte actiu real fins que aquestes fases estiguin fetes.
+  // FASE 4/5 (FET): cada repte actiu ja té la seva pròpia targeta amb
+  // desplegables de mode i dates (renderObjectivesList) i el seu propi
+  // calendari (reptes_calendari, per objective_id) — dos reptes actius a la
+  // vegada ja es gestionen de manera independent. Únic punt encara pendent
+  // (Fase 6): el costat participant només mostra la targeta de pujada/
+  // mosaic de votació del PRIMER repte actiu que troba
+  // (`state.currentObjective`); amb 2+ reptes actius, els socis només
+  // interactuen amb el primer fins que la Fase 6 repeteixi aquell bloc per
+  // cada repte actiu.
 
   if (id) {
     // Editing existing: only update title and description, keep status unchanged

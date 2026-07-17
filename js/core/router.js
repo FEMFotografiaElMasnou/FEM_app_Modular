@@ -13,8 +13,8 @@ import { renderAdminVotingGrid, renderVotingGrid } from '../features/votacio.js'
 import { renderAdminGallery } from '../features/fotos.js';
 import { renderMembersTable } from '../features/socis.js';
 import { renderObjectivesList } from '../features/tematiques.js';
-import { applyCalendarAutomation } from '../features/calendari.js';
-import { refreshAdminDashboard, syncPlasticButtons } from '../screens/admin.js';
+import { applyAllActiveCalendars } from '../features/calendari.js';
+import { refreshAdminDashboard } from '../screens/admin.js';
 import { refreshParticipantDashboard, showParticipantMain } from '../screens/participant.js';
 
 // ── BOTTOM NAV HELPERS ──
@@ -45,10 +45,7 @@ export function showAdminScreen() {
   applyTranslations();
   _updateDbModeButton();
   document.getElementById('admin-username').textContent = state.currentUser.name;
-  applyCalendarAutomation();   // el calendari mana sobre pujada/votació (si automatització ON)
-  document.getElementById('toggle-upload').checked  = state.settings.uploads_enabled;
-  document.getElementById('toggle-voting').checked  = state.settings.voting_enabled;
-  syncPlasticButtons();
+  applyAllActiveCalendars();   // aplica mode+dates de cada repte actiu (Fase 4/5)
   refreshAdminDashboard();
   renderAdminGallery();
   renderAdminVotingGrid();
@@ -213,10 +210,7 @@ function _buildSignature() {
 function _refreshUI() {
   if (!state.currentUser) return;
   if (actingAsAdmin()) {
-    applyCalendarAutomation();   // el calendari mana sobre pujada/votació (si automatització ON)
-    document.getElementById('toggle-upload').checked = state.settings.uploads_enabled;
-    document.getElementById('toggle-voting').checked = state.settings.voting_enabled;
-    syncPlasticButtons();
+    applyAllActiveCalendars();   // aplica mode+dates de cada repte actiu (Fase 4/5)
     refreshAdminDashboard();
     renderAdminGallery();
     if (!window._hasUnsavedVotes) renderAdminVotingGrid();

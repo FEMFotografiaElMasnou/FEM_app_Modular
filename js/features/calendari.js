@@ -1,378 +1,229 @@
 // ═══════════════════════════════════
-// CALENDARI — programació de dates (subida/votació) i històric per repte.
-// El motor real (aplicar toggles a la data) el fa pg_cron dins de Supabase;
-// aquí només editem les dates/switch i mostrem l'històric. Veure sql/reptes_calendari.sql
+// CALENDARI — dates i mode (calendari/obert/tancat) de cada fase (pujada,
+// votació) per repte. El motor real (aplicar el mode a la data, cada dia) el
+// fa pg_cron dins de Supabase (sql/reptes_calendari_fase4.sql, funció
+// fem_apply_calendar()); aquí calculem el mateix resultat AL MOMENT (sense
+// esperar el cron) quan l'admin edita una data o un mode, i persistim.
+//
+// FASE 4/5 (pla multi-repte, FEM_reptes.md — FET, 2026-07-17): substitueix el
+// vell "automation_enabled" (un únic ON/OFF per repte, botons de plàstic
+// globals a la card "Calendari" del Panell de Control) per DOS desplegables
+// independents PER REPTE — un per "Pujada", un per "Votació" — amb 3 estats
+// cadascun:
+//   · calendari → segueix les dates (equival al vell automation_enabled=true)
+//   · obert     → forçat obert, per damunt del calendari
+//   · tancat    → forçat tancat, per damunt del calendari
+// La graella visual de mes i la card global "Calendari" del Panell de Control
+// queden RETIRADES (es fa efectiu el punt 1 del pla, FEM_reptes.md): cada
+// targeta de repte a l'apartat Reptes (tematiques.js) té ara els seus propis
+// 4 camps de data (<input type="date"> natius) i els 2 desplegables de mode.
 // ═══════════════════════════════════
 import { state } from '../core/state.js';
 import { sb } from '../core/config.js';
-import { currentLang, t } from '../core/i18n.js';
+import { t } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
-import { getActiveObjectiveId, loadAllData, saveSettings, saveObjectives } from '../core/data.js';
+import { getActiveObjectiveId, saveSettings, saveObjectives } from '../core/data.js';
+import { renderRanking } from './ranking.js';
 
-// Fila de calendari del repte actiu (o null)
-// PLA MULTI-REPTE (FEM_reptes.md, Fase 3 — encara NO implementat): aquesta funció
-// i les que en depenen (isCalendarAutomationActive, applyCalendarAutomation,
-// toggleCalAutomation, saveCalendari) es reescriuran per acceptar un objectiveId
-// explícit com a paràmetre, en lloc de mirar sempre getActiveObjectiveId() (el
-// singular). Fins que no es faci la Fase 3, aquestes funcions només valen per al
-// repte "active" únic d'avui.
-export function getActiveCalendar() {
-  const objId = getActiveObjectiveId();
+// Fila de calendari d'un repte (per defecte, l'actiu). El nom és històric:
+// funciona per a QUALSEVOL objectiveId, no només per al repte "actiu" global.
+export function getActiveCalendar(objectiveId) {
+  const objId = objectiveId || getActiveObjectiveId();
   if (!objId) return null;
   return (state.reptesCalendari || []).find(c => c.objectiveId === objId) || null;
 }
 
-// El calendari gestiona pujada/votació del repte actiu? (switch ON amb fila)
-export function isCalendarAutomationActive() {
-  const cal = getActiveCalendar();
-  return !!(cal && cal.automationEnabled);
+// Què dirien les dates avui per a un repte, si la fase estigués en mode
+// 'calendari' (independentment del mode que tingui realment triat).
+function computeWantFromDates(cal) {
+  const today = new Date().toISOString().slice(0, 10);   // 'YYYY-MM-DD' (UTC, coincideix amb current_date del cron)
+  const inRange = (start, end) => !!(start && end && today >= start && today <= end);
+  return {
+    wantUpload: inRange(cal.uploadStart, cal.uploadEnd),
+    wantVoting: inRange(cal.votingStart, cal.votingEnd),
+    wantReveal: !!(cal.votingEnd && today > cal.votingEnd),
+  };
 }
 
-// ── Aplicar l'estat que dicta el calendari SENSE esperar el cron ──
-// Replica la lògica de fem_apply_calendar() (sql/reptes_calendari.sql) al front:
-// si el repte actiu té automatització ON, ajusta uploads/voting/names segons la
-// data d'avui i, si canvia res, ho persisteix a Supabase perquè els socis també
-// ho vegin. La part que toca state.settings és SÍNCRONA (els toggles es poden
-// pintar tot seguit); el desat va en segon pla.
-// Nota: usem la data en UTC (toISOString) per coincidir amb current_date del cron.
-export function applyCalendarAutomation() {
-  const cal = getActiveCalendar();
-  if (!cal || !cal.automationEnabled) return false;
+// ── Aplicar l'estat efectiu (mode + dates) d'UN repte, sense esperar el cron ──
+// Recalcula uploads_enabled/voting_enabled/names_revealed del repte segons
+// uploadMode/votingMode i, quan el mode és 'calendari', les dates. Només
+// persisteix si canvia res. Revela noms quan la votació passa a tancada (per
+// qualsevol via: mode 'tancat' manual o data de fi de calendari) — mateix
+// efecte que abans feia el botó "Tancar Votacions".
+export function applyPhaseModes(objectiveId) {
+  const objId = objectiveId || getActiveObjectiveId();
+  const cal = getActiveCalendar(objId);
+  const obj = state.objectives.find(o => o.id === objId);
+  if (!cal || !obj) return false;
 
-  const today = new Date().toISOString().slice(0, 10);   // 'YYYY-MM-DD' (UTC)
-  const inRange = (start, end) => !!(start && end && today >= start && today <= end);
+  const { wantUpload, wantVoting, wantReveal } = computeWantFromDates(cal);
+  const finalUpload = cal.uploadMode === 'obert' ? true : cal.uploadMode === 'tancat' ? false : wantUpload;
+  const finalVoting = cal.votingMode === 'obert' ? true : cal.votingMode === 'tancat' ? false : wantVoting;
+  const wasVotingOpen = !!obj.voting_enabled;
 
-  const wantUpload = inRange(cal.uploadStart, cal.uploadEnd);
-  const wantVoting = inRange(cal.votingStart, cal.votingEnd);
-  const wantReveal = !!(cal.votingEnd && today > cal.votingEnd);
-
-  // FASE 2 (pla multi-repte): la FONT DE VERITAT és el repte actiu
-  // (state.currentObjective.uploads_enabled/voting_enabled/names_revealed,
-  // taula `objectives`), no app_settings. Es manté state.settings com a
-  // mirall perquè participant.js/votacio.js/fotos.js el segueixen llegint.
-  const obj = state.currentObjective;
+  // state.settings només té sentit com a mirall de l'ÚNIC repte "actiu"
+  // global (state.currentObjective) — participant.js/votacio.js/fotos.js el
+  // segueixen llegint. Si objId no és el repte actual, s'actualitza igualment
+  // el seu propi objecte, però no es trepitja el mirall amb dades d'un altre.
+  const isCurrentGlobal = objId === getActiveObjectiveId();
   let changed = false;
-  if (state.settings.uploads_enabled !== wantUpload) {
-    state.settings.uploads_enabled = wantUpload;
-    if (obj) obj.uploads_enabled = wantUpload;
+  if (obj.uploads_enabled !== finalUpload) {
+    obj.uploads_enabled = finalUpload;
+    if (isCurrentGlobal) state.settings.uploads_enabled = finalUpload;
     changed = true;
   }
-  if (state.settings.voting_enabled !== wantVoting) {
-    state.settings.voting_enabled = wantVoting;
-    if (obj) obj.voting_enabled = wantVoting;
+  if (obj.voting_enabled !== finalVoting) {
+    obj.voting_enabled = finalVoting;
+    if (isCurrentGlobal) state.settings.voting_enabled = finalVoting;
     changed = true;
   }
-  if (wantReveal && !state.settings.namesRevealed) {
-    state.settings.namesRevealed = true;
-    if (obj) obj.names_revealed = true;
+  // Revelar noms: la votació es tanca ARA (per qualsevol via) o, en mode
+  // calendari, la data de fi de votació ja ha passat.
+  const closedNow = wasVotingOpen && !finalVoting;
+  const revealByCalendar = cal.votingMode === 'calendari' && wantReveal;
+  if ((closedNow || revealByCalendar) && !obj.names_revealed) {
+    obj.names_revealed = true;
+    if (isCurrentGlobal) state.settings.namesRevealed = true;
     changed = true;
+    renderRanking('ranking-current-list', 'ranking-general-list');
+    renderRanking('p-ranking-current-list', 'p-ranking-general-list');
   }
 
   if (changed) {
-    saveObjectives();   // fire-and-forget: persisteix en segon pla (objectives)
-    saveSettings();     // ídem (app_settings — mirall/compat, no és la font real)
+    saveObjectives();                     // fire-and-forget: persisteix en segon pla (objectives)
+    if (isCurrentGlobal) saveSettings();  // ídem (app_settings — mirall/compat)
   }
   return changed;
 }
 
-// Fase 2 (decisió Pablo 2026-07-17): un clic manual als botons master
-// "guanya" al calendari de forma PERMANENT — es desactiva l'automatització
-// d'aquest repte (mateix camí que el botó "Automatització"), fins que algú
-// la torni a activar. Cridada des de plasticPress() (admin.js) just abans
-// d'aplicar el canvi manual.
-export async function disableAutomationForActiveObjective() {
-  if (isCalendarAutomationActive()) {
-    await toggleCalAutomation();   // ja sap que està ON: la commuta a OFF
-  }
+// Recalcula l'estat efectiu de TOTS els reptes actius alhora (multi-repte,
+// Fase 2 desbloquejat). Cridada en obrir la pantalla d'admin i en cada cicle
+// d'auto-refresh (router.js) — abans només es cridava applyCalendarAutomation()
+// per a l'únic repte "actiu" global.
+export function applyAllActiveCalendars() {
+  state.objectives.filter(o => o.status === 'active').forEach(o => applyPhaseModes(o.id));
 }
 
-// ═══ CALENDARI VISUAL (rejilla de mes) ═══
-// La card és alhora l'històric (franges de tots els reptes, amb nom als acabats)
-// i l'editor del repte actiu: amb un chip actiu, clic marca el dia, un altre clic
-// omple el rang automàticament i clic sobre el marcat l'esborra. Res no es
-// persisteix fins a "Desar calendari" (esborrany a calDraft).
-//
-// PLA MULTI-REPTE (FEM_reptes.md, Fase 4 — DECISIÓ PRESA, encara NO implementat):
-// aquesta graella visual d'un sol calDraft global es manté només per a la card
-// "Calendari" del Panell de Control (punt 1, sense tocar de moment). La NOVA
-// edició de dates dins de cada targeta de repte (Fase 4) NO reutilitza aquesta
-// graella: fa servir <input type="date"> natius, un joc de 4 per repte (opció
-// simple, sense esborrany intermedi ni rèplica de la graella mensual per repte).
-const _avui = new Date();
-let calView  = { year: _avui.getFullYear(), month: _avui.getMonth() };  // mes mostrat (month 0-11)
-let calMode  = null;   // 'upload' | 'voting' | null — chip actiu
-let calDraft = null;   // esborrany de dates del repte actiu (dirty = canvis sense desar)
+// ── Canviar el mode (calendari/obert/tancat) d'una fase d'un repte ──
+// Cridat pel desplegable corresponent de cada targeta (tematiques.js).
+// Persisteix el mode a Supabase i recalcula l'estat efectiu a l'instant.
+export async function setPhaseMode(objectiveId, phase, mode) {
+  if (!objectiveId || (phase !== 'upload' && phase !== 'voting')) return false;
+  if (mode !== 'calendari' && mode !== 'obert' && mode !== 'tancat') return false;
 
-const MONTHS_CA = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
-const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DOW_CA = ['Dl','Dt','Dc','Dj','Dv','Ds','Dg'];
-const DOW_ES = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
-
-// y/m(0-11)/d → 'YYYY-MM-DD' (els rangs es comparen com a strings ISO)
-const isoDate = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-
-// ── Render de la card (estat del draft + switch + rejilla) ──
-export function renderCalendariCard() {
-  const wrap = document.getElementById('calendari-card');
-  if (!wrap) return;
-
-  const objId = getActiveObjectiveId();
-  const noObj = document.getElementById('calendari-no-obj');
-  const form  = document.getElementById('calendari-form');
-  // Sense repte actiu es pot consultar l'històric igualment; només s'amaga l'edició
-  if (noObj) noObj.classList.toggle('hidden', !!objId);
-  if (form)  form.classList.remove('hidden');
-
-  // Esborrany del repte actiu: es crea/refresca des de l'estat persistit,
-  // però MAI es trepitgen canvis pendents (dirty) — l'auto-refresh passa per aquí
-  if (objId) {
-    const cal = getActiveCalendar();
-    if (!calDraft || calDraft.objectiveId !== objId) {
-      calDraft = {
-        objectiveId: objId,
-        uploadStart: cal ? cal.uploadStart : '', uploadEnd: cal ? cal.uploadEnd : '',
-        votingStart: cal ? cal.votingStart : '', votingEnd: cal ? cal.votingEnd : '',
-        dirty: false,
-      };
-      calMode = null;
-    } else if (!calDraft.dirty && cal) {
-      calDraft.uploadStart = cal.uploadStart; calDraft.uploadEnd = cal.uploadEnd;
-      calDraft.votingStart = cal.votingStart; calDraft.votingEnd = cal.votingEnd;
-    }
-  } else {
-    calDraft = null; calMode = null;
-  }
-
-  const auto = document.getElementById('cal-automation');
-  if (auto) { const cal = getActiveCalendar(); auto.checked = cal ? !!cal.automationEnabled : true; }
-  syncAutomationButton();
-  renderCalMonth();
-}
-
-// ── Render del mes visible (títol, chips i rejilla) ──
-function renderCalMonth() {
-  const titleEl = document.getElementById('cal-month-title');
-  const grid    = document.getElementById('cal-grid');
-  if (!titleEl || !grid) return;
-
-  const isES  = currentLang === 'es';
-  const objId = getActiveObjectiveId();
-  titleEl.textContent = `${(isES ? MONTHS_ES : MONTHS_CA)[calView.month]} ${calView.year}`;
-
-  // Chips i botons d'acció: només amb repte actiu
-  const modeRow    = document.getElementById('cal-mode-row');
-  const actionsRow = document.getElementById('cal-actions-row');
-  if (modeRow)    modeRow.style.display    = objId ? '' : 'none';
-  if (actionsRow) actionsRow.style.display = objId ? '' : 'none';
-  const chipU = document.getElementById('cal-mode-upload');
-  const chipV = document.getElementById('cal-mode-voting');
-  if (chipU) chipU.classList.toggle('active', calMode === 'upload');
-  if (chipV) chipV.classList.toggle('active', calMode === 'voting');
-
-  // Rangs a pintar: tots els reptes de reptes_calendari; el repte actiu surt del draft
-  // (previsualització dels canvis abans de desar). Nom del repte només als acabats.
-  const ranges = [];
-  (state.reptesCalendari || []).forEach(c => {
-    if (calDraft && c.objectiveId === calDraft.objectiveId) return;   // el pinta el draft
-    const o = state.objectives.find(o => o.id === c.objectiveId);
-    const name = (o && o.status === 'finished') ? o.title : (o ? o.title : c.objectiveId);
-    if (c.uploadStart && c.uploadEnd) ranges.push({ start: c.uploadStart, end: c.uploadEnd, cls: 'cal-up',   name });
-    if (c.votingStart && c.votingEnd) ranges.push({ start: c.votingStart, end: c.votingEnd, cls: 'cal-vote', name });
-  });
-  if (calDraft) {
-    if (calDraft.uploadStart && calDraft.uploadEnd) ranges.push({ start: calDraft.uploadStart, end: calDraft.uploadEnd, cls: 'cal-up',   name: '' });
-    if (calDraft.votingStart && calDraft.votingEnd) ranges.push({ start: calDraft.votingStart, end: calDraft.votingEnd, cls: 'cal-vote', name: '' });
-  }
-
-  const daysInMonth = new Date(calView.year, calView.month + 1, 0).getDate();
-  const firstDow    = (new Date(calView.year, calView.month, 1).getDay() + 6) % 7;  // dilluns = 0
-  const avui        = new Date();
-  const todayIso    = isoDate(avui.getFullYear(), avui.getMonth(), avui.getDate());
-
-  let html = (isES ? DOW_ES : DOW_CA).map(d => `<div class="cal-dow">${d}</div>`).join('');
-  for (let i = 0; i < firstDow; i++) html += '<div class="cal-day empty"></div>';
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dIso = isoDate(calView.year, calView.month, d);
-    let cls = 'cal-day', label = '', tip = '';
-    for (const r of ranges) {
-      if (dIso < r.start || dIso > r.end) continue;
-      cls += ' ' + r.cls;
-      if (dIso === r.start) cls += ' r-start';
-      if (dIso === r.end)   cls += ' r-end';
-      if (r.name) {
-        tip = r.name;
-        // Nom del repte al 1r dia de la franja i al 1r dia de cada setmana que travessa
-        const col = (firstDow + d - 1) % 7;
-        if (dIso === r.start || col === 0) label = r.name;
-      }
-    }
-    if (dIso === todayIso)     cls += ' cal-today';
-    if (calMode && objId)      cls += ' clickable';
-    html += `<div class="${cls}"${tip ? ` title="${tip}"` : ''}${objId ? ` onclick="calDayClick('${dIso}')"` : ''}>`
-          + `<span class="cal-num">${d}</span>${label ? `<span class="cal-name">${label}</span>` : ''}</div>`;
-  }
-  grid.innerHTML = html;
-}
-
-// ── Navegació de mes (fletxes ‹ ›). El rang a mig marcar sobreviu entre mesos ──
-export function calNavMonth(delta) {
-  let m = calView.month + delta, y = calView.year;
-  if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
-  calView = { year: y, month: m };
-  renderCalMonth();
-}
-
-// ── Chip de mode: què estàs marcant (tornar a clicar el chip actiu el desactiva) ──
-export function calSetMode(mode) {
-  calMode = calMode === mode ? null : mode;
-  if (calMode) {
-    showToast(t('cal_mode_hint'), 'info');
-  }
-  renderCalMonth();
-}
-
-// ── Clic en un dia (chip actiu) — el calendari omple sol: ──
-// · sense rang → marca aquest dia (rang d'1 dia)
-// · amb rang i clic a fora → estén el rang fins al dia clicat (omple entremig)
-// · clic sobre el rang ja marcat → l'esborra sencer (per rectificar)
-export function calDayClick(dateIso) {
-  if (!calDraft) return;
-  if (!calMode) {
-    showToast(t('cal_choose_mode_first'), 'info');
-    return;
-  }
-  const ks = calMode === 'upload' ? 'uploadStart' : 'votingStart';
-  const ke = calMode === 'upload' ? 'uploadEnd'   : 'votingEnd';
-  const start = calDraft[ks], end = calDraft[ke];
-
-  if (start && end && dateIso >= start && dateIso <= end) {
-    calDraft[ks] = ''; calDraft[ke] = '';                       // esborrar el rang
-  } else if (!start || !end) {
-    calDraft[ks] = dateIso; calDraft[ke] = dateIso;             // primer dia marcat
-  } else if (dateIso < start) {
-    calDraft[ks] = dateIso;                                     // omplir cap enrere
-  } else {
-    calDraft[ke] = dateIso;                                     // omplir cap endavant
-  }
-  calDraft.dirty = true;
-  renderCalMonth();
-}
-
-// Reflecteix l'estat del checkbox ocult al botó de plàstic
-function syncAutomationButton() {
-  const cb  = document.getElementById('cal-automation');
-  const btn = document.getElementById('pbtn-cal-automation');
-  if (cb && btn) btn.classList.toggle('on', cb.checked);
-}
-
-// Botó de plàstic "Automatització": commuta el checkbox i DESA el switch a l'instant
-// (només el switch; les dates segueixen desant-se amb "Desar calendari"). Cal persistir-ho
-// al moment perquè el bloqueig dels toggles i el cron llegeixen automation_enabled de la BD:
-// si quedés només en pantalla, el cron re-aplicaria el calendari a les 00:05.
-export async function toggleCalAutomation() {
-  const cb = document.getElementById('cal-automation');
-  if (!cb) return;
-  const objId = getActiveObjectiveId();
-  if (!objId) { showToast(t('no_active_objective_short'), 'error'); return; }
-
-  cb.checked = !cb.checked;
-  syncAutomationButton();
+  const patch = {};
+  patch[phase + '_mode'] = mode;
+  // Regla de negoci heretada de l'antic toggleVotingOpen(): si es força la
+  // VOTACIÓ oberta, la PUJADA es tanca a l'instant (no té sentit rebre fotos
+  // noves un cop la votació ja ha començat manualment). En mode calendari el
+  // marge d'1 dia entre finestres (validat a updateCalendarDate) ja ho evita.
+  if (phase === 'voting' && mode === 'obert') patch.upload_mode = 'tancat';
 
   const { error } = await sb.from('reptes_calendari').upsert({
-    objective_id:       objId,
-    automation_enabled: cb.checked,
-    updated_at:         new Date().toISOString(),
+    objective_id: objectiveId,
+    ...patch,
+    updated_at: new Date().toISOString(),
   }, { onConflict: 'objective_id' });
-
   if (error) {
-    console.error('toggleCalAutomation error', error);
-    cb.checked = !cb.checked;   // revertir: no s'ha pogut desar
-    syncAutomationButton();
-    showToast(t('automation_save_error'), 'error');
-    return;
+    console.error('setPhaseMode error', error);
+    showToast(t('calendar_save_error'), 'error');
+    return false;
   }
 
-  // Reflectir-ho a l'estat local sense esperar cap recàrrega
-  let cal = getActiveCalendar();
+  let cal = getActiveCalendar(objectiveId);
   if (!cal) {
-    cal = { id: '', objectiveId: objId, uploadStart: '', uploadEnd: '', votingStart: '', votingEnd: '', automationEnabled: cb.checked };
+    cal = { id: '', objectiveId, uploadStart: '', uploadEnd: '', votingStart: '', votingEnd: '', uploadMode: 'calendari', votingMode: 'calendari' };
     (state.reptesCalendari = state.reptesCalendari || []).push(cal);
-  } else {
-    cal.automationEnabled = cb.checked;
+  }
+  if (phase === 'upload') cal.uploadMode = mode;
+  if (phase === 'voting') {
+    cal.votingMode = mode;
+    if (mode === 'obert') cal.uploadMode = 'tancat';
   }
 
-  // ON: el calendari mana ja → aplicar dates i repintar els toggles amb l'estat resultant
-  if (cb.checked) applyCalendarAutomation();
-  const cbU = document.getElementById('toggle-upload');
-  const cbV = document.getElementById('toggle-voting');
-  if (cbU) cbU.checked = !!state.settings.uploads_enabled;
-  if (cbV) cbV.checked = !!state.settings.voting_enabled;
-  if (typeof window.syncPlasticButtons === 'function') window.syncPlasticButtons();
-
-  showToast(cb.checked ? t('automation_enabled_msg') : t('automation_disabled_msg'), 'success');
+  applyPhaseModes(objectiveId);
+  if (typeof window.renderObjectivesList === 'function') window.renderObjectivesList();
+  if (typeof window.refreshAdminDashboard === 'function') window.refreshAdminDashboard();
+  return true;
 }
 
-// ── Guardar dates + switch (upsert per objective_id) — llegeix de l'esborrany ──
-export async function saveCalendari() {
-  const objId = getActiveObjectiveId();
-  if (!objId || !calDraft) { showToast(t('no_active_objective_short'), 'error'); return; }
+// ── Editar una data d'un repte (<input type="date"> a la targeta) ──
+// field: 'uploadStart' | 'uploadEnd' | 'votingStart' | 'votingEnd'
+export async function updateCalendarDate(objectiveId, field, value) {
+  if (!objectiveId) return false;
+  const existing = getActiveCalendar(objectiveId);
+  const draft = {
+    uploadStart: existing ? existing.uploadStart : '',
+    uploadEnd:   existing ? existing.uploadEnd   : '',
+    votingStart: existing ? existing.votingStart : '',
+    votingEnd:   existing ? existing.votingEnd   : '',
+    uploadMode:  existing ? existing.uploadMode  : 'calendari',
+    votingMode:  existing ? existing.votingMode  : 'calendari',
+  };
+  draft[field] = value || '';
 
-  const uStart = calDraft.uploadStart || null;
-  const uEnd   = calDraft.uploadEnd   || null;
-  const vStart = calDraft.votingStart || null;
-  const vEnd   = calDraft.votingEnd   || null;
-  const auto   = !!(document.getElementById('cal-automation') && document.getElementById('cal-automation').checked);
-
-  // Validacions (només si les dues dates del parell hi són)
-  if (uStart && uEnd && uStart > uEnd) {
-    showToast(t('upload_close_before_open'), 'error'); return;
+  // Validacions (només si les dues dates del parell hi són) — mateixes regles
+  // que abans tenia el "Desar calendari" global.
+  if (draft.uploadStart && draft.uploadEnd && draft.uploadStart > draft.uploadEnd) {
+    showToast(t('upload_close_before_open'), 'error');
+    if (typeof window.renderObjectivesList === 'function') window.renderObjectivesList();
+    return false;
   }
-  if (vStart && vEnd && vStart > vEnd) {
-    showToast(t('voting_close_before_open'), 'error'); return;
+  if (draft.votingStart && draft.votingEnd && draft.votingStart > draft.votingEnd) {
+    showToast(t('voting_close_before_open'), 'error');
+    if (typeof window.renderObjectivesList === 'function') window.renderObjectivesList();
+    return false;
   }
-  // Marge d'1 dia entre tancar subida i obrir votació
-  if (uEnd && vStart) {
-    const diffDays = (new Date(vStart) - new Date(uEnd)) / 86400000;
+  if (draft.uploadEnd && draft.votingStart) {
+    const diffDays = (new Date(draft.votingStart) - new Date(draft.uploadEnd)) / 86400000;
     if (diffDays < 1) {
       showToast(t('voting_min_gap'), 'error');
-      return;
+      if (typeof window.renderObjectivesList === 'function') window.renderObjectivesList();
+      return false;
     }
   }
 
-  // Il·luminar el botó mentre dura el desat (mateix efecte .on que els toggles)
-  const saveBtn = document.getElementById('pbtn-cal-save');
-  if (saveBtn) saveBtn.classList.add('on');
-  try {
-    const { error } = await sb.from('reptes_calendari').upsert({
-      objective_id:       objId,
-      upload_start:       uStart,
-      upload_end:         uEnd,
-      voting_start:       vStart,
-      voting_end:         vEnd,
-      automation_enabled: auto,
-      updated_at:         new Date().toISOString(),
-    }, { onConflict: 'objective_id' });
-
-    if (error) {
-      console.error('saveCalendari error', error);
-      showToast(t('calendar_save_error'), 'error');
-      return;
-    }
-
-    if (calDraft) calDraft.dirty = false;   // desat: l'esborrany torna a seguir l'estat persistit
-    await loadAllData();
-    renderCalendariCard();
-    // Refrescar les dates a les targetes de Temàtiques (via window per evitar import circular)
-    if (typeof window.renderObjectivesList === 'function') window.renderObjectivesList();
-    showToast(t('calendar_saved'), 'success');
-  } finally {
-    if (saveBtn) saveBtn.classList.remove('on');
+  const { error } = await sb.from('reptes_calendari').upsert({
+    objective_id: objectiveId,
+    upload_start: draft.uploadStart || null,
+    upload_end:   draft.uploadEnd   || null,
+    voting_start: draft.votingStart || null,
+    voting_end:   draft.votingEnd   || null,
+    upload_mode:  draft.uploadMode  || 'calendari',
+    voting_mode:  draft.votingMode  || 'calendari',
+    updated_at:   new Date().toISOString(),
+  }, { onConflict: 'objective_id' });
+  if (error) {
+    console.error('updateCalendarDate error', error);
+    showToast(t('calendar_save_error'), 'error');
+    return false;
   }
+
+  let cal = getActiveCalendar(objectiveId);
+  if (!cal) {
+    cal = { id: '', objectiveId, uploadMode: 'calendari', votingMode: 'calendari' };
+    (state.reptesCalendari = state.reptesCalendari || []).push(cal);
+  }
+  cal.uploadStart = draft.uploadStart;
+  cal.uploadEnd   = draft.uploadEnd;
+  cal.votingStart = draft.votingStart;
+  cal.votingEnd   = draft.votingEnd;
+
+  applyPhaseModes(objectiveId);
+  if (typeof window.renderObjectivesList === 'function') window.renderObjectivesList();
+  if (typeof window.refreshAdminDashboard === 'function') window.refreshAdminDashboard();
+  showToast(t('calendar_saved'), 'success');
+  return true;
 }
 
-// ── Dates del calendari d'un repte, com a bloc HTML per a la targeta de Temàtiques ──
-// (substitueix la card "Històric de reptes" del dashboard; l'estat Obert/Tancat ja el
-// dóna el badge propi de la temàtica, aquí només les dates)
+// ── Dates del calendari d'un repte, com a bloc HTML de només lectura ──
+// NO S'USA ACTUALMENT (revisat 2026-07-18): els reptes FINALITZATS ja NO
+// mostren aquest resum de text — mostren la MATEIXA targeta que un repte
+// actiu (desplegables + dates), però amb tot `disabled` (visible, bloquejat),
+// mateix criteri que "Eliminar i Tornar a Pujar" quan la pujada és tancada.
+// Es deixa la funció per si calgués un resum de només lectura en un altre
+// lloc (p. ex. filtres de galeria).
 export function getCalendariDatesHtml(objectiveId) {
   const cal = (state.reptesCalendari || []).find(c => c.objectiveId === objectiveId);
   if (!cal || !(cal.uploadStart || cal.uploadEnd || cal.votingStart || cal.votingEnd)) return '';
@@ -387,9 +238,6 @@ export function getCalendariDatesHtml(objectiveId) {
   </div>`;
 }
 
-// Exposar per als onclick del HTML
-window.saveCalendari = saveCalendari;
-window.toggleCalAutomation = toggleCalAutomation;
-window.calNavMonth = calNavMonth;
-window.calSetMode = calSetMode;
-window.calDayClick = calDayClick;
+// Exposar per als onchange inserits per tematiques.js (un joc per repte)
+window.setPhaseMode = setPhaseMode;
+window.updateCalendarDate = updateCalendarDate;

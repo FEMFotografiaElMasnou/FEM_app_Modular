@@ -438,14 +438,10 @@ body::before {
   margin-top: 6px;
 }
 
-/* Comptador simple "Votacions rebudes" (v0.1.28), substitueix la barra anterior */
-.votes-received-count {
-  font-family: var(--font-display);
-  font-size: 34px;
-  letter-spacing: 1px;
-  color: var(--accent2);
-  margin-top: 4px;
-}
+/* .votes-received-count (v0.1.28) — RETIRADA a la Fase 4/5 (FEM_reptes.md):
+   la card global "Votacions rebudes" del Panell de Control desapareix,
+   substituïda pel comptador de vots de cada targeta de repte (.obj-phase-count
+   a admin.css). Es deixa aquesta nota en lloc de la regla per traçabilitat. */
 
 /* ════════════════════════════════
    STAT GRID
@@ -820,6 +816,12 @@ body::before {
 /* ════════════════════════════════
    OBJECTIVE / MEMBER LISTS
 ════════════════════════════════ */
+/* .objective-item i derivades: NO S'USEN ACTUALMENT (revisat 2026-07-18).
+   Servien per al resum de només lectura dels reptes FINALITZATS a
+   tematiques.js; ara els reptes finalitzats mostren la mateixa targeta
+   .objective-card (amb desplegables/dates) que un repte actiu, amb tot
+   `disabled`. Es deixen per si es necessités un resum de només lectura en
+   un altre lloc. */
 .objective-item {
   background: rgba(17,34,96,0.5);
   border: 1px solid var(--border);
