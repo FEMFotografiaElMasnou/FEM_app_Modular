@@ -174,27 +174,30 @@
     <div id="admin-tab-dashboard" class="tab-content active">
 
       <!-- ═══ Iteració 2: caixes ocultes (placeholders) perquè el JS no peti ═══ -->
+      <!-- admin-progress-label eliminat (v0.1.28): pertanyia a la barra de progrés
+           retirada; ja no el llegeix cap JS. -->
       <div style="display:none;" id="dashboard-placeholders">
-        <span id="admin-progress-label"></span>
         <span id="stat-photos">—</span>
         <span id="stat-votes-done">0</span>
         <span id="stat-votes-total">0</span>
       </div>
 
-      <!-- PROGRÉS VOTACIONS: mogut des del panell de participant (v0.1.21) -->
+      <!-- VOTACIONS REBUDES: simplificat (v0.1.28) — abans "Progrés de votacions" amb
+           barra n/m i %. Es treu perquè el "total" (getVotingProgress().total) no és
+           fix: creix cada cop que vota algú que no ha pujat foto, així que la barra i
+           el % no representaven res estable. N'hi ha prou amb el recompte de vots
+           definitius rebuts. Vegeu pla multi-repte a FEM_reptes.md (Fase 1).
+           NOTA (transitori): aquesta card és GLOBAL i pressuposa un sol repte actiu
+           (state.currentObjective). Quan la Fase 4 del pla porti aquesta informació
+           dins de cada targeta de repte a l'apartat Reptes, aquesta card del
+           Panell de Control desapareixerà del tot (no té sentit global). -->
       <div class="card">
         <div class="card-header">
           <div>
-            <div class="card-title" data-i18n="voting_progress">Progrés de votacions</div>
+            <div class="card-title" data-i18n="votes_received_title">Votacions rebudes</div>
           </div>
         </div>
-        <div class="progress-wrap">
-          <div class="progress-bar" id="admin-progress-bar" style="width:0%"></div>
-        </div>
-        <div class="progress-label">
-          <span id="admin-progress-left">Carregant...</span>
-          <span id="admin-progress-right">0%</span>
-        </div>
+        <div class="votes-received-count" id="admin-votes-received">—</div>
       </div>
 
       <div class="card card-fit">
@@ -488,18 +491,18 @@
     <!-- Panel Principal -->
     <div id="participant-panel-main">
       <!-- FILA PRINCIPAL — Repte/La meva foto (esquerra) + Galeria (dreta):
-           les dues targetes principals, més grans i gràfiques que la resta.
-           Quan calgui obrir/tancar votacions, probablement s'afegirà aquí
-           mateix (dins la targeta de Repte), ja que hi està associat i
-           tindrà sentit quan hi hagi múltiples reptes actius. -->
+           les dues targetes principals, més grans i gràfiques que la resta. -->
       <div class="hero-grid">
 
         <!-- REPTE + LA MEVA FOTO — unificats: la foto pujada pertany a aquest repte.
              Amagada sencera quan la votació és oberta (la substitueix
              #vote-mosaic-section, de mida i tractament idèntics a Galeria).
-             NOTA (futur multi-repte): aquest box és una unitat autocontinguda;
-             si en el futur hi ha més d'un repte actiu, caldria repetir aquest
-             mateix bloc un cop per repte (això no s'implementa encara). -->
+             PLA MULTI-REPTE (FEM_reptes.md, Fase 6 — encara NO implementat):
+             aquest bloc, JUNT amb #vote-mosaic-section de sota, formen una parella
+             per repte. Quan hi hagi més d'un repte actiu, aquesta parella sencera
+             es repetirà un cop per cada repte (cadascun mostrant "La meva foto" o
+             "Votar" segons el SEU propi voting_enabled, no un de global). Depèn
+             que abans es facin les Fases 2/3 (BD + nucli JS per repte). -->
         <div class="card objective-card" id="card-objective-photo">
 
           <!-- Capçalera del repte — sense subdivisions, només nom + text informatiu
@@ -569,8 +572,13 @@
              Mateixa mida i tractament que Galeria (hero-gallery-tile): mosaic fix
              de 6 fotos del repte (3 columnes x 2 files) de fons, amb "Votar el
              repte: [nom]" com a títol per damunt (no un botó global: lligat al
-             repte, llest per a múltiples reptes actius en el futur). El JS omple
-             #vote-mosaic-title i #vote-mosaic-sub (data fi de votació) a fotos.js.
+             repte). El JS omple #vote-mosaic-title i #vote-mosaic-sub (data fi de
+             votació) a fotos.js.
+             PLA MULTI-REPTE (FEM_reptes.md, Fase 6 — encara NO implementat): quan hi
+             hagi més d'un repte actiu, aquest bloc es repeteix un cop per repte
+             (parella amb #card-objective-photo de dalt); cada repte identifica
+             clarament de quin repte es tracta al títol i porta al seu propi
+             showParticipantVoting(objectiveId).
              NOTA: el .nav-sub NO porta data-i18n perquè el text es genera
              dinàmicament (amb la data); si en portés, applyTranslations()
              el sobreescriuria cada refresc amb el text estàtic del diccionari. -->
@@ -609,10 +617,21 @@
     <div id="participant-panel-voting" class="hidden">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
         <button type="button" class="btn btn-secondary btn-sm" onclick="showParticipantMain()" data-i18n="embedded_back">← Tornar</button>
-        <h2 style="font-family:var(--font-display);font-weight:700;font-size:24px;letter-spacing:2px;" data-i18n="voting_screen_title">Votació de fotos</h2>
+        <!-- Títol dinàmic (v0.1.30): el JS hi escriu "Votació del repte: [nom]"
+             (showParticipantVoting(), participant.js). El data-i18n estàtic
+             es treu d'aquí perquè el text ja no és fix. -->
+        <h2 id="voting-screen-title" style="font-family:var(--font-display);font-weight:700;font-size:24px;letter-spacing:2px;">Votació de fotos</h2>
       </div>
       <div class="card">
-        <div class="card-subtitle" style="margin-bottom:16px;" data-i18n="voting_screen_subtitle">Puntua cada foto de l'1 al 5. No pots votar la teva pròpia foto.</div>
+        <!-- Capçalera d'estat (v0.1.30, revisat v0.1.31): una sola línia que
+             combina el recompte global de vots rebuts amb la data límit / si
+             ja s'ha enviat (abans en 2 línies separades — es fonien massa
+             entre el títol i la instrucció). Menys prominent que el títol
+             (h2) però prou visible — mida i contrast pujats respecte al
+             subtítol genèric d'abans (mateix criteri d'accessibilitat
+             aplicat ja a altres pantalles, v0.1.22). -->
+        <div id="voting-status-line" class="voting-status-line"></div>
+        <div class="card-subtitle voting-instructions" style="margin-bottom:16px;" data-i18n="voting_screen_subtitle">Puntua cada foto de l'1 al 5. No pots votar la teva pròpia foto.</div>
         <div id="participant-voting-grid" class="voting-grid">
           <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🗳️</div><p data-i18n="no_photos_published">No hi ha fotos publicades.</p></div>
         </div>
@@ -722,7 +741,11 @@
       <label data-i18n="obj_desc_label">Descripció</label>
       <textarea id="obj-desc" rows="3" data-i18n-placeholder="obj_desc_placeholder" placeholder="Ex: Fotos urbanístiques de la ciutat..." style="resize:vertical;"></textarea>
     </div>
-    <!-- status is managed automatically, hidden field -->
+    <!-- status is managed automatically, hidden field.
+         DECISIÓ (pla multi-repte, FEM_reptes.md Fase 4): l'Estat de la targeta
+         de repte a l'apartat Reptes és el badge de lectura (actiu/finalitzat) que
+         ja existeix — NO es converteix en un desplegable editable a mà. L'únic
+         canvi d'estat continua sent el botó "Finalitzar" (finalizeObjective()). -->
     <input type="hidden" id="obj-status" value="active">
     <div class="modal-actions">
       <button type="button" class="btn btn-secondary" onclick="closeModal('modal-objective')" data-i18n="cancel_btn">Cancel·lar</button>

@@ -29,7 +29,9 @@ function _escape(s) {
 // motiu que getCalendariDatesHtml() a calendari.js: evita que un parsing amb
 // fus horari desplaci el dia. Retorna '' si la data no és vàlida/no existeix
 // (qui la crida fa fallback al text genèric en aquest cas).
-function _formatDateEs(dateVal) {
+// Exportada (v0.1.30) perquè participant.js la reutilitza a la capçalera de
+// la pantalla de votació — no duplicar-la un tercer cop.
+export function _formatDateEs(dateVal) {
   if (!dateVal || typeof dateVal !== 'string' || dateVal.length < 10) return '';
   const yyyy = dateVal.slice(0, 4), mm = dateVal.slice(5, 7), dd = dateVal.slice(8, 10);
   return `${dd}-${mm}-${yyyy}`;
@@ -176,8 +178,14 @@ export function updateUploadSection() {
   // VOTACIÓ OBERTA: TOTA la targeta "Repte + La meva foto" es substitueix per
   // la de Votar (mateixa mida que Galeria), amb "Votar el repte: [nom]" com a
   // títol i la data fi de votació com a subtítol. Lligat al repte, no un botó
-  // global — té sentit de cara a múltiples reptes actius en el futur (cadascun
-  // tindrà el seu propi accés a Votar).
+  // global.
+  // PLA MULTI-REPTE (FEM_reptes.md, Fase 6 — encara NO implementat): aquesta
+  // funció treballa avui amb els ids fixos 'card-objective-photo' / 'vote-mosaic-
+  // section' (un sol parell al DOM) i amb state.currentObjective (singular).
+  // Quan es faci la Fase 6, caldrà generar/actualitzar aquest parell un cop per
+  // cada repte actiu (objectiveId explícit en comptes de state.currentObjective),
+  // perquè cadascun mostri "La meva foto" o "Votar" segons el SEU propi
+  // voting_enabled. Depèn de tenir fetes abans les Fases 2/3.
   if (getButtonVisibility().showVote) {
     if (objectiveCard) objectiveCard.classList.add('hidden');
     if (voteSection) {
@@ -224,9 +232,13 @@ export function updateUploadSection() {
     if (captionEditEl) captionEditEl.value = myPhoto.caption || '';
     const saveCaptionBtn = document.getElementById('btn-save-caption');
     if (saveCaptionBtn) saveCaptionBtn.classList.add('hidden');
-    // Ocultar botón "Eliminar i Tornar a Pujar" si la subida está cerrada
+    // Pujada tancada (per master o per calendari): la foto ja pujada NO es pot
+    // canviar ni el seu peu de foto es pot editar. Decisió (Pablo): es veuen
+    // tots dos (no s'amaguen), però queden inhabilitats (disabled) — ni el botó
+    // "Eliminar i Tornar a Pujar" ni el camp de text es poden tocar.
     const deleteBtn = doneSect.querySelector('[data-i18n="delete_photo_btn"]');
-    if (deleteBtn) deleteBtn.style.display = state.settings.uploads_enabled ? '' : 'none';
+    if (deleteBtn) deleteBtn.disabled = !state.settings.uploads_enabled;
+    if (captionEditEl) captionEditEl.disabled = !state.settings.uploads_enabled;
   } else if ((!state.settings.uploads_enabled || state.settings.voting_enabled) && !actingAsAdmin()) {
     uploadSect.classList.remove('hidden');
     if (uploadZone) uploadZone.classList.add('hidden');
@@ -495,6 +507,12 @@ export async function uploadPhoto() {
 }
 
 export async function deleteMyPhoto() {
+  // Guarda de fons (a més del `disabled` a la vista, updateUploadSection()):
+  // amb la pujada tancada no es pot eliminar/tornar a pujar la foto.
+  if (!actingAsAdmin() && !state.settings.uploads_enabled) {
+    showToast(t('upload_closed_msg'), 'error');
+    return;
+  }
   confirmAction(t('confirm_delete_photo'), t('confirm_delete_photo_msg'), async () => {
     const uid = state.currentUser.id;
     await sb.from('photo_submissions').delete()
@@ -524,6 +542,13 @@ export async function deleteMyPhoto() {
 export async function saveCaptionEdit() {
   const input = document.getElementById('caption-edit-input');
   if (!input) return;
+  // Guarda de fons (a més del `disabled` a la vista, updateUploadSection()):
+  // el peu de foto només és editable si la pujada està oberta — va associat a
+  // la mateixa acció que "pujar/canviar foto", no és independent.
+  if (!actingAsAdmin() && !state.settings.uploads_enabled) {
+    showToast(t('upload_closed_msg'), 'error');
+    return;
+  }
   const newCaption = input.value.trim();
   const uid   = state.currentUser.id;
   const objId = state.currentObjective ? state.currentObjective.id : '';

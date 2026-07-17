@@ -58,6 +58,13 @@
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
+/* Peu de foto inhabilitat (pujada tancada, v0.1.28): es veu però no es pot
+   editar — va associat a la mateixa acció que pujar/canviar foto. */
+.caption-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Botó que no ha de forçar amplada completa (ex: Confirmar Pujada) */
 .btn-inline { width: auto; }
 
@@ -190,6 +197,40 @@
 .vote-mosaic-grid img:nth-child(4) { top: calc((100% - 2px) / 2 + 2px); left: 0; }
 .vote-mosaic-grid img:nth-child(5) { top: calc((100% - 2px) / 2 + 2px); left: calc((100% - 4px) / 3 + 2px); }
 .vote-mosaic-grid img:nth-child(6) { top: calc((100% - 2px) / 2 + 2px); left: calc(2 * (100% - 4px) / 3 + 4px); }
+
+/* ════════════════════════════════
+   PANTALLA DE VOTACIÓ — capçalera d'estat (v0.1.30, revisat v0.1.31)
+   Decisió (Pablo): una sola línia d'estat (recompte de vots + data límit /
+   ja enviat, fosos junts — abans en 2 línies, es fonien massa entre el
+   títol i la instrucció). No ha de competir amb el títol (h2, 24px) però ha
+   de ser prou visible — i tots els textos d'aquesta pantalla (instruccions,
+   criteris a votar) han de pujar de mida i contrast, mateix criteri ja
+   aplicat a altres pantalles (v0.1.22) en atenció a la mitjana d'edat dels
+   socis (~65 anys).
+   ════════════════════════════════ */
+.voting-status-line {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.voting-status-line.is-submitted { color: var(--success); }
+
+/* .card-subtitle genèric és 13px — aquí es puja mida i contrast (deixa de ser
+   "text-muted" pur) perquè la instrucció es llegeixi bé. */
+.voting-instructions {
+  font-size: 16px;
+  color: var(--text);
+}
+
+/* Etiquetes "Creativitat"/"Temàtica"/"Composició" de cada foto a votar (abans
+   inline a votacio.js: 11px, var(--text-muted), width:80px — il·legible). */
+.vote-criteria-label {
+  font-size: 15px;
+  color: var(--text);
+  width: 108px;
+  flex-shrink: 0;
+}
 
 /* ════════════════════════════════
    GALERIA — filtres, capçaleres de grup i mosaic

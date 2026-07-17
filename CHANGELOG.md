@@ -8,6 +8,180 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.31] — 2026-07-18 — Pantalla de votació: fusionar les 2 línies d'estat en una
+
+> Petició (Pablo): la línia "Total votacions rebudes: n" quedava perduda
+> visualment entre el títol (gran) i la instrucció "Puntua cada foto..."
+> (també gran des de v0.1.30) — es fon amb la línia d'estat en una de sola.
+
+### Canviat
+- **`index.html`**: treta la fila `#voting-count-line`.
+- **`js/screens/participant.js`** (`renderVotingHeader()`): una sola línia
+  `#voting-status-line` amb el recompte i l'estat junts:
+  - Pendent, amb data: "Total votacions rebudes: n. Tens fins el dd-mm-aaaa
+    per enviar la teva votació."
+  - Pendent, sense data (calendari sense configurar): "Total votacions
+    rebudes: n. Encara no has enviat la teva votació."
+  - Enviada: "Total votacions rebudes: n. Ja vas enviar la teva votació."
+- **`i18n.js`**: `voting_deadline_msg`/`voting_status_submitted`/
+  `votes_received_label` (v0.1.30) substituïdes per
+  `voting_status_pending_date`/`voting_status_pending_nodate`/`voting_status_done`,
+  cadascuna amb el recompte ja integrat al text.
+- **`participant.css`**: treta `.voting-count-line`; `.voting-status-line`
+  ajusta el `margin-bottom`.
+- La mida/contrast del text (v0.1.30) es manté sense canvis — validada com a OK.
+
+---
+
+## [0.1.30] — 2026-07-18 — Pantalla de votació: capçalera d'estat + textos més visibles
+
+> Petició (Pablo): en obrir avui la votació d'un repte, la pantalla "Votació de
+> fotos" no deia de quin repte es tractava, ni si el soci ja havia enviat la
+> seva votació, ni fins quan podia fer-ho, ni quants vots portava rebuts el
+> repte. A més, aprofitar per pujar mida i contrast de tots els textos
+> d'aquesta pantalla (mateix criteri que v0.1.22, socis amb mitjana d'edat
+> ~65 anys).
+
+### Afegit
+- **Capçalera dinàmica** (`index.html` + `js/screens/participant.js`,
+  `renderVotingHeader()`, cridada des de `showParticipantVoting()`):
+  - Títol: "Votació del repte: [nom]" (abans fix, "Votació de fotos").
+  - 2a línia: "Tens fins el dd-mm-aaaa per enviar la teva votació" o, si ja
+    l'ha enviat, "✅ Ja has enviat la teva votació" — mida/pes visible però per
+    sota del títol.
+  - 3a línia: "Total votacions rebudes: n" (mateix comptador que la card
+    "Votacions rebudes" del Panell de Control, `getVotingProgress().voted`).
+- **`js/features/fotos.js`**: `_formatDateEs()` exportada (abans privada del
+  fitxer) perquè `participant.js` la reutilitzi sense duplicar-la un tercer cop.
+- **`participant.css`**: classes noves `.voting-status-line`,
+  `.voting-count-line`, `.voting-instructions`, `.vote-criteria-label`.
+
+### Canviat
+- **Textos de la pantalla de votació, més grans i amb més contrast**:
+  la instrucció "Puntua cada foto de l'1 al 5..." puja de 13px a 16px i deixa
+  de ser `text-muted`; les etiquetes "Creativitat"/"Temàtica"/"Composició" de
+  cada foto (`votacio.js`, `renderVotingGrid()`) pugen d'11px inline (gairebé
+  il·legible) a 15px amb la classe `.vote-criteria-label`. Aquest canvi
+  també es veu a la vista de votació de l'admin (`admin-voting-grid`),
+  perquè reutilitza la mateixa funció.
+- **`i18n.js`**: repintat en canviar d'idioma — `window._refreshVotingGrids()`
+  (votacio.js) ara també crida `window.renderVotingHeader()`.
+
+---
+
+## [0.1.29] — 2026-07-17 — Fase 2 del pla multi-repte: BD i masters per repte
+
+> Pla complet a `FEM_reptes.md` ("Pla — Revisió de l'admin i suport
+> multi-repte"). Aquesta és la Fase 2 (BD Supabase + nucli JS mínim perquè els
+> masters ja siguin per repte, no globals). Fases 4/6 (UI de la targeta de
+> repte i la home) encara pendents.
+
+### Descobert (abans de tocar res)
+- `objectives.uploads_enabled`/`voting_enabled` ja existien a la taula i ja es
+  carregaven/desaven (`data.js`), però eren **lletra morta**: cap part de
+  l'app els llegia per decidir res — tot depenia de 2 flags GLOBALS a
+  `app_settings` (`state.settings.uploads_enabled`/`voting_enabled`). Això ha
+  reduït molt l'abast real d'aquesta fase (no calien columnes noves per a
+  aquests dos camps, només connectar-los).
+
+### Afegit
+- **`sql/reptes_calendari_fase2.sql`** (nou, a aplicar a Supabase Normal i
+  Test, DESPRÉS de `reptes_calendari.sql`): columna `objectives.names_revealed`
+  + backfill del repte actiu des dels valors actuals d'`app_settings` +
+  `fem_apply_calendar()` reescrit — itera **tots** els reptes actius amb
+  automatització ON (abans `limit 1`) i escriu cadascun al seu propi
+  `objectives.uploads_enabled/voting_enabled/names_revealed` (abans escrivia a
+  2 claus globals d'`app_settings`).
+- **`js/features/calendari.js`**: `disableAutomationForActiveObjective()` —
+  desactiva l'automatització del repte actiu (mateix camí que el botó
+  "Automatització").
+
+### Canviat
+- **`js/features/tematiques.js`** (`saveObjective()`): retirat el bloqueig que
+  impedia crear un repte nou si ja n'hi havia un altre `active` o no
+  finalitzat. Ara es poden tenir diversos reptes `active` a la BD.
+  **Avís**: la UI d'avui (Panell de Control, Calendari, masters) encara només
+  gestiona el primer repte actiu que troba — un 2n repte actiu quedaria
+  inert (sense calendari/masters gestionables, sense rebre fotos) fins les
+  Fases 4/6. No crear-ne un de veritat fins llavors.
+- **`js/screens/admin.js`** (`toggleUpload()`/`toggleVotingOpen()`): passen a
+  escriure `state.currentObjective.uploads_enabled/voting_enabled` i persistir
+  amb `saveObjectives()` (abans només `state.settings` + `saveSettings()`).
+  `revealNamesAndRanking()` marca també `state.currentObjective.names_revealed`.
+- **Masters (botons de plàstic) — ja NO es bloquegen** (`admin.js`
+  `plasticPress()`/`syncPlasticButtons()`): decisió (Pablo, 2026-07-17): un
+  clic manual sempre funciona; si el calendari gestionava aquell repte, el
+  clic manual "guanya" de forma **permanent** (desactiva l'automatització
+  d'aquest repte, com si l'admin l'hagués apagat ell mateix) fins que algú la
+  torni a activar des de la card "Calendari" (que llavors reaplica l'estat
+  que toqui avui). `.locked` (`admin.css`) passa a ser només informatiu, ja
+  no implica `cursor:not-allowed`.
+- **`js/features/calendari.js`** (`applyCalendarAutomation()`): escriu ara al
+  repte actiu (`objectives`, via `saveObjectives()`) com a font de veritat;
+  `state.settings` es manté com a mirall (`saveSettings()` en segon terme).
+- **`js/core/data.js`** (`loadAllData()`): `state.settings.uploads_enabled/
+  voting_enabled/namesRevealed` ja NO es carreguen d'`app_settings` — es
+  calculen com a mirall del repte actiu just després de fixar
+  `state.currentObjective`. `saveObjectives()` inclou ara `names_revealed`.
+- **`js/features/fotos.js`**: amb `uploads_enabled=false` i una foto ja
+  pujada, el botó "Eliminar i Tornar a Pujar" i el peu de foto es veuen però
+  queden `disabled` (abans el botó s'amagava i el peu de foto quedava
+  editable sense cap restricció) — decisió (Pablo): "es veuen tots dos, no es
+  pot tocar cap dels dos". Guarda equivalent afegida a `deleteMyPhoto()` i
+  `saveCaptionEdit()` per si s'invoquen sense passar per la vista.
+  `.btn:disabled` (`base.css`) i `.caption-input:disabled` (`participant.css`)
+  nous perquè el deshabilitat es vegi (el `:disabled` natiu és imperceptible
+  sobre els estils propis).
+
+### Notes
+- `state.settings.uploads_enabled/voting_enabled/namesRevealed` es mantenen
+  (com a mirall) perquè `participant.js`/`votacio.js`/`fotos.js`/`router.js`/
+  `ranking.js` els segueixen llegint sense canvis — no calia tocar-los ara.
+  Deute intencionat: quan la Fase 3 tregui la noció de "repte actiu únic",
+  aquest mirall haurà de desaparèixer en favor de llegir directament el
+  repte concret de cada targeta.
+- Les claus `uploads_enabled`/`voting_enabled`/`names_revealed` a
+  `app_settings` queden com a residu (no s'esborren, ADR-015); ja no en
+  depèn res de l'app.
+
+---
+
+## [0.1.28] — 2026-07-17 — Panell de Control: "Votacions rebudes" substitueix la barra de progrés
+
+> Petició (Pablo): revisió de l'admin, punt 0. La barra "Progrés de votacions"
+> (n/m + %) no tenia sentit perquè el "total" (`getVotingProgress().total`) no és
+> fix — creix cada cop que vota algú que no ha pujat foto, així que numerador i
+> denominador pugen alhora i el % no representa res estable.
+
+### Canviat
+- **Card "Progrés de votacions" → "Votacions rebudes"** (`index.html`): treta la
+  barra (`.progress-wrap`/`.progress-bar`) i el text n/m/%; ara mostra només el
+  recompte de vots definitius rebuts (`admin-votes-received`).
+- **`refreshAdminDashboard()`** (`js/screens/admin.js`): ja no escriu als
+  elements de la barra (retirats); reutilitza `getVotingProgress().voted` (el
+  `total`/`pct` es descarten a propòsit, no s'usen enlloc més ara mateix).
+- **`i18n.js`**: nova clau `votes_received_title` (CA/ES); `voting_progress` i
+  `members_voted` es deixen sense esborrar (deute intencionat, per si es
+  reutilitzen en una altra pantalla més endavant).
+- **`base.css`**: `.progress-wrap`/`.progress-bar`/`.progress-label` queden sense
+  cap ús des de JS (es deixen, deute tècnic marcat al comentari); nova classe
+  `.votes-received-count` per al comptador.
+
+### Notes
+- Aquesta card és **transitòria i global** (pressuposa el model actual d'un sol
+  repte actiu, `state.currentObjective`). Forma part d'un pla més ampli de
+  revisió de l'admin i suport a múltiples reptes actius simultanis — vegeu la
+  nova secció **"Pla — Revisió de l'admin i suport multi-repte"** a
+  `FEM_reptes.md` per a l'abast complet (7 fases) i les decisions preses. Quan es
+  faci la Fase 4 d'aquest pla, aquesta informació es mourà dins de cada targeta
+  de repte i la card desapareixerà del Panell de Control.
+- S'han deixat comentaris de referència a aquest pla a `state.js`, `data.js`,
+  `calendari.js`, `fotos.js`, `tematiques.js`, `index.html` i
+  `sql/reptes_calendari.sql`, allà on el codi actual pressuposa un sol repte
+  actiu i caldrà tocar-lo en fases properes.
+
+---
+
 ## [0.1.26] — 2026-07-10 — Menú inferior mòbil: bugs de traducció i visibilitat
 
 > Petició (Enric): al menú inferior mòbil el botó "Inici" mostrava la clau sense traduir

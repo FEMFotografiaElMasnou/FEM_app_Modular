@@ -138,6 +138,15 @@ body::before {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Botó deshabilitat (ex: "Eliminar i Tornar a Pujar" amb la pujada tancada,
+   v0.1.28): es veu però queda clarament inactiu — sense això el :disabled
+   natiu és gairebé imperceptible sobre els estils propis de .btn-*. */
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, var(--accent) 0%, #2b6fd4 100%);
   color: #fff;
@@ -397,6 +406,10 @@ body::before {
 
 /* ════════════════════════════════
    PROGRESS BAR
+   (v0.1.28: ja no s'usa des de cap JS — la card "Votacions rebudes" del
+   Panell de Control ha deixat de fer servir barra n/m/%, vegeu
+   FEM_reptes.md Fase 1. Es deixa la classe per deute tècnic, no s'esborra
+   fins a confirmar que cap altra pantalla en necessita una de nova.)
 ════════════════════════════════ */
 .progress-wrap {
   background: rgba(4,9,30,0.5);
@@ -423,6 +436,15 @@ body::before {
   color: var(--text-muted);
   font-family: var(--font-mono);
   margin-top: 6px;
+}
+
+/* Comptador simple "Votacions rebudes" (v0.1.28), substitueix la barra anterior */
+.votes-received-count {
+  font-family: var(--font-display);
+  font-size: 34px;
+  letter-spacing: 1px;
+  color: var(--accent2);
+  margin-top: 4px;
 }
 
 /* ════════════════════════════════

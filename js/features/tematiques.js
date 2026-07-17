@@ -75,10 +75,15 @@ export async function finalizeObjective(id) {
       // 2. Marcar temática como finalizada
       obj.status = 'finished';
       obj.end_date = new Date().toISOString().split('T')[0];
+      // FASE 2: el repte finalitzat també tanca els seus propis flags (font de
+      // veritat des d'ara), no només el mirall global.
+      obj.uploads_enabled = false;
+      obj.voting_enabled  = false;
       state.currentObjective = null;
       await saveObjectives();
 
-      // 3. Desactivar uploads y voting
+      // 3. Desactivar uploads y voting (mirall global — la resta de pantalles
+      // encara el llegeixen; sense repte actiu, tot false és correcte)
       state.settings.uploads_enabled = false;
       state.settings.voting_enabled  = false;
       state.settings.namesRevealed   = false;
@@ -129,19 +134,18 @@ export async function saveObjective() {
 
   if (!title) { showToast(t('title_required'), 'error'); return; }
 
-  // Block creating a new objective if there's an active one with pending votes
-  if (!id) {
-    const activeObj = state.objectives.find(o => o.status === 'active');
-    if (activeObj) {
-      showToast(t('objective_already_active'), 'error');
-      return;
-    }
-    const hasUnfinished = state.objectives.some(o => o.status !== 'finished');
-    if (hasUnfinished) {
-      showToast(t('objective_not_finished'), 'error');
-      return;
-    }
-  }
+  // FASE 2 (pla multi-repte, FEM_reptes.md — FET): ja no es bloqueja crear un
+  // repte nou si n'hi ha un altre actiu o no finalitzat. Abans hi havia aquí
+  // un bloqueig ("objective_already_active"/"objective_not_finished") que
+  // limitava l'app a un sol repte actiu a la vegada; es retira a propòsit.
+  //
+  // AVÍS (encara vigent): crear un 2n repte actiu ja no peta ni es bloqueja,
+  // però la UI d'avui (Panell de Control, Calendari, masters) encara només
+  // sap mostrar/gestionar UN repte — el que trobi primer
+  // `state.objectives.find(o => o.status === 'active')` (línia de sota i a
+  // data.js). El 2n repte actiu quedaria "actiu" a la BD però sense manera
+  // de gestionar-ne el calendari/masters ni de rebre fotos fins la Fase 4/6.
+  // No crear un 2n repte actiu real fins que aquestes fases estiguin fetes.
 
   if (id) {
     // Editing existing: only update title and description, keep status unchanged

@@ -32,7 +32,10 @@ export async function loadAppTexts() {
 export async function loadAllData() {
   const results = await Promise.all([
     sb.from('users').select('id,display_name,email,password,role,created_at').order('id', { ascending: true }),
-    sb.from('objectives').select('id,name,description,status,uploads_enabled,voting_enabled,start_date,end_date,created_by'),
+    // names_revealed afegit a la Fase 2 (multi-repte): vegeu FEM_reptes.md.
+    // uploads_enabled/voting_enabled ja existien a la taula però eren lletra
+    // morta fins la Fase 2 — ara SÍ que en depèn el mirall de state.settings.
+    sb.from('objectives').select('id,name,description,status,uploads_enabled,voting_enabled,names_revealed,start_date,end_date,created_by'),
     sb.from('photo_submissions').select('id,user_id,objective_id,file_name,file_url,original_url,file_size,published,revealed,submitted_at,caption'),
     sb.from('votes').select('id,user_id,photo_id,objective_id,creativity,theme,composition'),
     sb.from('app_settings').select('key,value'),
@@ -84,6 +87,7 @@ export async function loadAllData() {
     status:          o.status || 'inactive',
     uploads_enabled: !!o.uploads_enabled,
     voting_enabled:  !!o.voting_enabled,
+    names_revealed:  !!o.names_revealed,
     start_date:      o.start_date || '',
     end_date:        o.end_date || '',
     created_by:      o.created_by || '',
@@ -153,10 +157,13 @@ export async function loadAllData() {
     }
     return def;
   };
+  // uploads_enabled/voting_enabled/namesRevealed: FONT DE VERITAT des de la
+  // Fase 2 = el repte actiu (objectives.uploads_enabled/voting_enabled/
+  // names_revealed), NO app_settings. Es calculen uns quants línies més avall,
+  // un cop es coneix state.currentObjective (mirall — vegeu comentari allà).
+  // Les claus d'app_settings 'uploads_enabled'/'voting_enabled'/'names_revealed'
+  // queden com a residu de l'etapa pre-Fase 2: ja no s'hi llegeix res.
   state.settings = {
-    uploads_enabled: parseSetting('uploads_enabled', false),
-    voting_enabled:  parseSetting('voting_enabled', false),
-    namesRevealed:   parseSetting('names_revealed', false),
     rankingHidden:   parseSetting('ranking_hidden', false),
     force_hide_upload:        parseSetting('force_hide_upload', false),
     force_hide_vote:          parseSetting('force_hide_vote', false),
@@ -167,6 +174,15 @@ export async function loadAllData() {
 
   // ── Active objective
   state.currentObjective = state.objectives.find(o => o.status === 'active') || null;
+
+  // ── Mirall (Fase 2 — pla multi-repte, FEM_reptes.md): uploads_enabled/
+  // voting_enabled/namesRevealed a `state.settings` es mantenen NOMÉS perquè
+  // participant.js/votacio.js/fotos.js/router.js/ranking.js encara els
+  // llegeixen d'aquí (no es toquen fins la Fase 3/6). El valor real viu al
+  // repte actiu; sense repte actiu, tot està tancat/no revelat.
+  state.settings.uploads_enabled = state.currentObjective ? !!state.currentObjective.uploads_enabled : false;
+  state.settings.voting_enabled  = state.currentObjective ? !!state.currentObjective.voting_enabled  : false;
+  state.settings.namesRevealed   = state.currentObjective ? !!state.currentObjective.names_revealed  : false;
 
   // ── Calendari de reptes (taula nova; si encara no existeix, no trenca la resta)
   const calRes = await sb.from('reptes_calendari')
@@ -214,6 +230,7 @@ export async function saveObjectives() {
     status:          o.status,
     uploads_enabled: !!o.uploads_enabled,
     voting_enabled:  !!o.voting_enabled,
+    names_revealed:  !!o.names_revealed,
     start_date:      o.start_date || null,
     end_date:        o.end_date || null,
     created_by:      o.created_by || (state.currentUser ? state.currentUser.id : null),
@@ -277,6 +294,12 @@ export async function saveSettings() {
 }
 
 // ── Filtrado por temática activa ─────────────────────────────────
+// PLA MULTI-REPTE (FEM_reptes.md dins de FEM_app_Modular/, Fase 3 — encara NO
+// implementat): aquesta funció i getActivePublishedPhotos/getActiveAllPhotos/
+// getActiveVotes/getVotingProgress de sota filtren totes per l'ÚNIC repte
+// "actiu" global (state.currentObjective). La Fase 3 les adaptarà perquè puguin
+// rebre un objectiveId explícit (per poder pintar cada targeta de repte del
+// dashboard de forma independent, un cop desbloquejat el multi-actiu a la Fase 2).
 export function getActiveObjectiveId() {
   return state.currentObjective ? state.currentObjective.id : null;
 }

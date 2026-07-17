@@ -4,10 +4,10 @@
 import { state } from '../core/state.js';
 import { t } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
-import { getActivePublishedPhotos, getActiveAllPhotos, getActiveVotes, getVotingProgress, saveSettings } from '../core/data.js';
+import { getActivePublishedPhotos, getActiveAllPhotos, getActiveVotes, getVotingProgress, saveSettings, saveObjectives } from '../core/data.js';
 import { updateVoteButtonsState } from '../features/votacio.js';
 import { renderRanking } from '../features/ranking.js';
-import { renderCalendariCard, isCalendarAutomationActive } from '../features/calendari.js';
+import { renderCalendariCard, isCalendarAutomationActive, disableAutomationForActiveObjective } from '../features/calendari.js';
 import { switchTab } from '../core/router.js';
 
 // ═══════════════════════════════════
@@ -40,13 +40,14 @@ export function refreshAdminDashboard() {
   document.getElementById('stat-votes-done').textContent    = fullyVotedPhotos;
   document.getElementById('stat-votes-total').textContent   = totalPhotos;
 
-  // Barra PROGRÉS VOTACIONS (moguda des del panell de participant, v0.1.21):
-  // progrés per VOTANTS (socis que han enviat definitiva / participants ∪ votants).
+  // VOTACIONS REBUDES (simplificat, v0.1.28 — abans barra "Progrés de votacions"
+  // amb n/m i %). getVotingProgress() encara calcula { voted, total, pct } perquè
+  // `voted` (vots definitius rebuts) és tot el que necessitem aquí; `total`/`pct`
+  // no s'usen enlloc més ara mateix (es descarten a propòsit, no és un oblit).
+  // Pla multi-repte: FEM_reptes.md, Fase 1 (aquesta targeta és transitòria — a la
+  // Fase 4 aquest recompte es mourà dins de cada targeta de repte).
   const votingProgress = getVotingProgress();
-  document.getElementById('admin-progress-bar').style.width    = votingProgress.pct + '%';
-  document.getElementById('admin-progress-left').textContent   = `${votingProgress.voted}/${votingProgress.total} ${t('members_voted')}`;
-  document.getElementById('admin-progress-right').textContent  = `${votingProgress.pct}%`;
-  document.getElementById('admin-progress-label').textContent  = '';
+  document.getElementById('admin-votes-received').textContent = votingProgress.voted;
 
   // Admin own photo upload section (solo foto de la temática activa)
   const adminPhoto = getActiveAllPhotos().find(p => p.userId === state.currentUser.id);
@@ -92,6 +93,11 @@ export function refreshAdminDashboard() {
 // ═══════════════════════════════════
 // ADMIN CONTROLS (toggles)
 // ═══════════════════════════════════
+// FASE 2 (pla multi-repte, FEM_reptes.md): els masters ja NO escriuen a
+// app_settings (saveSettings) sinó al repte actiu (state.currentObjective.
+// uploads_enabled/voting_enabled, persistit amb saveObjectives()). Es manté
+// també state.settings.* actualitzat (mirall) perquè la resta de pantalles
+// (participant.js, votacio.js, fotos.js) el segueixen llegint sense canvis.
 export async function toggleUpload() {
   // Block upload activation if no active objective/temàtica
   if (document.getElementById('toggle-upload').checked && !state.currentObjective) {
@@ -99,7 +105,10 @@ export async function toggleUpload() {
     showToast(t('create_objective_first'), 'error');
     return;
   }
-  state.settings.uploads_enabled = document.getElementById('toggle-upload').checked;
+  const checked = document.getElementById('toggle-upload').checked;
+  state.settings.uploads_enabled = checked;
+  if (state.currentObjective) state.currentObjective.uploads_enabled = checked;
+  await saveObjectives();
   await saveSettings();
   showToast(state.settings.uploads_enabled ? t('upload_enabled_msg') : t('upload_disabled_msg'), 'info');
 }
@@ -111,24 +120,31 @@ export async function toggleVotingOpen() {
     showToast(t('publish_photos_first'), 'error');
     return;
   }
-  state.settings.voting_enabled = document.getElementById('toggle-voting').checked;
+  const checked = document.getElementById('toggle-voting').checked;
+  state.settings.voting_enabled = checked;
+  if (state.currentObjective) state.currentObjective.voting_enabled = checked;
   if (state.settings.voting_enabled) {
     // Al abrir votación: cerrar subidas automáticamente
     state.settings.uploads_enabled = false;
+    if (state.currentObjective) state.currentObjective.uploads_enabled = false;
     document.getElementById('toggle-upload').checked = false;
   } else {
     // Al cerrar votación: revelar nombres y ranking (antes lo hacía el botón "Tancar Votacions")
     revealNamesAndRanking();
   }
+  await saveObjectives();
   await saveSettings();
   showToast(state.settings.voting_enabled ? t('voting_opened_msg') : t('voting_closed_ranking_msg'), 'success');
   refreshAdminDashboard();
 }
 
 // Revela nombres y ranking de la temática activa.
-// Reutilizable: lo llama el toggle al cerrar la votación y (en el futuro) el calendario automatizado.
+// Reutilizable: lo llama el toggle al cerrar la votación y el calendario automatizado.
+// Fase 2: també marca names_revealed al repte actiu (qui la crida ja persisteix
+// amb saveObjectives() després).
 export function revealNamesAndRanking() {
   state.settings.namesRevealed = true;
+  if (state.currentObjective) state.currentObjective.names_revealed = true;
   renderRanking('ranking-current-list', 'ranking-general-list');
   renderRanking('p-ranking-current-list', 'p-ranking-general-list');
 }
@@ -149,22 +165,29 @@ export function adminNav(tab) {
 }
 
 // Iteració 3: botons de plàstic com a pell dels checkboxes
+// FASE 2 (pla multi-repte, FEM_reptes.md — decisió Pablo 2026-07-17): el
+// calendari ja NO bloqueja els botons. `.locked` és només informatiu (indica
+// "ara mateix ho porta el calendari"), no impedeix el clic.
 export function syncPlasticButtons() {
-  var locked = isCalendarAutomationActive();   // el calendari mana → pujada/votació bloquejats
+  var managedByCalendar = isCalendarAutomationActive();
   [['pbtn-upload','toggle-upload'], ['pbtn-voting','toggle-voting']].forEach(function (pair) {
     var btn = document.getElementById(pair[0]);
     var cb  = document.getElementById(pair[1]);
     if (btn && cb) {
       btn.classList.toggle('on', cb.checked);
-      btn.classList.toggle('locked', locked);
+      btn.classList.toggle('locked', managedByCalendar);
     }
   });
 }
 export function plasticPress(btnId, cbId, fnName) {
-  // Si el calendari gestiona pujada/votació, no permetre el canvi manual
+  // FASE 2: un clic manual sobre pujada/votació SEMPRE es permet. Si el
+  // calendari estava gestionant aquest repte, el clic guanya de forma
+  // PERMANENT: es desactiva l'automatització (com si l'admin l'hagués apagat
+  // ell mateix) i després s'aplica el canvi manual. Per tornar a deixar-ho
+  // en mans del calendari cal reactivar l'automatització des de la card
+  // "Calendari" — llavors es torna a aplicar l'estat que toqui avui.
   if ((cbId === 'toggle-upload' || cbId === 'toggle-voting') && isCalendarAutomationActive()) {
-    showToast(t('managed_by_calendar_msg'), 'info');
-    return;
+    disableAutomationForActiveObjective();   // async, fire-and-forget (persisteix en segon pla)
   }
   var cb = document.getElementById(cbId);
   if (!cb) return;

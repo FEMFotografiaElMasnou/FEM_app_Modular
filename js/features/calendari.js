@@ -7,9 +7,15 @@ import { state } from '../core/state.js';
 import { sb } from '../core/config.js';
 import { currentLang, t } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
-import { getActiveObjectiveId, loadAllData, saveSettings } from '../core/data.js';
+import { getActiveObjectiveId, loadAllData, saveSettings, saveObjectives } from '../core/data.js';
 
 // Fila de calendari del repte actiu (o null)
+// PLA MULTI-REPTE (FEM_reptes.md, Fase 3 — encara NO implementat): aquesta funció
+// i les que en depenen (isCalendarAutomationActive, applyCalendarAutomation,
+// toggleCalAutomation, saveCalendari) es reescriuran per acceptar un objectiveId
+// explícit com a paràmetre, en lloc de mirar sempre getActiveObjectiveId() (el
+// singular). Fins que no es faci la Fase 3, aquestes funcions només valen per al
+// repte "active" únic d'avui.
 export function getActiveCalendar() {
   const objId = getActiveObjectiveId();
   if (!objId) return null;
@@ -40,13 +46,44 @@ export function applyCalendarAutomation() {
   const wantVoting = inRange(cal.votingStart, cal.votingEnd);
   const wantReveal = !!(cal.votingEnd && today > cal.votingEnd);
 
+  // FASE 2 (pla multi-repte): la FONT DE VERITAT és el repte actiu
+  // (state.currentObjective.uploads_enabled/voting_enabled/names_revealed,
+  // taula `objectives`), no app_settings. Es manté state.settings com a
+  // mirall perquè participant.js/votacio.js/fotos.js el segueixen llegint.
+  const obj = state.currentObjective;
   let changed = false;
-  if (state.settings.uploads_enabled !== wantUpload) { state.settings.uploads_enabled = wantUpload; changed = true; }
-  if (state.settings.voting_enabled  !== wantVoting) { state.settings.voting_enabled  = wantVoting; changed = true; }
-  if (wantReveal && !state.settings.namesRevealed)   { state.settings.namesRevealed   = true;       changed = true; }
+  if (state.settings.uploads_enabled !== wantUpload) {
+    state.settings.uploads_enabled = wantUpload;
+    if (obj) obj.uploads_enabled = wantUpload;
+    changed = true;
+  }
+  if (state.settings.voting_enabled !== wantVoting) {
+    state.settings.voting_enabled = wantVoting;
+    if (obj) obj.voting_enabled = wantVoting;
+    changed = true;
+  }
+  if (wantReveal && !state.settings.namesRevealed) {
+    state.settings.namesRevealed = true;
+    if (obj) obj.names_revealed = true;
+    changed = true;
+  }
 
-  if (changed) saveSettings();   // fire-and-forget: persisteix en segon pla
+  if (changed) {
+    saveObjectives();   // fire-and-forget: persisteix en segon pla (objectives)
+    saveSettings();     // ídem (app_settings — mirall/compat, no és la font real)
+  }
   return changed;
+}
+
+// Fase 2 (decisió Pablo 2026-07-17): un clic manual als botons master
+// "guanya" al calendari de forma PERMANENT — es desactiva l'automatització
+// d'aquest repte (mateix camí que el botó "Automatització"), fins que algú
+// la torni a activar. Cridada des de plasticPress() (admin.js) just abans
+// d'aplicar el canvi manual.
+export async function disableAutomationForActiveObjective() {
+  if (isCalendarAutomationActive()) {
+    await toggleCalAutomation();   // ja sap que està ON: la commuta a OFF
+  }
 }
 
 // ═══ CALENDARI VISUAL (rejilla de mes) ═══
@@ -54,6 +91,13 @@ export function applyCalendarAutomation() {
 // i l'editor del repte actiu: amb un chip actiu, clic marca el dia, un altre clic
 // omple el rang automàticament i clic sobre el marcat l'esborra. Res no es
 // persisteix fins a "Desar calendari" (esborrany a calDraft).
+//
+// PLA MULTI-REPTE (FEM_reptes.md, Fase 4 — DECISIÓ PRESA, encara NO implementat):
+// aquesta graella visual d'un sol calDraft global es manté només per a la card
+// "Calendari" del Panell de Control (punt 1, sense tocar de moment). La NOVA
+// edició de dates dins de cada targeta de repte (Fase 4) NO reutilitza aquesta
+// graella: fa servir <input type="date"> natius, un joc de 4 per repte (opció
+// simple, sense esborrany intermedi ni rèplica de la graella mensual per repte).
 const _avui = new Date();
 let calView  = { year: _avui.getFullYear(), month: _avui.getMonth() };  // mes mostrat (month 0-11)
 let calMode  = null;   // 'upload' | 'voting' | null — chip actiu

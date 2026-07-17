@@ -120,10 +120,12 @@
 }
 .plastic-btn.on .pb-icon svg { filter: drop-shadow(0 0 7px rgba(255,255,255,0.95)); }
 
-/* LOCKED — el calendari gestiona pujada/votació: no editable manualment */
-.plastic-btn.locked { cursor: not-allowed; opacity: 0.72; }
+/* "GESTIONAT PEL CALENDARI" — informatiu, NO bloqueja (Fase 2, v0.1.28: el
+   clic manual sempre funciona i guanya al calendari). Vora discontínua com a
+   pista visual; es manté `cursor:pointer` (heretat de .plastic-btn) perquè
+   no sembli inhabilitat. */
+.plastic-btn.locked { opacity: 0.85; }
 .plastic-btn.locked .pb-icon { border-style: dashed; }
-.plastic-btn.locked:hover { color: inherit; }
 
 /* ── CALENDARI VISUAL (rejilla de mes) ── */
 .cal-month-nav { display: flex; align-items: center; gap: 10px; }

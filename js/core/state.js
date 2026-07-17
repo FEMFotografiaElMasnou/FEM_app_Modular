@@ -20,8 +20,15 @@ export const state = {
   selectedPhotos:  new Set(),
   selectMode:      false,
   pendingFile:     null,
+  // currentObjective: SINGULAR (model actual = un sol repte "active" que la
+  // UI sap gestionar a la vegada). Fase 2 (FEM_reptes.md) ja permet que hi
+  // hagi >1 repte amb status='active' a la BD, però aquest camp encara agafa
+  // NOMÉS el primer que troba (state.objectives.find, a data.js/tematiques.js)
+  // — la resta d'actius queden inerts (sense calendari/masters gestionables)
+  // fins la Fase 3 (llista de reptes actius, no un de sol) i la Fase 4 (UI).
   currentObjective: null,
-  reptesCalendari: [],          // filas de reptes_calendari (programación + histórico)
+  reptesCalendari: [],          // filas de reptes_calendari (programación + histórico;
+                                 // ja és 1:1 per objective_id — base de la Fase 2/3)
   adminViewingAsParticipant: false,  // true when admin is browsing the participant view
   // ─── AUTOSAVE VOTING ─────────────────────────────────────────────
   // Map keyed by `${userId}__${objectiveId}` → { es_esborrany, submitted_at }

@@ -24,7 +24,12 @@ export const TRANSLATIONS = {
     active_objective: 'Repte Actual', my_photo: 'La meva foto', home_repte_label: 'Repte:',
     upload_photo_label: 'Puja la teva foto per participar',
     photo_pending: 'Foto pujada (pendent) ⏳', photo_published: 'Foto publicada ✅',
+    // voting_progress/members_voted: obsoletes des de v0.1.28 (la barra n/m/% es
+    // va treure del Panell de Control, vegeu FEM_reptes.md Fase 1). Es deixen
+    // perquè no fem servir claus per esborrar sense revisar-ho (Fase 4/6 podria
+    // voler-les recuperar per a una altra pantalla).
     voting_progress: 'Progrés de votacions', members_voted: 'votants',
+    votes_received_title: 'Votacions rebudes',
     close_voting_btn: 'Tancar Votacions i Revelar Noms',
     // Photos
     manage_photos: 'Gestió de fotos', photos_subtitle: 'Fotos rebudes dels participants',
@@ -302,6 +307,13 @@ export const TRANSLATIONS = {
     ranking_current_title: 'Ranking — Repte Actual',
     voting_screen_title: 'Votació de fotos',
     voting_screen_subtitle: "Puntua cada foto de l'1 al 5. No pots votar la teva pròpia foto.",
+    // Capçalera dinàmica de la pantalla de votació (v0.1.30, revisat v0.1.31):
+    // repte concret + una sola línia d'estat que combina el recompte global
+    // de vots rebuts amb la data límit / si ja s'ha enviat.
+    voting_repte_title: 'Votació del repte: {title}',
+    voting_status_pending_date: 'Total votacions rebudes: {n}. Tens fins el {date} per enviar la teva votació.',
+    voting_status_pending_nodate: 'Total votacions rebudes: {n}. Encara no has enviat la teva votació.',
+    voting_status_done: 'Total votacions rebudes: {n}. Ja vas enviar la teva votació.',
     no_photos_published: 'No hi ha fotos publicades.',
     ranking_screen_title: 'Ranking',
     general_tab: 'General',
@@ -348,6 +360,7 @@ export const TRANSLATIONS = {
     upload_photo_label: 'Sube tu foto para participar',
     photo_pending: 'Foto subida (pendiente) ⏳', photo_published: 'Foto publicada ✅',
     voting_progress: 'Progreso de votaciones', members_voted: 'votantes',
+    votes_received_title: 'Votaciones recibidas',
     close_voting_btn: 'Cerrar Votaciones y Revelar Nombres',
     // Photos
     manage_photos: 'Gestión de fotos', photos_subtitle: 'Fotos recibidas de los participantes',
@@ -621,6 +634,10 @@ export const TRANSLATIONS = {
     ranking_current_title: 'Ranking — Reto Actual',
     voting_screen_title: 'Votación de fotos',
     voting_screen_subtitle: 'Puntúa cada foto del 1 al 5. No puedes votar tu propia foto.',
+    voting_repte_title: 'Votación del reto: {title}',
+    voting_status_pending_date: 'Total votaciones recibidas: {n}. Tienes hasta el {date} para enviar tu votación.',
+    voting_status_pending_nodate: 'Total votaciones recibidas: {n}. Todavía no has enviado tu votación.',
+    voting_status_done: 'Total votaciones recibidas: {n}. Ya enviaste tu votación.',
     no_photos_published: 'No hay fotos publicadas.',
     ranking_screen_title: 'Ranking',
     general_tab: 'General',

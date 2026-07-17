@@ -158,11 +158,14 @@ export function renderVotingGrid(containerId) {
     const myVote = getMyVote(photo.id);
     const num    = getParticipantNumber(photo.userId);
 
+    // Etiqueta del criteri (Creativitat/Temàtica/Composició): abans 11px
+    // inline, il·legible — classe .vote-criteria-label (participant.css,
+    // v0.1.30) puja mida i contrast per als socis.
     const starRow = (criteria, label) => {
       const val = myVote ? myVote[criteria] : 0;
       return `
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <span style="font-size:11px;color:var(--text-muted);width:80px;">${label}</span>
+          <span class="vote-criteria-label">${label}</span>
           <div class="vote-stars" style="${starStyle}">
             ${[1,2,3,4,5].map(s => `<span class="star ${val>=s?'active':''}" onclick="handleStar('${photo.id}','${criteria}',${s},'${containerId}')" title="${s}">★</span>`).join('')}
           </div>
@@ -382,4 +385,7 @@ window.saveParticipantVotes = saveParticipantVotes;
 window._refreshVotingGrids = function () {
   renderAdminVotingGrid();
   renderVotingGrid('participant-voting-grid');
+  // Capçalera de la pantalla de votació (v0.1.30, participant.js): repte,
+  // estat d'enviament i recompte — també generada amb t(), també cal repintar.
+  if (typeof window.renderVotingHeader === 'function') window.renderVotingHeader();
 };

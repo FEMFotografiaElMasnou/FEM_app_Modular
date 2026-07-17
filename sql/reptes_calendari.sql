@@ -52,6 +52,16 @@ create extension if not exists pg_cron;
 --   · posa uploads_enabled / voting_enabled a app_settings segons les ventanes
 --   · en passar voting_end: revela els noms (names_revealed = true)
 -- Tot és idempotent: es pot executar cada dia sense efectes secundaris.
+--
+-- PLA MULTI-REPTE — FASE 2 FETA (vegeu FEM_reptes.md): aquesta funció d'aquí
+-- baix és la versió ANTIGA (un sol repte, `limit 1`, escriu a app_settings).
+-- Ha quedat SUBSTITUÏDA per la de sql/reptes_calendari_fase2.sql, que cal
+-- aplicar A SOBRE d'aquest fitxer (Normal i Test): itera tots els reptes
+-- actius amb automatització ON i escriu a `objectives.uploads_enabled/
+-- voting_enabled/names_revealed` per objective_id, no a app_settings.
+-- Aquest fitxer (reptes_calendari.sql) es deixa intacte com a referència
+-- històrica de la taula/RLS/cron original; no cal tornar-lo a aplicar si ja
+-- ho vas fer (v0.1.17) — només cal aplicar el fase2 per sobre.
 create or replace function public.fem_apply_calendar()
 returns void
 language plpgsql

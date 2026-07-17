@@ -4,11 +4,13 @@
 import { state, actingAsAdmin } from '../core/state.js';
 import { t, applyTranslations } from '../core/i18n.js';
 import { showToast } from '../ui/toast.js';
-import { renderVotingGrid, updateVoteButtonsState } from '../features/votacio.js';
+import { renderVotingGrid, updateVoteButtonsState, isVotingSubmitted } from '../features/votacio.js';
 import { renderRanking, renderResultatsRepte } from '../features/ranking.js';
-import { updateUploadSection } from '../features/fotos.js';
+import { updateUploadSection, _formatDateEs } from '../features/fotos.js';
 import { setActiveNav, switchTab } from '../core/router.js';
 import { populateGalleryFilters, renderGallery, startGalleryCarousel, stopGalleryCarousel } from '../features/galeria.js';
+import { getActiveCalendar } from '../features/calendari.js';
+import { getVotingProgress } from '../core/data.js';
 
 // ═══════════════════════════════════
 // PANELES
@@ -43,7 +45,42 @@ export function showParticipantVoting() {
   _hideAllParticipantPanels();
   document.getElementById('participant-panel-voting').classList.remove('hidden');
   setActiveNav('bnav-vote');
+  renderVotingHeader();
   renderVotingGrid('participant-voting-grid');
+}
+
+// Capçalera dinàmica de la pantalla de votació (v0.1.30, revisat v0.1.31):
+// repte concret + una sola línia d'estat amb el recompte global de vots
+// rebuts fos amb la data límit / si ja s'ha enviat (abans en 2 línies
+// separades — decisió Pablo: es fonien massa entre el títol i la instrucció).
+// Vegeu FEM_reptes.md (proposta discutida amb Pablo) per al disseny.
+// Exportada + a window: applyTranslations() (i18n.js) la crida via
+// window._refreshVotingGrids (votacio.js) en canviar d'idioma, perquè el
+// text (generat amb t()) es repinti igual que la resta de contingut dinàmic.
+export function renderVotingHeader() {
+  const titleEl  = document.getElementById('voting-screen-title');
+  const statusEl = document.getElementById('voting-status-line');
+  if (!titleEl) return;
+
+  const obj = state.currentObjective;
+  titleEl.textContent = obj ? t('voting_repte_title').replace('{title}', obj.title) : t('voting_screen_title');
+
+  if (statusEl) {
+    const uid = state.currentUser ? state.currentUser.id : null;
+    const objId = obj ? obj.id : null;
+    const submitted = (uid && objId) ? isVotingSubmitted(uid, objId) : false;
+    const votesReceived = getVotingProgress().voted;
+    statusEl.classList.toggle('is-submitted', submitted);
+    if (submitted) {
+      statusEl.textContent = t('voting_status_done').replace('{n}', votesReceived);
+    } else {
+      const cal = getActiveCalendar();
+      const endDate = cal ? _formatDateEs(cal.votingEnd) : '';
+      statusEl.textContent = endDate
+        ? t('voting_status_pending_date').replace('{n}', votesReceived).replace('{date}', endDate)
+        : t('voting_status_pending_nodate').replace('{n}', votesReceived);
+    }
+  }
 }
 
 export function showParticipantRanking() {
@@ -225,3 +262,4 @@ window.openEmbedded = openEmbedded;
 window.closeEmbedded = closeEmbedded;
 window.showParticipantGallery = showParticipantGallery;
 window.refreshParticipantDashboard = refreshParticipantDashboard;
+window.renderVotingHeader = renderVotingHeader;
