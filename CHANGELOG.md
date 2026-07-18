@@ -8,6 +8,23 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.42] — 2026-07-18 — Reptes ordenats de més recent a més antic
+
+> Petició (Pablo): "vull els reptes en ordre descendent de data, de manera
+> que el vigent ja estigui disponible en obrir la pàgina, sense scroll —
+> cada cop serà més llarg".
+
+### Canviat
+- **`js/features/tematiques.js`** (`renderObjectivesList()`): es pinta una
+  còpia de `state.objectives` ordenada descendentment per `start_date`
+  (data de creació del repte) — el més recent (normalment el vigent) surt a
+  dalt de tot. `state.objectives` en si no es toca (cap altra funció en
+  depèn de l'ordre).
+
+### Sense SQL
+
+---
+
 ## [0.1.41] — 2026-07-18 — Retirada la pestanya "Panell de Control"
 
 > Petició (Pablo): "el botó Panell de Control no té sentit, es pot eliminar".

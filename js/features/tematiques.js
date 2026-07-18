@@ -28,7 +28,14 @@ export function renderObjectivesList() {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><p>${t('no_objectives')}</p></div>`;
     return;
   }
-  el.innerHTML = state.objectives.map(obj => {
+  // Ordre descendent per data de creació del repte (2026-07-18, petició
+  // Pablo): el repte vigent (sempre el més recent) surt a dalt de tot, sense
+  // haver de fer scroll — cada cop hi haurà més reptes a la llista. Es
+  // construeix una còpia ordenada NOMÉS per pintar; state.objectives es
+  // queda tal qual (cap altra funció en depèn de l'ordre).
+  const sortedObjectives = [...state.objectives]
+    .sort((a, b) => (b.start_date || '').localeCompare(a.start_date || ''));
+  el.innerHTML = sortedObjectives.map(obj => {
     const isActive   = obj.status === 'active';
     const isFinished = obj.status === 'finished';
     const statusBadge = isActive
