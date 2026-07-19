@@ -314,6 +314,16 @@ export function compressImage(file, maxWidth = 4800, maxHeight = 4800, quality =
           if (exifObj && exifObj['GPS']) {
             exifObj['GPS'] = {};
           }
+          // El canvas de STEP 2 ja pinta la imatge "de peu" (els navegadors
+          // apliquen la rotació EXIF en decodificar la <img> abans de dibuixar-
+          // la). Si mantenim el tag Orientation original (p. ex. 6/8 en fotos
+          // fetes en vertical), qualsevol visor que respecti l'EXIF (navegador,
+          // Cloudinary, apps de fotos...) tornaria a girar-la per sobre —
+          // rotació doble. Forcem-lo a "normal" perquè els píxels ja són
+          // correctes i no cal cap rotació addicional.
+          if (exifObj && exifObj['0th']) {
+            exifObj['0th'][piexif.ImageIFD.Orientation] = 1;
+          }
         }
       } catch (err) {
         console.warn('EXIF read failed, continuing without metadata:', err);

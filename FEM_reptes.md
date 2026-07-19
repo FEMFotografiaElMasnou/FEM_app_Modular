@@ -66,6 +66,20 @@ módulos por pantalla y por función.
 - Si no estás seguro al 80%, pregunta. No inventes.
 - Tras tocar un módulo, valida sintaxis y prueba con servidor local antes de dar la iteración por buena.
 
+## Lliurament de fitxers modificats (Enric)
+
+> Instrucció d'Enric (2026-07-19), per evitar errors en desplegar canvis
+> quan no es treballa directament sobre el repositori (p. ex. sessions on
+> només es puja el `.zip` de l'app). Aplica sempre que es lliurin canvis
+> com a fitxers/zip en comptes de com a commit/PR.
+
+- **Al xat**: llistar els fitxers modificats amb la seva **ruta destí dins
+  l'app** (ex. `js/features/fotos.js`, `js/core/data.js`), no només el nom.
+- **Al ZIP**: incloure **només** els fitxers que cal actualitzar — mai
+  l'app sencera —, **sense estructura de carpetes**: tots plans a l'arrel
+  del ZIP. Enric els col·loca manualment a la ruta corresponent seguint la
+  llista del xat.
+
 ## Documentación
 - **RAG del producto** (fuente de verdad funcional, fuera de esta carpeta):
   `D:\Mis proyectos\FEM_Reptes\Instrucciones\Archivos MD\...` → `PRD.MD`, `Components.MD`, `Decisions.MD` (ADRs), `Changelog.MD`, `Setup.MD`.

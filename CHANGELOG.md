@@ -8,6 +8,34 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.43] — 2026-07-19 — Fix fotos girades (doble rotació EXIF)
+
+> Queixa d'usuaris: algunes fotos pujades es veien girades (sobretot les
+> fetes en vertical amb el mòbil).
+
+### Arreglat
+- **`js/features/fotos.js`** (`compressImage()`): el `<canvas>` de
+  redimensionat ja pinta la imatge "de peu" (el navegador aplica la rotació
+  EXIF en decodificar-la), però l'EXIF original es tornava a injectar sense
+  tocar el tag `Orientation` — resultat: rotació doble en qualsevol visor que
+  respecti l'EXIF (navegador, Cloudinary, apps de fotos...). Ara es força
+  `Orientation = 1` abans de re-injectar l'EXIF, ja que els píxels ja estan
+  corregits. Només afecta pujades noves.
+- **`js/core/data.js`** (`loadAllData()`, nova `_noAutoRotateUrl()`): per a
+  les fotos ja pujades abans d'aquest fix (que van quedar amb píxels
+  correctes però EXIF `Orientation` incorrecte), s'afegeix el flag
+  `a_ignore` a la URL de lliurament de Cloudinary perquè mai apliqui rotació
+  pròpia. És segur per a totes les fotos de l'app (cap depèn de l'EXIF per
+  mostrar-se bé, totes passen per `compressImage()`). Com que `url`/
+  `originalUrl` es construeixen en aquest únic lloc i totes les pantalles
+  (galeria, votació, ranking, lightbox, "la meva foto", descàrrega) el
+  reutilitzen, l'efecte és immediat a tot arreu sense tocar Cloudinary ni
+  Supabase.
+
+### Sense SQL
+
+---
+
 ## [0.1.42] — 2026-07-18 — Reptes ordenats de més recent a més antic
 
 > Petició (Pablo): "vull els reptes en ordre descendent de data, de manera

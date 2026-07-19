@@ -16,6 +16,23 @@ import { mergeTranslations } from './i18n.js';
 // (login.js:init) i en canviar d'entorn (config.js:switchDbMode).
 // Si Supabase no respon o la taula encara no existeix, l'app es queda amb
 // el diccionari estàtic de i18n.js — no es trenca res.
+// Totes les fotos d'aquesta app passen per compressImage() (fotos.js), que
+// sempre les redibuixa a un <canvas> abans de pujar-les — els píxels
+// resultants ja surten "de peu" independentment del tag EXIF Orientation
+// original. Fotos pujades abans del fix d'Orientation a compressImage()
+// (vegeu fotos.js) van quedar amb els píxels correctes però l'Orientation
+// EXIF antic re-injectat, fent que Cloudinary/els navegadors les tornessin a
+// girar per sobre. Afegint el flag `a_ignore` a la URL de lliurament de
+// Cloudinary li diem que mai apliqui rotació pròpia — és segur fer-ho sempre
+// per a totes les fotos d'aquesta app (noves i antigues), perquè cap depèn
+// de l'EXIF per mostrar-se correctament.
+function _noAutoRotateUrl(url) {
+  if (!url) return url;
+  return url.includes('/image/upload/a_ignore/')
+    ? url
+    : url.replace('/image/upload/', '/image/upload/a_ignore/');
+}
+
 export async function loadAppTexts() {
   try {
     const { data, error } = await sb.from('app_texts').select('lang,content');
@@ -99,8 +116,8 @@ export async function loadAllData() {
     userId:       String(p.user_id || ''),
     objectiveId:  String(p.objective_id || ''),
     fileName:     p.file_name || '',
-    url:          p.file_url || '',
-    originalUrl:  p.original_url || p.file_url || '',
+    url:          _noAutoRotateUrl(p.file_url || ''),
+    originalUrl:  _noAutoRotateUrl(p.original_url || p.file_url || ''),
     fileSize:     p.file_size || '',
     published:    !!p.published,
     revealed:     !!p.revealed,
