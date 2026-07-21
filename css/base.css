@@ -890,6 +890,7 @@ body::before {
 .badge-yellow { background: rgba(245,166,35,0.12);  color: var(--warning);  border: 1px solid rgba(245,166,35,0.3); }
 .badge-red    { background: rgba(240,82,82,0.12);   color: var(--danger);   border: 1px solid rgba(240,82,82,0.3); }
 .badge-gray   { background: rgba(80,130,255,0.08);  color: var(--text-muted); border: 1px solid var(--border); }
+.badge-blue   { background: rgba(75,142,245,0.12);  color: var(--accent);    border: 1px solid rgba(75,142,245,0.3); }
 
 /* ════════════════════════════════
    MODAL

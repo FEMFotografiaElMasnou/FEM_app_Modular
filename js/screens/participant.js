@@ -159,7 +159,11 @@ export function showParticipantClassificacio() {
 const RESULTATS_BASE = 'https://fem-resultats.vercel.app/';
 
 export function openEmbedded(view) {
-  const role = state.currentUser ? state.currentUser.role : 'participant';
+  // L'app Resultats (fem-resultats.vercel.app) encara només sap interpretar
+  // 'admin'/'participant'. Els Experts s'hi passen com a 'participant' fins
+  // que aquella app es revisi per tractar-los de manera diferenciada.
+  const rawRole = state.currentUser ? state.currentUser.role : 'participant';
+  const role = rawRole === 'expert' ? 'participant' : rawRole;
   document.getElementById('iframe-resultats').src =
     `${RESULTATS_BASE}?role=${role}&view=${view}&embedded=true`;
   // El títol el pinta la pròpia App d'Enric dins l'iframe; no en dupliquem un de nostre.
@@ -183,7 +187,9 @@ export function refreshParticipantDashboard() {
   if (roleBadge && state.currentUser && !state.adminViewingAsParticipant) {
     roleBadge.textContent = state.currentUser.role === 'admin'
       ? t('admin_role_name')
-      : t('member_role_name');
+      : state.currentUser.role === 'expert'
+        ? t('expert_role_name')
+        : t('member_role_name');
   }
 
   const obj = state.currentObjective;

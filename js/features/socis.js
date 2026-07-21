@@ -15,6 +15,11 @@ export async function toggleRole(userId) {
   const user = state.users.find(u => u.id === userId);
   if (!user) return;
   if (user.id === state.currentUser.id) { showToast(t('no_change_own_role'), 'error'); return; }
+  // El badge només alterna Admin↔Soci (com sempre). Els Experts no es toquen des
+  // d'aquí — canviar el rol d'un Expert (o convertir algú en Expert) es fa només
+  // des del modal "Editar soci" (openMemberModal), per evitar que un clic ràpid
+  // al badge faci saltar un Expert a Admin per accident.
+  if (user.role === 'expert') return;
   user.role = user.role === 'admin' ? 'participant' : 'admin';
   await updateUser(userId, { role: user.role });
   renderMembersTable();
@@ -113,16 +118,20 @@ export function renderMembersTable() {
         </td>
         <td style="font-family:var(--font-mono);font-size:12px;">${u.email || u.username}</td>
         <td>
-          <span
-            class="badge ${u.role==='admin'?'badge-red':'badge-yellow'}"
-            style="cursor:pointer;user-select:none;"
-            onclick="toggleRole('${u.id}')"
-            title="${t('edit_role_tooltip')}"
-          >${u.role==='admin'?'Admin':t('member_role_name')}</span>
+          ${u.role === 'expert'
+            ? `<span class="badge badge-blue" title="${t('edit_member_tooltip')}">${t('expert_role_name')}</span>`
+            : `<span
+                class="badge ${u.role==='admin'?'badge-red':'badge-yellow'}"
+                style="cursor:pointer;user-select:none;"
+                onclick="toggleRole('${u.id}')"
+                title="${t('edit_role_tooltip')}"
+              >${u.role==='admin'?'Admin':t('member_role_name')}</span>`
+          }
         </td>
         <td>${uploaded?'<span class="badge badge-green">✓ Sí</span>':'<span class="badge badge-gray">No</span>'}</td>
         <td>${voted?'<span class="badge badge-green">✓ Sí</span>':'<span class="badge badge-gray">No</span>'}</td>
         <td style="display:flex;gap:6px;align-items:center;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="openMemberModal('${u.id}')" title="${t('edit_member_tooltip')}" style="padding:4px 10px;font-size:13px;">✏️</button>
           <button type="button" class="btn btn-secondary btn-sm" onclick="resetMemberPassword('${u.id}')" title="${t('reset_pwd_tooltip')}" style="padding:4px 10px;font-size:13px;">🔄 ${t('member_reset_pwd')}</button>
           <button type="button" class="btn btn-danger btn-sm" onclick="deleteMember('${u.id}')">${t("delete_btn")}</button>
         </td>
