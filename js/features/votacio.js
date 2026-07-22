@@ -354,25 +354,48 @@ export function resetVoteButtons() {
 }
 
 // ── VOTE BUTTONS STATE — disable when objective finalized or voting closed ──
+// Rèplica de l'estat de la capçalera (renderVotingHeader): si l'usuari ja ha
+// enviat la votació per al repte actiu, el botó del peu ha de quedar amb el
+// mateix aspecte i missatge que el banner superior (bloquejat, verd,
+// "Vots Enviats"), no simplement "habilitat" com si encara pogués votar.
 export function updateVoteButtonsState() {
   const hasActiveObj = state.objectives.some(o => o.status === 'active');
   const votingOpen = state.settings.voting_enabled;
-  const canVote = hasActiveObj && votingOpen;
+  const uid = state.currentUser ? state.currentUser.id : null;
+  const objId = state.currentObjective ? state.currentObjective.id : null;
+  const submitted = (uid && objId) ? isVotingSubmitted(uid, objId) : false;
+  const canVote = hasActiveObj && votingOpen && !submitted;
 
   // Admin save votes button
   const adminBtn = document.getElementById('btn-save-admin-votes');
   if (adminBtn) {
-    adminBtn.disabled = !canVote;
-    adminBtn.style.opacity = canVote ? '1' : '0.4';
-    adminBtn.style.cursor = canVote ? 'pointer' : 'not-allowed';
+    if (submitted) {
+      markVoteButtonSaved(adminBtn);
+    } else {
+      adminBtn.innerHTML = t('save_votes_btn');
+      adminBtn.style.background = '';
+      adminBtn.style.borderColor = '';
+      adminBtn.style.color = '';
+      adminBtn.disabled = !canVote;
+      adminBtn.style.opacity = canVote ? '1' : '0.4';
+      adminBtn.style.cursor = canVote ? 'pointer' : 'not-allowed';
+    }
   }
 
   // Participant save votes button
   const partBtn = document.getElementById('btn-save-participant-votes');
   if (partBtn) {
-    partBtn.disabled = !canVote;
-    partBtn.style.opacity = canVote ? '1' : '0.4';
-    partBtn.style.cursor = canVote ? 'pointer' : 'not-allowed';
+    if (submitted) {
+      markVoteButtonSaved(partBtn);
+    } else {
+      partBtn.innerHTML = t('save_votes_btn');
+      partBtn.style.background = '';
+      partBtn.style.borderColor = '';
+      partBtn.style.color = '';
+      partBtn.disabled = !canVote;
+      partBtn.style.opacity = canVote ? '1' : '0.4';
+      partBtn.style.cursor = canVote ? 'pointer' : 'not-allowed';
+    }
   }
 }
 

@@ -47,6 +47,10 @@ export function showParticipantVoting() {
   setActiveNav('bnav-vote');
   renderVotingHeader();
   renderVotingGrid('participant-voting-grid');
+  // Assegura que el botó del peu reflecteix sempre l'estat real (bloquejat
+  // i "Vots Enviats" si ja s'ha enviat) cada cop que s'entra a la pantalla,
+  // no només després d'un refresc complet del dashboard.
+  updateVoteButtonsState();
 }
 
 // Capçalera dinàmica de la pantalla de votació (v0.1.30, revisat v0.1.31):

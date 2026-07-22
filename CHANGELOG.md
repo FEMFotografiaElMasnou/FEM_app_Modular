@@ -8,6 +8,33 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). F
 
 ---
 
+## [0.1.44] — 2026-07-22 — Fix botó "Enviar Vots" no es bloquejava després d'enviar
+
+> Queixa: un cop enviada la votació, la capçalera de la pantalla ja mostrava
+> correctament l'estat bloquejat ("Ja has enviat la teva votació"), però el
+> botó del peu ("Enviar Vots") seguia actiu — en clicar-lo tornava a mostrar
+> l'error "Ja has enviat votació" sense cap sentit, ja que hauria d'estar
+> deshabilitat com la resta de la pantalla.
+
+### Arreglat
+- **`js/features/votacio.js`** (`updateVoteButtonsState()`): abans només
+  comprovava si hi havia repte actiu i votació oberta (`hasActiveObj &&
+  votingOpen`) per decidir si el botó estava actiu, sense tenir en compte si
+  l'usuari ja havia enviat la seva votació (`isVotingSubmitted()`). Ara, si
+  ja s'ha enviat, es crida `markVoteButtonSaved()` — la mateixa funció que
+  s'usa just després d'enviar — de manera que el botó del peu queda com una
+  rèplica exacta del banner superior (verd, bloquejat, text "✅ Vots
+  Enviats"), tant per a l'admin com per al participant.
+- **`js/screens/participant.js`** (`showParticipantVoting()`): es crida
+  `updateVoteButtonsState()` cada cop que s'entra a la pantalla de votació,
+  no només després d'un refresc complet del dashboard, per garantir que el
+  botó reflecteix sempre l'estat real encara que aquesta pantalla s'obri per
+  una altra via de navegació.
+
+### Sense SQL
+
+---
+
 ## [0.1.43] — 2026-07-19 — Fix fotos girades (doble rotació EXIF)
 
 > Queixa d'usuaris: algunes fotos pujades es veien girades (sobretot les
